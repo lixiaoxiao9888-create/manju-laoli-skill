@@ -1,7 +1,7 @@
 # 《寒骨错：第一集·雪地藏锋》完整剧本与 AI 视频分镜表
 
 本文件包含《寒骨错：第一集·雪地藏锋》的**【完整文学剧本】**与**【AI 视频生成专用分镜表（含英文 Prompt 提示词）】**。
-我们严格执行山音 2.0 导演纪律，去心理化，保证每一个镜头、每一句台词都在 ASR 算力限制内，且在画面上完全可拍、在 AI 视频生成中完全不崩。
+我们严格执行工业化标准 导演纪律，去心理化，保证每一个镜头、每一句台词都在 ASR 算力限制内，且在画面上完全可拍、在 AI 视频生成中完全不崩。
 
 ---
 
@@ -106,5 +106,5 @@
 - **AI 视频生成 Prompts**：`Close up shot, Dolly Zoom. An ancient Chinese noble man looking terrified, his pupils dilating with fear as the background snowscape stretches. Shockwave, high dynamic, slow-motion facial twitch, dramatic suspense, smash cut to black.`
 
 ---
-**山音超级编剧大师 v2 · 导演中心出品**
+**短剧工业化体系 · 导演中心出品**
 *让文字精准落位，让视频在 AI 模型的每一个渲染帧中，都饱含震碎视网膜的张力。*
