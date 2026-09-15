@@ -79,6 +79,57 @@ check("⑤ 模型支持口径一致（2.5/2.0/即梦，无可灵）",
       and not [l for l in readme.splitlines() if "可灵" in l and not re.search(r"移除|残留|LEGACY", l)])
 check("⑤ 模型前置锁定保留（SKILL 〇节）", "强制二选一" in skill and "停下询问用户" in skill)
 
+# ---------- ⑥ 场景拼接图口径（2026-09-15 四向校准）----------
+asl = read(os.path.join("references", "asset-spatial-ledger.md"))
+check("⑥ 场景拼接图=左 2/3 高空鸟瞰透视 + 右 1/3 四向缩略图",
+      "左 2/3" in asl and "高空鸟瞰" in asl and "四视角缩略图" in asl)
+check("⑥ 场景拼接图硬规则（交叉可定位/纯场景禁人物/16:9）",
+      "交叉可定位" in asl and "纯场景禁人物" in asl and "16:9" in asl)
+check("⑥ 旧口径「关键区域细节三联」已清零",
+      "细节三联" not in asl)
+chk = read(os.path.join("references", "★ prompt-feeding-checklist.md"))
+check("⑥ 场景双图铁律（功能图 + 场景拼接图）",
+      "场景双图" in chk and "场景拼接图" in chk)
+
+# ---------- ⑦ 首尾帧仅限 2.5（2026-09-15 用户裁定）----------
+# 2.0 语境行不得把首尾帧当作可用能力（排除“无首尾帧/禁用/不适用/禁止”等否定表述）
+NEG = re.compile(r"无首尾帧|禁用|不适用|禁止|不得|排除|2\.0 无")
+bad_fl = []
+for p in scan_md_files():
+    rel = os.path.relpath(p, BASE)
+    if rel.startswith("CHANGELOG"):
+        continue
+    for i, line in enumerate(read(rel).splitlines(), 1):
+        if ("2.0" in line or "2．0" in line) and ("首帧" in line or "尾帧" in line) and not NEG.search(line):
+            bad_fl.append(f"{rel}:{i}")
+check("⑦ 2.0 语境无首尾帧（仅否定/禁用表述可提及）", not bad_fl, "; ".join(bad_fl[:5]))
+check("⑦ SKILL 〇节含「首尾帧仅限 2.5」硬约束 + 参考模式二选一默认①",
+      "首尾帧仅限 Seedance 2.5" in skill and "全能参考模式（默认推荐）" in skill)
+check("⑦ model-adapters §1.5 标明仅 2.5",
+      "仅锁定 2.5 后必答" in read(os.path.join("references", "model-adapters.md")))
+
+# ---------- ⑧ 稿件级门禁脚本（V6.8 新增 validate_prompt.py · 出稿时门）----------
+import subprocess
+vp = os.path.join(BASE, "scripts", "validate_prompt.py")
+check("⑧ validate_prompt.py 存在（稿件级出稿门禁）", os.path.exists(vp))
+if os.path.exists(vp):
+    try:
+        r = subprocess.run([sys.executable, vp, "--self-test"], capture_output=True,
+                           text=True, timeout=30)
+        check("⑧ validate_prompt.py self-test 通过", r.returncode == 0,
+              (r.stdout or r.stderr)[-120:])
+    except Exception as e:
+        check("⑧ validate_prompt.py self-test 通过", False, str(e))
+    vp_src = read(os.path.join("scripts", "validate_prompt.py"))
+    check("⑧ validate_prompt 含 C8 2.0 首尾帧禁用门", "C8 Seedance 2.0 全面禁用首尾帧" in vp_src)
+    check("⑧ validate_prompt 含 C9 平台高危词门", "C9 正文出现平台高危词" in vp_src)
+    check("⑧ validate_prompt 含 C13 镜长雷同节奏门", "C13 镜长雷同" in vp_src)
+    check("⑧ SKILL 含法则 17 镜长节奏铁律", "镜长节奏铁律" in read("SKILL.md"))
+chk_vp = read(os.path.join("references", "★ prompt-feeding-checklist.md"))
+check("⑧ checklist 挂线 validate_prompt（出稿门禁）", "validate_prompt" in chk_vp)
+skill_vp = read("SKILL.md")
+check("⑧ SKILL 架构树/指令挂线 validate_prompt", "validate_prompt.py" in skill_vp)
+
 # ---------- 汇总 ----------
 print("-" * 40)
 if FAILED:

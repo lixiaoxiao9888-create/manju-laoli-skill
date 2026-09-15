@@ -25,7 +25,7 @@
 | 剧本 | `screenplay-gate-engine` | 五阶门控（前提/结构/节拍/世界观/专业排版） |
 | 台词 | `dialogue-doctor-7d` | 台词七维诊断与三段式重构 |
 | 台词 | `dialogue-speed-check` | **强制语速自检**（三档语速/五步流程/拆镜） |
-| 资产 | `asset-spatial-ledger` | A/B/C 分级资产锁 + **分批出图执行规范（角色 4 View 资产板/场景/道具）** + 3D 空间快照 + 空间站位 S0~S4 分级 |
+| 资产 | `asset-spatial-ledger` | A/B/C 分级资产锁 + **分批出图执行规范（角色 4 View 资产板/场景/道具）** + 3D 空间快照 + 空间站位 S0~S4 分级 + **场景资产图三部分（母版 + 机位调度版/站位版 + 场景拼接图四向版）** |
 | 资产 | `character-lineage-and-sheets` | 角色资产板 + T1→T2→T3 亲缘推导**直接出图** |
 | 台账 | `production-ledger-handbook` | 《剧组资产图册》CHR/AUD/PRP/SCN/Uxx + **资产参考图** 工业化台账 |
 | 情绪 | `emotion-beat-curve` | 12 节拍全片情绪张力量化 + 可视化曲线 |
@@ -38,9 +38,10 @@
 | 武学 | `martial-arts-combat-library` / `martial-arts-arsenal` / `authentic-martial-taxonomy` | 23 门武学 + 9 套剑法 + 兵器 + 轻功 + 11 环杀招 |
 | 衔接 | `camera-transitions-6types` | 三手法六式镜头衔接 |
 | 渲染 | `seedance-render-engine` | 时长预算（单组 ≤15s，Seedance 2.5 官方上限 30s）+ 三层解耦；**主格式为七段式**（唯一权威定义见 `model-adapters.md` §5），画幅按 B 锁回填，Seedance 2.5 / Seedance 2.0 强制二选一 |
-| 适配 | `model-adapters` / `comfyui-canvas-automation` | 闭源模型参数适配 + Canvas/API 工作流对接 |
+| 适配 | `model-adapters` / `comfyui-canvas-automation` | 闭源模型参数适配 + Canvas/API 工作流对接；**2.5 锁定后参考模式二选一（①全能参考 默认 / ②首尾帧·仅 2.5）；2.0 无首尾帧** |
 | 合规 | `platform-safety-compliance-guide` | 安全风控转译词典（降低风险，不承诺 100% 通过） |
 | 质检 | `quality-gate-review` | P0/P1/P2 独立门禁 + 声音相对电平 + **改动后复验铁律（三步闭环 + 改动复验报告）** |
+| 机检 | `scripts/validate_prompt.py` | **稿件级投喂词机检门禁**（C1~C13：时长/切镜/版本语法/画幅/七段式/2.0 禁用首尾帧/高危词/接续状态/镜长雷同节奏门），出稿时跑，FAIL 清零才交付 |
 | 看板 | `storyboard-board-lite` | **轻量离线分镜看板**（md → 单文件 HTML，双击即开；P2.5 出图提示词与 P4 投喂提示词必同板） |
 | 空间 | `spatial-reference-system-V3` | 空间参考系统 V3 原文（**备查**：默认不用一行式站位声明，仅超复杂群像时取法） |
 
@@ -59,7 +60,9 @@
 
 ## 🧮 常用指令（SKILL 内注册）
 
-`/写剧本` · `/台词诊断` · `/拆资产` · `/做分镜` · `/语速自检` · `/生成视频提示词` · `/看板` · `/微表情` · `/审查` · `跳过确认，直接出整集`
+`/写剧本` · `/台词诊断` · `/数字资产包` · `/做分镜` · `/语速自检` · `/生成视频提示词` · `/导出工作流参数` · `/看板` · `/微表情` · `/审查` · `跳过确认，直接出整集`
+
+> 完整指令路由（含 `/剧组产出册` `/资产图册` `/情绪曲线` `/角色资产板` `/顶视图` 等）见 `SKILL.md` 四、快速指令路由。
 
 ---
 
@@ -91,7 +94,8 @@ short-drama-director/
 ├── SKILL.md                     # 总控路由 + 工作法 + 模块清单
 ├── references/                  # 38 个专业规则库
 ├── scripts/
-│   ├── check_package.py         # 静态自检脚本
+│   ├── check_package.py         # 包级静态规则与完整性校验脚本（打包/出厂时跑）
+│   ├── validate_prompt.py       # 稿件级投喂词机检门禁（C1~C13；出稿时跑）
 │   ├── build_board_lite.py      # 轻量离线分镜看板编译器（md → 单文件 HTML）
 │   └── generate_emotion_curve.py# 12 节拍情绪曲线绘制脚本
 ├── README.md
