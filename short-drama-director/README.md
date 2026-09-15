@@ -1,6 +1,7 @@
-# 漫剧老李 AIGC 全流程 Skill · V6.8 轻量版（Short-Drama Director Suite）
+# 漫剧老李 AIGC 创作全流程 Skill · V6.8 轻量版（Short-Drama Director Suite）
 
-面向竖屏短剧、AI 漫剧、短视频剧集全生命周期的工业级导演总控技能包，供 AI 助手 / LLM 调用。
+面向 **AIGC 视听创作** 的工业级全流程创作技能包，供 AI 助手 / LLM 调用——从创意立项、剧本、资产、分镜到视频模型投喂提示词与独立质检。
+典型场景为 AI 短剧 / 漫剧 / 短视频剧集；管线与题材解耦，同样适用于 AI 广告片 / 宣传片、分镜预演（PREVIS）、武打动作设计、微表情专项等一切需要跨镜头一致性的 AIGC 视频生产。
 覆盖：**Asset-First 六阶段管线**（立项锁定 → 五阶门控剧本 → 数字资产包 → 分镜 → 视频提示词渲染 → 独立质检）。
 
 > 🔑 **核心理念：资产图先于分镜。** 角色/场景/道具在 P2 数字资产包阶段完成**出图并锁定**（非文字描述），成为《资产图册》唯一权威事实来源，分镜/投喂一律引用已锁定 @资产图。
@@ -19,7 +20,7 @@
 | 阶段 | 模块 | 功能 |
 |---|---|---|
 | 管线 | `asset-first-pipeline` | **Asset-First 六阶段（★权威）**：P0~P5 唯一生产顺序，资产图先于分镜（A0~A3 按任务复杂度分级触发） |
-| 画幅 | `aspect-ratio-adaptation` | **画幅自适应路由（★权威）**：横/竖屏全流程裁决，用户指令优先 |
+| 画幅 | `aspect-ratio-adaptation` | **画幅强制三选一 + 全流程路由（★权威）**：16:9 / 9:16 / 21:9 与模型版本同规格前置锁定，未指定不动笔；用户指令优先 |
 | 平台 | `agent-platform-adapters` | 多 Agent 平台适配（OpenClaw/WorkBuddy/豆包Coze/Dify）+ 豆包 JSON 分块 |
 | 剧本 | `screenplay-gate-engine` | 五阶门控（前提/结构/节拍/世界观/专业排版） |
 | 台词 | `dialogue-doctor-7d` | 台词七维诊断与三段式重构 |
@@ -28,15 +29,15 @@
 | 资产 | `character-lineage-and-sheets` | 角色资产板 + T1→T2→T3 亲缘推导**直接出图** |
 | 台账 | `production-ledger-handbook` | 《剧组资产图册》CHR/AUD/PRP/SCN/Uxx + **资产参考图** 工业化台账 |
 | 情绪 | `emotion-beat-curve` | 12 节拍全片情绪张力量化 + 可视化曲线 |
-| 空间 | `spatial-topview-camera` | 2x2 顶视图机位调度（CAM1~4）+ 180° 轴线 |
+| 空间 | `spatial-topview-camera` | 顶视图机位调度（CAM1~4）+ 180° 轴线——**S4 复杂战斗 / 超复杂群像才启用**；日常走一行式【站位声明】+ S0~S4 分级 |
 | 分镜 | `action-previs-15grid` | 15 秒打戏完播潜力评分 + R1/R2/R3 三档 + 11 环动力链 |
 | 分镜 | `xuanhuan-magic-combat` | **玄幻法术战斗（R3专用）**：法宝/五行术法/术法攻防/能量具象/对军清场 |
 | 分镜 | `combat-direction-engine` / `combat-rhythm-defense3state` / `camera-specs-15rules` | 武打导演引擎 / 机枪节奏防守三态 / 镜头规格 15 铁律 |
 | 分镜 | `wenxi-micro-expression` | 文戏情绪六阶段 + 对白保护 |
-| 表演 | `★ facs-micro-expression` / `facs-au-dictionary` / `facs-emotion-recipes` | **FACS 微表情引擎**：表情 AU 化（四区拆解/强度三档/真假笑铁律）+ AU 完整字典 + 情绪→AU 配方库（增强模块·按需触发）（增强模块·按需触发） |
+| 表演 | `★ facs-micro-expression` / `facs-au-dictionary` / `facs-emotion-recipes` | **FACS 微表情引擎**：表情 AU 化（四区拆解/强度三档/真假笑铁律）+ AU 完整字典 + 情绪→AU 配方库（增强模块·按需触发） |
 | 武学 | `martial-arts-combat-library` / `martial-arts-arsenal` / `authentic-martial-taxonomy` | 23 门武学 + 9 套剑法 + 兵器 + 轻功 + 11 环杀招 |
 | 衔接 | `camera-transitions-6types` | 三手法六式镜头衔接 |
-| 渲染 | `seedance-render-engine` | 三层解耦提示词模板（16:9 / 9:16，Seedance 2.5 / Seedance 2.0 强制二选一） |
+| 渲染 | `seedance-render-engine` | 时长预算（单组 ≤15s，Seedance 2.5 官方上限 30s）+ 三层解耦；**主格式为七段式**（唯一权威定义见 `model-adapters.md` §5），画幅按 B 锁回填，Seedance 2.5 / Seedance 2.0 强制二选一 |
 | 适配 | `model-adapters` / `comfyui-canvas-automation` | 闭源模型参数适配 + Canvas/API 工作流对接 |
 | 合规 | `platform-safety-compliance-guide` | 安全风控转译词典（降低风险，不承诺 100% 通过） |
 | 质检 | `quality-gate-review` | P0/P1/P2 独立门禁 + 声音相对电平 + **改动后复验铁律（三步闭环 + 改动复验报告）** |
