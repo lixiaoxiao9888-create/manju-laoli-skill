@@ -3,7 +3,15 @@
 > 品牌：漫剧老李 AIGC 全流程 Skill
 > 技术标识：short-drama-director
 
-> 🗄️ **LEGACY/HISTORY 声明（V6.8）**：本文件为历史版本沿革记录，仅作查阅；历史条目中的旧口径（三视图/旧格式/可灵等）一律不得作为 CURRENT 规则调用，当前唯一口径以 `SKILL.md` + `README.md` 为准。
+> 🗄️ **LEGACY/HISTORY 声明（V6.8）**：本文件为历史版本沿革记录，仅作查阅；历史条目中的旧口径（三视图/旧格式/可灵/「台词或音效走后期配音」等）一律不得作为 CURRENT 规则调用，当前唯一口径以 `SKILL.md` + `README.md` 为准。
+
+## 2026-09-16 · 台词/音效默认视频内出（废除「走后期配音」默认）
+
+> 用户令：**除非用户明确指定"不出台词"，台词必须在视频里出**——删除 skill 内 "台词/音效走后期配音" 作为默认规则的口径。
+
+- **新增加铁律 F（SKILL.md 〇节，与 D/E 同级）**：台词与人声音效默认写入提示词、由视频模型在成片内生成——2.5 用官方 `{}` 台词字符 / `<>` 音效、`[SFX:]`；2.0 以文字描述写入镜行 `声音：/台词：` 栏由模型生成；**仅用户明确逐次指定「不出台词/走后期」才降级后期配音**。
+- **同步修订 6 文件**：`SKILL.md`（2.0 投喂封装差异+特性行+铁律 F）、`references/model-adapters.md`（对照表音效/台词行+【音效】段+镜行尾缀说明）、`references/seedance-render-engine.md`（台词警示+音效时间线节+模板音效行）、`references/★ prompt-feeding-checklist.md`（Step 3 镜行尾缀+Step 5 版本二择一）、`scripts/validate_prompt.py`（C5 文案+自测样例 2 处）。
+- **机检确认**：`validate_prompt.py --self-test` PASSED；全包扫描无 CURRENT 文件残留旧口径（CHANGELOG 历史条目仅查阅不作数）。
 
 ## 2026-09-15 · V6.8 稿件级机检门禁 validate_prompt.py（出稿门）
 
