@@ -1,0 +1,35 @@
+{
+  "format": "minimax-h3-director-pack",
+  "formatVersion": 1,
+  "taskType": "r2v",
+  "widgets": {
+    "steps": 8,
+    "sampler": "res_multistep",
+    "scheduler": "simple",
+    "cfg": 1,
+    "shift_video": 12,
+    "shift_audio": 3,
+    "seed": 666,
+    "task_type": "r2v — 参考主体生视频(Reference to Video)"
+  },
+  "output": {
+    "mode": "fixed",
+    "aspectRatio": "9:16 (竖屏)",
+    "megapixels": 0.8,
+    "multiple": 32,
+    "longEdge": 1216,
+    "width": 672,
+    "height": 1216,
+    "maxExportFrames": 0,
+    "exportMode": "segments",
+    "audioMode": "generate",
+    "exportSourceImages": false,
+    "exportPreFaceRefine": false,
+    "refImageSize": "match",
+    "continuityEnabled": false,
+    "continuityOverlapFrames": 22,
+    "continuityMode": "guide",
+    "continuityRedraw": 0.1,
+    "continuityKeepTail": true
+  }
+}

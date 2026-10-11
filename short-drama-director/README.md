@@ -1,4 +1,7 @@
-# 漫剧老李 AIGC 创作全流程 Skill · V6.9.8 轻量版（Short-Drama Director Suite）
+# 漫剧老李 AIGC 创作全流程 Skill · V7.2（Short-Drama Director Suite）
+
+> **当前版本 V7.2（2026-10-11）**：H3 生产线（`references/h3-production-playbook.md`）＋ P5 专业剪辑包装（`references/pro-editing-packaging.md`：字幕、配乐卡点、人声原速、人名条、AI 漫画冲击帧、裸眼 3D 破框）＋ 参考音频锁音色 ＋ 导演台整集导入包；机检 C1~C20 / H1~H22。下文为历史版本说明，以 `SKILL.md` 与 `CHANGELOG.md` 为准。
+
 
 面向 **AIGC 视听创作** 的工业级全流程创作技能包，供 AI 助手 / LLM 调用——从创意立项、剧本、资产、分镜到视频模型投喂提示词与独立质检。
 典型场景为 AI 短剧 / 漫剧 / 短视频剧集；管线与题材解耦，同样适用于 AI 广告片 / 宣传片、分镜预演（PREVIS）、武打动作设计、微表情专项等一切需要跨镜头一致性的 AIGC 视频生产。

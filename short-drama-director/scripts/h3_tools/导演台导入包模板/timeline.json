@@ -1,0 +1,146 @@
+{
+  "version": 5,
+  "editMode": "segment",
+  "totalFrames": 1448,
+  "frameRate": 24,
+  "video": {
+    "fileName": "",
+    "videoFile": "",
+    "subfolder": "",
+    "type": "input",
+    "frames": [],
+    "frameMap": [],
+    "sourceFrameCount": 734,
+    "deletedSourceRanges": []
+  },
+  "videoClips": [],
+  "global": {
+    "taskType": "r2v — 参考主体生视频(Reference to Video)",
+    "prompt": "",
+    "refs": [],
+    "referenceVideo": {
+      "videoFile": "",
+      "fileName": "",
+      "type": "input",
+      "subfolder": ""
+    },
+    "continuousReference": false,
+    "genImage": {
+      "imageFile": ""
+    },
+    "sourceWidth": 768,
+    "sourceHeight": 1024,
+    "refAudios": [],
+    "commonEnabled": false,
+    "commonCollapsed": true,
+    "refVideos": []
+  },
+  "output": {
+    "mode": "fixed",
+    "aspectRatio": "9:16 (竖屏)",
+    "megapixels": 0.8,
+    "multiple": 32,
+    "longEdge": 1216,
+    "width": 672,
+    "height": 1216,
+    "maxExportFrames": 0,
+    "exportMode": "segments",
+    "audioMode": "generate",
+    "exportSourceImages": false,
+    "exportPreFaceRefine": false,
+    "refImageSize": "match",
+    "continuityEnabled": false,
+    "continuityOverlapFrames": 22,
+    "continuityMode": "guide",
+    "continuityRedraw": 0.1,
+    "continuityKeepTail": true
+  },
+  "runSelectEnabled": true,
+  "runSelection": [
+    3
+  ],
+  "segments": [
+    {
+      "id": "muxxzj48nvgxy",
+      "start": 0,
+      "length": 362,
+      "frameCount": 362,
+      "durationSec": 15,
+      "prompt": "",
+      "negativePrompt": "",
+      "taskType": "",
+      "refs": [],
+      "refAudios": [],
+      "refVideos": [],
+      "genImage": {
+        "imageFile": "",
+        "fileName": ""
+      },
+      "startImage": null,
+      "endImage": null,
+      "continuityFromPrev": false,
+      "refImageSize": "match",
+      "loras": []
+    }
+  ],
+  "timelineMode": "prompt_batch",
+  "width": 672,
+  "height": 1216,
+  "refMaxSize": 1216,
+  "gen": {
+    "defaultFrameCount": 124
+  },
+  "keyframes": [],
+  "durationSec": 20,
+  "shots": [],
+  "liveTaePreview": true,
+  "batchDetailMode": "solo",
+  "batchWorkspaces": {
+    "r2v": {
+      "selectedIndex": 0,
+      "editMode": "segment",
+      "runSelectEnabled": true,
+      "runSelection": [
+        3
+      ],
+      "segments": [
+        {
+          "id": "muxxzj48nvgxy",
+          "start": 0,
+          "length": 362,
+          "frameCount": 362,
+          "durationSec": 15,
+          "prompt": "",
+          "negativePrompt": "",
+          "taskType": "",
+          "refs": [],
+          "refAudios": [],
+          "refVideos": [],
+          "genImage": {
+            "imageFile": "",
+            "fileName": ""
+          },
+          "continuityFromPrev": false,
+          "refImageSize": "match",
+          "loras": [],
+          "referenceVideo": {
+            "videoFile": "",
+            "fileName": "",
+            "type": "input",
+            "subfolder": ""
+          },
+          "_videoFrameCount": 362,
+          "previewFps": 24
+        }
+      ],
+      "globalCommon": {
+        "commonEnabled": false,
+        "commonCollapsed": true,
+        "prompt": "",
+        "refs": [],
+        "refAudios": [],
+        "refVideos": []
+      }
+    }
+  }
+}

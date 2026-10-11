@@ -38,7 +38,8 @@ def check(name, cond, detail=""):
 skill = read("SKILL.md")
 check("SKILL.md frontmatter name", "name: short-drama-director" in skill)
 refs = [f for f in os.listdir(os.path.join(BASE, "references")) if f.endswith(".md")]
-check("references 规则库完整（41 份）", len(refs) == 41, f"实际 {len(refs)} 份")
+check("references 规则库完整（45 份：V6.9.8 的 41 份 + h3-production-playbook / post-production-jianying / h3-combat-contact-review / pro-editing-packaging）", len(refs) == 45, f"实际 {len(refs)} 份")
+check("V7.2 SKILL 挂线 pro-editing-packaging 与新工具", all(x in skill for x in ("pro-editing-packaging.md", "人名条.py", "冲击帧特效.py", "裸眼3D.py", "导演台导入包.py", "人声定位.py", "精剪方案生成_示例.py")))
 
 # ---------- ① 可灵残留 ----------
 KLING_OK = re.compile(r"LEGACY|不再|已移除|历史|移除可灵|去可灵")
@@ -332,8 +333,8 @@ check("⑱ h3-adapter 含素材上限（9 图/3 视频/3 音频/总 12）",
       "≤9 张" in h3 and "总数 ≤12" in h3 and "不能作为唯一输入" in h3)
 check("⑱ h3-adapter 含 9 张取材策略与两套投喂载荷",
       "9 张取材策略" in h3 and "h3_context_ir" in h3 and "conditions" in h3)
-check("⑱ h3-adapter 含 H1~H12 机检与真人脸红线澄清",
-      "H1~H12" in h3 and "H3 官方没有这条" in h3)
+check("⑱ h3-adapter 含 H1~H16 机检与真人脸红线澄清",
+      ("H1~H16" in h3 or "H1~H12" in h3) and "H3 官方没有这条" in h3)
 check("⑱ h3-adapter 含语气位继承（法则 19 对齐）",
       "语气位必须继承" in h3 and "语气词禁写进画面段" in h3)
 check("⑱ h3-adapter 含摆位必入画继承（法则 20 对齐）",
@@ -349,6 +350,20 @@ check("⑱ SKILL 指令路由挂线 /H3提示词", "/H3提示词" in skill)
 check("⑱ SKILL 架构树挂线 h3-adapter + 41 份", "h3-adapter.md" in skill and "41 份" in skill)
 check("⑱ model-adapters 含 §二 H3 特性行与 §三 第 8 条",
       "MiniMax H3**（格式支线）" in ma and "A 锁选 MiniMax H3 时另加" in ma)
+# ⑲ V7.0：H3 生产线 + P5 后期
+_ref = lambda n: open(os.path.join(BASE, "references", n), encoding="utf-8").read() if os.path.exists(os.path.join(BASE, "references", n)) else ""
+pb = _ref("h3-production-playbook.md")
+check("⑲ h3-production-playbook 含分镜弱参考与九格动作过程", "weak_reference" in pb and "九格" in pb)
+check("⑲ h3-production-playbook 含运动量≈10 与禁静止蓄力/慢镜", "运动量≈10" in pb and "hit-stop" in pb)
+check("⑲ post-production-jianying 存在且挂线工具", "动作剪辑.py" in _ref("post-production-jianying.md"))
+for _t in ("动态检测.py", "动作剪辑.py", "生成剪映草稿.py", "拼接草稿.py", "合成音效.py", "合成配乐.py",
+           "合成音效v2.py", "渲染整集.py", "H3提示词构建器.py"):
+    check(f"⑲ scripts/h3_tools/{_t} 存在", os.path.exists(os.path.join(BASE, "scripts", "h3_tools", _t)))
+check("⑲ SKILL 挂线 V7.0 新文件", all(x in skill for x in ("h3-production-playbook.md", "post-production-jianying.md", "h3_tools")))
+check("⑲ validate_prompt 含 H13~H16", all(f"H1{k}" in vp_src for k in (3, 4, 5, 6)))
+# ⑳ V7.1：H3 实战修订（官方逐格映射分镜 / 剧本结构清单 / H17~H20）
+check("⑳ playbook V7.1 含剧本结构清单与官方逐格映射", "剧本结构清单" in pb and "corresponds to Panel" in pb)
+check("⑳ validate_prompt 含 H17~H20", all(x in vp_src for x in ("H17", "H18", "H19", "H20")))
 check("⑱ README 含 H3 支线能力行与 41 份规则库",
       "h3-adapter" in readme and "41 个专业规则库" in readme)
 if os.path.exists(vp):
