@@ -24,27 +24,56 @@ except ImportError:
     print("    （不影响包内其余机检与投喂链路——情绪曲线为可选交付物，节拍数据仍可按 12 节拍手写进投喂稿）")
     sys.exit(2)
 
-# ── 中文字体检测与配置（macOS/常见 Linux 路径回退）──
+# ── 中文字体检测与配置（Windows / macOS / Linux 三平台回退 · 2026-10-11 Windows 修复）──
 def _setup_cjk_font():
-    """为 matplotlib 配置可用的中文字体，避免图形中文变方块。"""
+    """为 matplotlib 配置可用的中文字体，避免图形中文变方块（全平台版）。"""
+    from matplotlib import font_manager
+
     candidates = [
-        "/System/Library/Fonts/Hiragino Sans GB.ttc",   # macOS
-        "/System/Library/Fonts/STHeiti Light.ttc",       # macOS
-        "/System/Library/Fonts/Supplemental/Songti.ttc", # macOS
-        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",  # Linux
-        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",          # Linux
+        # Windows（C:/Windows/Fonts）
+        "C:/Windows/Fonts/msyh.ttc",     # 微软雅黑
+        "C:/Windows/Fonts/simhei.ttf",   # 黑体
+        "C:/Windows/Fonts/simsun.ttc",   # 宋体
+        "C:/Windows/Fonts/Deng.ttf",     # 等线
+        # macOS
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/System/Library/Fonts/STHeiti Light.ttc",
+        "/System/Library/Fonts/Supplemental/Songti.ttc",
+        "/System/Library/Fonts/PingFang.ttc",
+        # Linux
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
     ]
     for path in candidates:
-        if os.path.exists(path):
-            try:
-                from matplotlib import font_manager
-                font_manager.fontManager.addfont(path)
-                name = font_manager.FontProperties(fname=path).get_name()
-                matplotlib.rcParams["font.family"] = name
-                matplotlib.rcParams["axes.unicode_minus"] = False
-                return name
-            except Exception:
-                continue
+        if not os.path.exists(path):
+            continue
+        try:
+            font_manager.fontManager.addfont(path)
+            name = font_manager.FontProperties(fname=path).get_name()
+            matplotlib.rcParams["font.family"] = name
+            matplotlib.rcParams["axes.unicode_minus"] = False
+            return name
+        except Exception:
+            continue
+
+    # 兜底：按常见中文字体名扫描系统已装字体（matplotlib 自带索引）
+    wanted = ["Microsoft YaHei", "SimHei", "SimSun", "DengXian",
+              "PingFang SC", "Hiragino Sans GB", "Songti SC",
+              "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei"]
+    try:
+        installed = {f.name for f in font_manager.fontManager.ttflist}
+    except Exception:
+        installed = set()
+    for name in wanted:
+        if name in installed:
+            matplotlib.rcParams["font.family"] = name
+            matplotlib.rcParams["axes.unicode_minus"] = False
+            return name
+
+    print("[!] 未找到可用中文字体：图中中文可能显示为方块。")
+    print("    Windows：请确认 C:/Windows/Fonts/msyh.ttc（微软雅黑）存在；")
+    print("    Linux：可安装 fonts-noto-cjk 或 wqy-microhei 后重试。")
     return None
 
 _setup_cjk_font()
