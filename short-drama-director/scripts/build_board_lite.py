@@ -20,7 +20,7 @@
     ## P1 · 视听圣经      ← 可选表格或正文
     ## P2 · 资产清单      ← 表格: 编码 | 名字 | 视图 | @图片N
     ## P2.5 · 资产出图提示词
-    ### CHR-001 · 林越 · 主角 4 View 资产板
+    ### CHR-001 · 林越 · 主角角色基准图
     ```text 出图提示词 ```
     ## P4 · 投喂提示词    ← 分镜提示词（与 ⑤ 必同板呈现）
     ### 段1
@@ -420,7 +420,7 @@ def parse_md(md_text: str) -> dict:
             if _missing_fp:
                 data["warnings"].append({
                     "seg": 0, "lvl": "WARN", "code": "K-lite-4b",
-                    "msg": f"K-lite-4b 资产「{_it.get('code') or _it.get('name', '')}」出图提示词疑似简笔空壳（仅 {len(_bd)} 字或未落权威模板指纹）——须按 sd-asset-engine 权威模板写满（角色四格无脸+声纹锚 / 场景母版+九宫格8字段 / 道具4格）"
+                    "msg": f"K-lite-4b 资产「{_it.get('code') or _it.get('name', '')}」出图提示词疑似简笔空壳（仅 {len(_bd)} 字或未落权威模板指纹）——须按 sd-asset-engine 权威模板写满（角色四字段模板 / 场景母版+九宫格8字段 / 道具4格）"
                 })
     if data["meta"]["画幅"] == "未锁定":
         data["warnings"].append({"seg": 0, "msg": "未声明【画幅】——B 锁未锁定（用户未指定 ≠ 默认 9:16）"})

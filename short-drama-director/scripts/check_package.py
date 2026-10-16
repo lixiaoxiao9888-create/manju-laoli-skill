@@ -303,16 +303,9 @@ check("① 可灵不作为正式支持模型（仅 LEGACY/移除声明行可提�
 check("① model-adapters 含可灵 LEGACY 声明",
       "LEGACY·可灵 (Kling)" in read(os.path.join(refs_dir, "model-adapters.md")))
 
-VIEW_OK = re.compile(r"LEGACY|旧称|旧「|历史")
-_bad_view = []
-for p in scan_rule_docs():
-    for i, line in enumerate(read(p).splitlines(), 1):
-        if "三视图" in line and not VIEW_OK.search(line):
-            _bad_view.append(f"{rel(p)}:{i}")
-check("② CURRENT 角色资产标准仅 4 View（三视图仅存于 LEGACY 说明行）", not _bad_view,
-      "; ".join(_bad_view[:5]))
 asl = read(os.path.join(refs_dir, "asset-spatial-ledger.md"))
-check("② asset-spatial-ledger 定义 4 View 资产参考图", "4 View 资产参考图" in asl)
+check("② CURRENT 角色提示词标准采用四字段模板",
+      all(k in asl for k in ("画幅", "排版结构", "服装与身体材质", "面部特写")))
 
 _ban = [l for l in "\n".join(read(p) for p in scan_rule_docs()).splitlines()
         if re.search(r"八段式|六栏|九栏", l) and not re.search(r"禁|别名", l)]
@@ -707,9 +700,10 @@ check("㉚ 九宫格模板含模式B 锁定档拆分（允许切换子区域机�
 check("㉚ 九宫格模板已与总控 asset-spatial-ledger §四 双向接线（母版 / 站位版 / 出图顺序）",
       "asset-spatial-ledger.md" in _grid and "母版" in _grid and "站位版" in _grid and "出图顺序" in _grid)
 
-check("㉚ 立绘模板含 4 View + 五官 + Voice Description 两档（完整版不进图 / 速览标签入图）",
-      "4 View" in _port and "五官" in _port and "Voice Description" in _port
-      and "不进图" in _port)
+check("㉚ 角色提示词权威模板明确四字段与五官描述",
+      all(k in read(os.path.join(PKG, "short-drama-director", "references", "asset-spatial-ledger.md"))
+          for k in ("画幅", "排版结构", "服装与身体材质", "面部特写"))
+      and "五官 10 项" in read(os.path.join(PKG, "short-drama-director", "references", "asset-spatial-ledger.md")))
 check("㉚ 立绘模板含「禁止持道具 / 禁止 pose」硬条",
       "手持" in _port and "pose" in _port and "禁止" in _port)
 check("㉚ 道具模板含「纯道具 + 禁止出现手/人物剪影」硬条",
@@ -1530,87 +1524,16 @@ check("㊵ M1 出图三件套 互锁②：子技能形态自检含出图提示�
 check("㊵ M1 出图三件套 互锁③：纪律源文件 §4.4 存在且子技能引用",
       "出图提示词配套纪律" in _e12_ade and "asset-delivery-modes.md" in _e12_sa)
 
-# --- ㊶ 单一面部锚点 + 全身完整性（2026-10-09 粉丝反馈 · 四互锁）
-#     2026-10-10 口径修正：旧「无头」废弃（砍头致头身比失真）→ 现行「无脸全身」 ---
-# 病灶：总控早已定「无脸全身三联 + 唯一 Face Close-up」，但子技能执行模板写的是
-#       「正面/侧面/背面」未标去脸、旧版主图只到膝盖以上 → 出的图里有 4~5 张清晰脸 + 主图没鞋。
+# --- ㊶ 角色独立建档与四字段模板（用户明确覆盖旧角色板规则）
 _e12_cpt = read(os.path.join(PKG, "sd-asset-engine", "references", "character-portrait-templates.md"))
 _e12_asl = read(os.path.join(refs_dir, "asset-spatial-ledger.md"))
-check("㊶ 面部锚点 互锁①：立绘模板含 §七 专节（无脸定义 + 保头去五官 + 禁字面马赛克 / 废无头）",
-      "## 七、角色资产板图面规则" in _e12_cpt and "Face-Anchor Uniqueness" in _e12_cpt
-      and "无脸" in _e12_cpt and "mosaic" in _e12_cpt and "头身比" in _e12_cpt)
-check("㊶ 面部锚点 互锁②：子技能 SKILL.md 有规则条 + 自检钩子（入口可见）",
-      "单一面部锚点" in _e12_sa and "character-portrait-templates.md` §七" in _e12_sa
-      and "形态自检⑥" in _e12_sa and "无脸" in _e12_sa)
-check("㊶ 面部锚点 互锁③：总控权威 §二 4View 块含面部锚点纪律 + 全身完整性 + 无脸口径",
-      "面部锚点纪律" in _e12_asl and "全身完整性" in _e12_asl
-      and "全图唯一允许渲染清晰五官" in _e12_asl and "无脸" in _e12_asl)
-check("㊶ 面部锚点 互锁④：交付配套纪律 §4.4 人物行点名锚点 + 含鞋含头",
-      "单一面部锚点" in _e12_ade and "完整全身头顶至鞋" in _e12_ade and "无脸" in _e12_ade)
-check("㊶ 全身完整性防回归：全身格口径已是「完整全身头顶至鞋」（旧「65%-75%」中景口径须清零）",
-      "85%-95%" in _e12_cpt and "65%-75%" not in _e12_cpt and "头顶至鞋" in _e12_cpt)
-check("㊶ 无脸口径防回归：现行写法须为「无脸全身」，旧「无头全身三联」写法须清零",
-      "无脸全身" in _e12_cpt and "四格纯图设定板" in _e12_asl
-      and "无头全身三联" not in _e12_cpt and "无头全身三联" not in _e12_asl)
-# 2026-10-10 第二轮：除图底音色外零文字 + 只出四格（粉丝反馈：图上字太多且乱码 / 三个特写不需要）
-# 2026-10-10 第四轮修正：音色口径翻转 —— 音色英文「必须入图（渲染于图底部）」，其余文字仍禁止
-# 2026-10-12 第五轮修正（B 方案）：图底改为「声纹锚（波形·非文字）+ ≤8 词速览标签（唯一入图文字）」，
-#            完整版 Voice Description 转纯文本「不进图」——治长英文崩字 / 被模糊 / 被判成字幕水印
-check("㊶ 零文字 互锁①：立绘模板有「除音色外零文字」专条 + 负向词含 text/watermark",
-      "除音色外零文字" in _e12_cpt and "watermark" in _e12_cpt
-      and "不得出现任何文字" in _e12_cpt)
-check("㊶ 零文字 互锁②：子技能 SKILL.md 有「除图底音色外零文字」硬性纪律条",
-      "除图底音色外零文字" in _e12_sa and "图上文字只有一处" in _e12_sa)
-check("㊶ 零文字 互锁③：总控 §二 四格纯图条含「除图底声纹锚」+「图面纪律」",
-      "四格纯图" in _e12_asl and "除图底声纹锚" in _e12_asl)
-check("㊶ 音色入图 互锁①：模板音色为「必须入图 · 渲染于图底部」、旧「禁止入图」须清零",
-      "必须入图" in _e12_cpt and "渲染于图底部" in _e12_cpt
-      and "纯文本交付 · 禁止入图" not in _e12_cpt
-      and "Voice Description 禁止入图" not in _e12_cpt
-      and "Voice Description 禁止入图" not in _e12_sa)
-check("㊶ 音色入图 互锁②：模板 §七 明确「图底音色速览标签 = 唯一入图文字」且 7.10 保留该指令句",
-      "唯一入图文字" in _e12_cpt and "图底部必须标注以下英文音色速览标签" in _e12_cpt
-      and "Voice Description Label 速览标签（进图" in _e12_cpt)
 _e12_ade = read(os.path.join(refs_dir, "asset-delivery-modes.md"))
-check("㊶ 音色入图 互锁③：总控 §二 ★条含「图底音色速览标签必须入图」+「第四轮修正」",
-      "图底音色速览标签必须入图" in _e12_asl and "第四轮修正" in _e12_asl
-      and "渲染于图底部" in _e12_ade)
-# 2026-10-12 第五轮新增：声纹锚（波形·非文字）四处互锁
-#   动机：用户实测证据 —— 豆包/即梦走图生视频时，资产图底部声纹波形条可作视觉一致性锚；
-#   且完整长英文易崩字/被模糊。故底部 = 波形（兜一致性）+ ≤8 词标签（兜可读性）。
-#   ⚠️ 只宣称「视觉锚 + 工作流标记」，不宣称「能锁声线」（未获证据，不符图生视频 conditioning 方式）。
-check("㊶ 声纹锚 互锁①：立绘模板图底细节条 = 声纹波形（非文字·不占入图文字名额）+ ≤8 词速览标签",
-      "声纹波形" in _e12_cpt and "不占「唯一入图文字」名额" in _e12_cpt
-      and "第五轮修正" in _e12_cpt)
-check("㊶ 声纹锚 互锁②：子技能 SKILL.md 形态自检⑥ 含 (h) 声纹锚条 + 术语正名",
-      "声纹锚" in _e12_sa and "不宣称能锁声线" in _e12_sa and "术语正名" in _e12_sa)
-check("㊶ 声纹锚 互锁③：总控 §二 图面纪律条含「声纹波形」+「不占入图文字名额」",
-      "声纹波形" in _e12_asl and "不占入图文字名额" in _e12_asl)
-check("㊶ 声纹锚 互锁④：交付配套纪律 §4.4 人物行含「声纹波形锚」且完整版标「不进图」",
-      "声纹波形锚" in _e12_ade and "不进图" in _e12_ade)
-check("㊶ 只出四格 互锁①：模板落位表已收敛为四格、三类特写取消且明确写出",
-      "只出四格" in _e12_cpt and "三类特写已全部取消" in _e12_cpt)
-check("㊶ 只出四格 互锁②：旧「膝盖以下至鞋」**图格**口径须清零（只允许出现在「已取消」说明里，阈值 ≤8）",
-      _e12_cpt.count("膝盖以下至鞋") <= 8
-      and "三类特写已全部取消" in _e12_cpt)
-# 2026-10-12 第六轮修正：废「主图 + 四格板」并列写法
-#   病灶（用户实测）：骨架同时含「主图」与「四格纯图板」→ 模型按 1 主图 + 4 格 = 5 格输出（正面被画两次）
-#   现行写法 = 显式总数声明「全图共 4 格」，且负向词须含防重复正面项
-check("㊶ 四格总数 互锁①：立绘模板骨架含「全图共 4 格」总数声明 + 禁重复正面负向词",
-      "全图共 4 格" in _e12_cpt and "不设独立大主图" in _e12_cpt
-      and "duplicate front view panel" in _e12_cpt)
-check("㊶ 四格总数 互锁②：子技能 SKILL.md 亦含「全图共 4 格」+ 点明「主图 + 四格板」病灶",
-      "全图共 4 格" in _e12_sa and "主图 + 四格板" in _e12_sa)
-check("㊶ 四格总数 互锁③：总控 §二 含「全图共 4 格」+「不设独立大主图」+「任一视角不得重复」",
-      "全图共 4 格" in _e12_asl and "不设独立大主图" in _e12_asl
-      and "任一视角不得重复" in _e12_asl)
-# 2026-10-10 第三轮补：防过度外推——「零文字 + 只出四格」只管角色资产板，不得蔓延到道具/场景
-_e12_prop = read(os.path.join(PKG, "sd-asset-engine", "references", "prop-template.md"))
-check("㊶ 防过度外推 互锁①：模板 §7.11 边界表已登记「道具设定图」行 + 显式免责段",
-      "道具设定图" in _e12_cpt and "不要过度外推" in _e12_cpt
-      and "只适用于角色四格纯图板" in _e12_cpt)
-check("㊶ 防过度外推 互锁②：道具模板仍保留「左上角标注」法定写法（未被零文字误删）",
-      "左上角标注" in _e12_prop and "关键细节特写" in _e12_prop)
+_e12_ce = read(os.path.join(refs_dir, "character-extraction.md"))
+check("㊶ 角色提示词互锁：四字段模板与独立建档规则在权威文件中明确",
+      all(x in _e12_asl for x in ("画幅", "排版结构", "服装与身体材质", "面部特写"))
+      and "不做亲缘视觉推导" in _e12_ce
+      and "四字段模板" in _e12_ade)
+
 # 2026-10-12 第七轮修正：道具模板补总数声明（与「主图 + 四格板」**同源病灶**）
 #   病灶：§二 只写「道具三视角图 + 关键细节特写」→ **无总数声明**，模型可出成 3 格 / 4 格 / 散图 / 5 格
 #   现行写法 = 显式总数声明「全图共 4 格」+「不设独立大主图 / 不得出现第 5 格」+ 防重复负向词

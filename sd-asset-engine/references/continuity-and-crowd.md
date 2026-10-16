@@ -155,7 +155,7 @@
 | 机制 | 关系 |
 |---|---|
 | `short-drama-director/references/asset-spatial-ledger.md`（总控） | **互补**：该文件是空间台账，本文件是**跨段使用的连续性规则** |
-| `short-drama-director/references/character-lineage-and-sheets.md`（总控） | 本文件引用其「图N」台账结构 |
+| `short-drama-director/references/production-ledger-handbook.md`（总控） | 本文件引用其「图N」台账结构；角色全集与归并另见 `character-extraction.md` |
 | `sd-feed-engine/references/asset-mapping-and-rules.md` | 本文件产出的"限制字段"由投喂引擎消费 |
 | `sd-storyboard-engine/references/segment-linkage.md` §一 D2/D3 | **同源**：分镜层的道具朝向/单实例锁，与本文件是"资产侧定义 + 分镜侧执行"的关系 |
 

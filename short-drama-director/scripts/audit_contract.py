@@ -5,7 +5,7 @@ audit_contract.py — 漫剧老李 Short-Drama Director Suite 全流程交付契
 
 专治外部 Agent 三大通病（2026-10-14 实测根因封堵）：
   1. 「拿 validate_prompt.py 机检全绿当任务完成」——只写 P4 投喂稿，漏掉 P0B 情绪锚点表、P1 表演档案/世界锚/人物锚、P3 场面调度/故事板图、P5 连续性台账/素材接线单；
-  2. 「按当下最小口径糊弄过关，不按权威源落字」——P2/P2.5 资产提示词写成几行简笔摘要（未回 sd-asset-engine 三大模板落 4 格无脸立绘 / 母版+九宫格 8 字段 / 道具 4 格板），I 锁美学短语凭常识手搓（未回 style-bible 取 72 卡正主短语与 11 槽位）；
+  2. 「按当下最小口径糊弄过关，不按权威源落字」——P2/P2.5 资产提示词写成几行简笔摘要（未回角色四字段模板 / 场景母版+九宫格 8 字段 / 道具模板），I 锁美学短语凭常识手搓（未回 style-bible 取 72 卡正主短语与 11 槽位）；
   3. 「你抓一次我修一次，挤牙膏式被动返工」——开工前不建契约清单，交付前不逐项核销。
 
 修复记录（2026-10-14 · 实测《北境隐王》回归发现）：
@@ -61,8 +61,8 @@ CONTRACT_ITEMS_FULL = [
      "每位主要角色一份：含内在驱动引擎 + Voice Lock 英文声线标签 + 习惯动作账本 + 眼神生命 + 「然而，当…」破功句"),
     ("CT2-P2L", "P2 资产三清单与状态汇总表", "sd-asset-engine/references/three-list-extraction.md",
      "文档A 角色清单 / 文档B 道具清单 / 文档C 场景清单 + Step 3.5 素材清单状态汇总表"),
-    ("CT2-CHR", "P2 角色四格无脸立绘提示词（防简笔糊弄）", "sd-asset-engine/references/character-portrait-templates.md",
-     "每角色必含：全图共 4 格 + ①面部特写唯一清晰脸 + ②③④无脸全身(featureless face,含头含鞋) + 身份外观三件套 + 五官10项锁定 + 图底声纹锚 + Voice Description 英文标签 + 负向词"),
+    ("CT2-CHR", "P2 角色独立建档与四字段提示词（防简笔糊弄）", "short-drama-director/references/character-extraction.md + asset-spatial-ledger.md",
+     "角色身份与出场证据可追溯；角色提示词采用画幅/排版结构/服装与身体材质/面部特写四字段；五官10项与服装6项写入描述；不要求亲缘推导、声纹图或音色标签"),
     ("CT2-SCN", "P2 场景母版 + 3×3 九宫格 8 字段提示词（防简笔糊弄）", "sd-asset-engine/references/scene-grid-template.md + asset-spatial-ledger.md §四",
      "必含：场景空间事实五件事(坐标系/SET_STATE/空气介质/尺度/年代锚) + ① 16:9 无人场景母版 + ② 3×3 九宫格完整 8 字段(含摄影机矩阵与标注降级条款)"),
     ("CT2-PRP", "P2 道具四格设定图提示词（防简笔糊弄）", "sd-asset-engine/references/prop-template.md",
@@ -157,19 +157,13 @@ def audit_markdown(text, mode="auto", director=None):
     # 与 CHR 检查原有的双变体口径对齐（SCN/PRP 此前只认单一带空格写法，口径不一）。
     _tn = re.sub(r"[\s\u3000]+", "", text)
     _tnl = _tn.lower()
-    has_chr_template = (
-        "全图共4格" in _tn
-        and ("无脸全身" in _tn or "featurelessface" in _tnl)
-        and "五官10项" in _tn
-        and ("voicedescription" in _tnl or "图底音色速览标签" in _tn)
-    )
+    has_chr_template = all(x in _tn for x in ("画幅", "排版结构", "服装与身体材质", "面部特写")) and "五官10项" in _tn
     if has_chr_template:
-        passed.append("CT2-CHR 角色四格无脸立绘提示词已按 sd-asset-engine 权威模板展开（含4格/无脸全身/五官10项/声纹与Voice标签）")
+        passed.append("CT2-CHR 角色提示词采用四字段模板（含五官10项描述）")
     else:
         issues.append(
-            "CT2-CHR 角色资产提示词未按权威模板展开（疑似简笔糊弄版！）——必须回读 "
-            "`sd-asset-engine/references/character-portrait-templates.md`，写出「全图共 4 格 + ①面部特写唯一清晰脸 + "
-            "②③④无脸全身(featureless face,含头含鞋) + 身份外观三件套 + 五官10项锁定 + 图底声纹锚 + Voice Description 英文标签 + 负向词」"
+            "CT2-CHR 角色资产提示词未按当前四字段模板展开——须包含「画幅、排版结构、服装与身体材质、面部特写」，并将五官10项写入描述；"
+            "不得把亲缘推导、四格板、声纹图或音色标签列为必需项。权威见 asset-spatial-ledger.md 与 character-extraction.md"
         )
 
     has_scn_template = (
@@ -279,7 +273,7 @@ def _self_test():
     compliant_sample = (
         "素材形态：M1\n情绪锚点表 E04 80%\n世界锚卡 人物锚卡 身份外观三件套\n"
         "角色表演主档案 然而，当\n"
-        "全图共 4 格 无脸全身 featureless face 五官 10 项 Voice Description\n"
+        "画幅 排版结构 服装与身体材质 面部特写 五官10项 服装6项\n"
         "场景母版 九宫格摄影机矩阵 3×3 九宫格 参考场景锁定模式 标注降级条款\n"
         "道具设定图 正面视图 45° 侧视图 俯视图 禁止手持\n"
         "场景坐标系 权力几何 故事板图 面板 1 图形化交付清单\n"
