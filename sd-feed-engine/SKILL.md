@@ -115,6 +115,7 @@ version: "7.4.26"
 | `references/engineering-language-cleanup.md` | 工程语言→画面语言对照表 + 摄影机行为六要素 + 风格/色彩/负面词翻译 + 光影冲突融合 + 表演拆微动作 + 人群/道具/角度图三易错点 + 官方符号规范 + **§十一 分镜层专用字段剥离（状态栏/重音/台词精简清单/故事板面板号与出口帧/卡ID）** | 清洗分镜稿语言时；封装投喂前必过 §十一 |
 | 总控 `short-drama-director/references/style-bible/`（引用不重定义） | I 画风锁知识库：`style-prefix-blocks.md`（段8/9 成品块，本层逐字取用）/ `director-param-library.md`（11 槽位参数源）/ `style-bible-spec.md`（交付规范与 C23 判据速查）/ `examples/`（成稿示例） | 画风锁选卡后的段8/9 植入时 |
 | `scripts/gate_check.py` | **六道闸门机器化校验器**（含闸门 0 结构完整性自检：`【】`配对/台词行收尾/镜号连续/必备字段；**闸门 6 含素材形态一致性**；**闸门 5 按模型分档：2.5→30 / 2.0→9 / h3→9**）：`python gate_check.py <投喂稿.md> [--model 2.5\|2.0\|h3] [--assets N] [--img-limit N] [--mode M0\|M1\|M2] [--tol 0.8]` | 步骤 8 过闸门时（每次投喂转换必跑） |
+| `scripts/check_action_chain.py` | **动作链时长门（C-act）**：逐镜动作拍×物理速度（肢体 0.6s/位移 1.2s/转场 1.5s/表情 0.3s）与台词并行模型（max+0.35×min）对照镜长，比率 >1.5 FAIL／>1.1 WARN——治「9 个动作拍塞 4 秒」类动作缩水（**无台词镜是语速机检盲区，本门与闸门2 并列互备：闸门2 管嘴、本门管手脚**）。规则详见 `references/action-chain-duration-gate.md` | 每次投喂转换时与 gate_check.py 并列必跑 |
 | `scripts/script_feed_diff.py` | **台词完整性对照器**（上游分镜稿 ↔ 投喂稿逐句核对，4-gram 覆盖率）：`python script_feed_diff.py --script <上游.md> --feed <投喂稿.md>` | 步骤 7 台词对照时（每次投喂转换必跑） |
 
 ## 七、快速调用语
