@@ -255,6 +255,18 @@ def parse_md(md_text: str) -> dict:
                 ap = None
             continue
 
+        # ★P9 修：七段式的画幅写在【画幅风格】**行内**且不带冒号，形如
+        #   `【画幅风格】16:9 横屏，…（aspect_ratio=16:9）`。
+        #   FIELD_RE 要求 `】:` 故永远匹配不到 → B 锁对外回显「未锁定」，
+        #   与稿内已锁定的事实矛盾（看板是交付物，这个失真会直接误导人）。
+        m_aspect = re.match(r"^【画幅风格】\s*(.+)$", s)
+        if m_aspect and data["meta"]["画幅"] == "未锁定":
+            _body = m_aspect.group(1)
+            _m = (re.search(r"aspect_ratio\s*=\s*(\d{1,2}\s*[:：]\s*\d{1,2})", _body)
+                  or re.search(r"(\d{1,2}\s*[:：]\s*\d{1,2})", _body))
+            if _m:
+                data["meta"]["画幅"] = re.sub(r"\s", "", _m.group(1)).replace("：", ":")
+
         fm_meta = FIELD_RE.match(s)
         if fm_meta:
             key, val = fm_meta.group(1), fm_meta.group(2).strip()
@@ -337,6 +349,20 @@ def parse_md(md_text: str) -> dict:
     flush_tbl()
     flush_plain()
 
+    # ★P9 修（B 锁失真）：七段式的画幅写在【画幅风格】**行内**且不带冒号，
+    #   形如 `【画幅风格】16:9 横屏，…（aspect_ratio=16:9）`。
+    #   而该行位于 ```text 围栏内，主循环遇到围栏体会直接 continue，
+    #   FIELD_RE 又要求 `】:` —— 两道都过不去 → 画幅永远「未锁定」，
+    #   看板对外回显与稿内已锁定的事实矛盾。故在全文层面单独扫一次。
+    if data["meta"]["画幅"] == "未锁定":
+        for _mf in re.finditer(r"^【画幅风格】\s*(.+)$", md_text, re.M):
+            _body = _mf.group(1)
+            _m = (re.search(r"aspect_ratio\s*=\s*(\d{1,2}\s*[:：]\s*\d{1,2})", _body)
+                  or re.search(r"(\d{1,2}\s*[:：]\s*\d{1,2})", _body))
+            if _m:
+                data["meta"]["画幅"] = re.sub(r"\s", "", _m.group(1)).replace("：", ":")
+                break
+
     # 围栏原文归属：段 / 资产出图
     parts = re.split(r"^#{2,4}\s+", md_text, flags=re.M)
     def fence_of(body):
@@ -404,7 +430,11 @@ def parse_md(md_text: str) -> dict:
             data["warnings"].append({"seg": 0, "msg": f"资产出图提示词 {ap['code']} 未找到 ```text 围栏原文"})
     if not data["segments"]:
         data["warnings"].append({"seg": 0, "msg": "全档未解析到「### 段N」分镜段——请检查标题契约"})
-    if not data["asset_prompts"]:
+    # ★P9：M0/M1/M2 形态下资产另册交付，稿内本就没有 P2.5 章节——
+    #   只要稿内写了「资产另册：…」声明，缺 P2.5 就是**合法形态**，不是漏写，不该报。
+    #   否则纯投喂稿永远带一条假 WARN，看板一开就"飘红"。
+    _asset_by_book = bool(re.search(r"资产另册\s*[:：]", md_text))
+    if not data["asset_prompts"] and not _asset_by_book:
         data["warnings"].append({"seg": 0,
             "msg": "未解析到「## P2.5 · 资产出图提示词」——⑤ 资产出图提示词与 ③ 分镜投喂提示词必须同板呈现（K-lite-4）"})
     else:
@@ -890,6 +920,10 @@ def main():
     ap.add_argument("--export-srt", default=None, help="同时导出 .srt 字幕文件")
     ap.add_argument("--export-csv", default=None, help="同时导出剪辑时间线 .csv 文件")
     ap.add_argument("--export-json", default=None, help="同时导出结构化 API 载荷 .json 文件")
+    # ★P9：A 锁（模型）在 P0 阶段由用户选定，七段式稿内通常不写；看板作为回显面
+    #   需要能承接外部传入，否则永远报「A 锁未锁定」，与已锁定的事实矛盾。
+    ap.add_argument("--model", default=None, help="A 锁模型版本（2.5 / 2.0），稿内未写时用于回显")
+    ap.add_argument("--aspect", default=None, help="B 锁画幅（9:16 / 16:9 / 21:9），稿内未写时用于回显")
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
     if a.self_test:
@@ -902,6 +936,13 @@ def main():
         print(f"[X] 源文件不存在：{src}")
         sys.exit(1)
     data = parse_md(src.read_text(encoding="utf-8"))
+    # 外部传入的 A/B 锁参数只在稿内未声明时兜底（稿内声明优先，绝不覆盖稿内事实）
+    if a.model and data["meta"]["模型版本"] == "未锁定":
+        data["meta"]["模型版本"] = str(a.model)
+        data["warnings"] = [w for w in data["warnings"] if "未声明【模型版本】" not in w["msg"]]
+    if a.aspect and data["meta"]["画幅"] == "未锁定":
+        data["meta"]["画幅"] = str(a.aspect).replace("：", ":")
+        data["warnings"] = [w for w in data["warnings"] if "未声明【画幅】" not in w["msg"]]
     out = Path(a.out) if a.out else src.with_name(src.stem + "_分镜看板.html")
     out.write_text(build_html(data), encoding="utf-8")
     n_shots = sum(len(s["shots"]) for s in data["segments"])

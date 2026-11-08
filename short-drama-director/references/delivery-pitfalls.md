@@ -129,7 +129,7 @@
 **硬规则**：
 - **凡一稿含 ≥2 段，一律加 `--by-segment`**：
   ```
-  python scripts/validate_prompt.py <交付稿.md> --model 2.5 --track 1 --by-segment
+  python scripts/validate_prompt.py <交付稿.md> --model 2.5 --by-segment
   ```
 - 该模式按「段N/M」标题切段，逐段独立跑判据，输出带 `[段N]` 前缀，末尾给「段数3（分单元校验）」。
 - 整份模式仍保留用途：**资产契约（C31/CT2）与结构指纹按全文核销**。
@@ -178,7 +178,7 @@
 ## 七、交付前验收（照这个顺序跑）
 
 1. `python scripts/check_asset_blocks.py <交付稿.md>` → **FAIL 必须清零**（跨条引用 / 格数 / 字段 / 道具）。
-2. `python scripts/validate_prompt.py <交付稿.md> --model 2.5 --track 1 --by-segment` → **FAIL 清零**；WARN 逐条判「真缺陷」还是「口径误报」，真缺陷改稿、误报写理由。
+2. `python scripts/validate_prompt.py <交付稿.md> --model 2.5 --by-segment` → **FAIL 清零**；WARN 逐条判「真缺陷」还是「口径误报」，真缺陷改稿、误报写理由。
 3. `python scripts/audit_contract.py <交付稿.md>` → 契约件核销（内部件缺失属预期，须能指出它在内部档案的哪一部分）。
 4. 人眼过三件事：**件数 ≤3**、**正文只有两样（资产提示词 + 分镜提示词）**、**每条提示词单拎出来能独立使用**。
 5. 命名检查：目录/文件/标题全中文，无 `EP0xx` 类代号。

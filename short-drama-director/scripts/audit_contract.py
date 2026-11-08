@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-audit_contract.py — 漫剧老李 Short-Drama Director Suite 全流程交付契约与权威源核销器 (V7.4.26)
+audit_contract.py — 漫剧老李 Short-Drama Director Suite 全流程交付契约与权威源核销器 (V7.5.0-SLIM · 沿革见 CHANGELOG)
 
 专治外部 Agent 三大通病（2026-10-14 实测根因封堵）：
   1. 「拿 validate_prompt.py 机检全绿当任务完成」——只写 P4 投喂稿，漏掉 P0B 情绪锚点表、P1 表演档案/世界锚/人物锚、P3 场面调度/故事板图、P5 连续性台账/素材接线单；
@@ -49,8 +49,8 @@ CANONICAL_DIRECTOR_CARDS = {
 }
 
 CONTRACT_ITEMS_FULL = [
-    ("CT1-P0A", "P0A 前置六道锁基准表", "short-drama-director/SKILL.md §〇",
-     "含 〇·0 赛道 / 〇·1 素材来源 / A 模型 / B 画幅 / C 交付 / D 段缝 / I 画风锁 / M 素材形态"),
+    ("CT1-P0A", "P0A 前置五道锁基准表", "short-drama-director/SKILL.md §〇",
+     "含 〇·1 素材来源 / A 模型 / B 画幅 / C 交付 / D 段缝 / I 画风锁 / M 素材形态"),
     ("CT1-P0B", "P0B 导演决策《情绪锚点表》", "sd-decision-engine/references/emotion-anchor-table.md + forbidden-zone-whitelist.md",
      "含 情境 ID (E01~E15) + 80/15/5 机位组合锁 + 构图雷区 A 类解锁 / B 类规避"),
     ("CT1-P1A", "P1 《世界锚卡》与《人物锚卡》", "sd-script-engine/references/story-bible-and-ip.md §1.11",
@@ -122,6 +122,16 @@ def print_init_checklist(mode="full", director=None, delivery=None):
             print(f"- 请运行 `python3 short-drama-director/scripts/style-lock-recommend.py` 或查阅 `director-style-catalog-74.md` 提取 `{director}` 的正主槽位。")
 
 
+# ★P2 补丁：投喂单元默认也要带资产提示词（SKILL L141「md 正文只放两样：资产提示词 + 分镜提示词」）。
+#   只有在主稿显式声明"资产已另册"时才免核 CT2——否则"另册"和"根本没写"在文字上无法区分。
+ASSET_ELSEWHERE_RE = re.compile(
+    r"资产另册|资产提示词见|资产提示词分|人物立绘提示词|场景提示词\.md|人物与场景提示词")
+
+
+def _asset_elsewhere(text):
+    return bool(ASSET_ELSEWHERE_RE.search(text or ""))
+
+
 def audit_markdown(text, mode="auto", director=None, delivery=None):
     """仅检查结构指纹；不证明内容正确、逐项完整或语义核销。"""
     if delivery not in (None, "full-project", "agent-bundle", "feed-only"):
@@ -188,6 +198,7 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
             "CT2-CHR 角色资产提示词未按权威模板展开（疑似简笔糊弄版！）——必须回读 "
             "`sd-asset-engine/references/character-portrait-templates.md`，写出「全图共 4 格 + ①面部特写唯一清晰脸 + "
             "②③④无脸全身(featureless face,含头含鞋) + 身份外观三件套 + 五官10项锁定 + 图底声纹锚 + Voice Description 英文标签 + 负向词」"
+            "；若资产已拆册交付，请在本稿写明「资产另册：{文件名}」"
         )
 
     has_scn_template = (
@@ -202,6 +213,7 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
             "CT2-SCN 场景资产提示词未按权威模板展开（疑似简笔糊弄版！）——必须回读 "
             "`sd-asset-engine/references/scene-grid-template.md` 与 `asset-spatial-ledger.md §四`，"
             "同时产出「① 16:9 无人场景母版」与「② 3×3 九宫格完整 8 字段（含【九宫格摄影机矩阵】、【参考场景锁定模式】、标注降级条款）」"
+            "；若资产已拆册交付，请在本稿写明「资产另册：{文件名}」"
         )
 
     has_prp_template = (
@@ -215,6 +227,7 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
         issues.append(
             "CT2-PRP 道具资产提示词未按权威模板展开（疑似简笔糊弄版或缺失！）——必须回读 "
             "`sd-asset-engine/references/prop-template.md`，写出「全图共 4 格（①正面视图/②45°侧视图/③顶部俯视图/④关键细节特写）+ 禁止手持展示 + negative prompt」"
+            "；若资产已拆册交付，请在本稿写明「资产另册：{文件名}」"
         )
 
     # 3. CT3: Style-Bible canonical verification
@@ -272,7 +285,16 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
         _ns45 = set(re.findall(r"@([^\s@（）()【】，、；;：:]+)", _blk45))
         if len(_ns45) >= 3:
             _p45_names.add(frozenset(_ns45))
-    _p45_scns = set(re.findall(r"@//scn/\s*-\s*([^（(；;\n]+)", text))
+    # ★P4：场景识别不再只认 `@//scn/ - ` 前缀。
+    #   `@//scn/` 仅在平台真挂载了 chr/scn/prp 资产文件夹时使用；未挂载（资产还是
+    #   md 待出图）时，投喂稿写「场景名（图N / 图M）」纯图号双挂形态——旧正则对后者
+    #   返回空集，「跨 N 个场景」触发器静默失效（2026-10-22 实测：《三天》3 个场景
+    #   识别为 0，全靠「≥3 人同框」另一条触发兜着，2 人 2 场景剧本会整条漏杀）。
+    #   场景 = 双挂（母版 + 九宫格），道具 = 单挂，故按「（图N / 图M）」判场景。
+    _p45_scns = set(re.findall(r"@//scn/\s*-\s*([^（(；;\n]+)", text))  # 旧语法兼容
+    for _sblk45 in re.findall(r"【场景资产】[：:]?([^\n]+)", text):
+        for _sn45 in re.findall(r"([^；;。，、\n]+?)（图\s*\d+\s*/\s*图\s*\d+", _sblk45):
+            _p45_scns.add(_sn45.strip())
     _p45_crossseg = text.count("【画幅风格】")
     _p45_hit = []
     if _p45_names:
@@ -312,6 +334,10 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
         prefixes = ("CT5-", "CT6-WIR")   # CT5- 前缀已含 CT5-P4F 与 CT5-P45
         if delivery == "agent-bundle":
             prefixes += ("CT2-", "CT3-")
+        elif not _asset_elsewhere(text):
+            # ★P2：投喂单元的正文按 SKILL L141 必须含资产提示词；未声明"资产另册"就照核 CT2。
+            #   旧行为把 CT2 一并过滤 → 「只交投喂稿」永远 PASS（2026-10-22 实测漏出资产层）。
+            prefixes += ("CT2-",)
         issues = [item for item in issues if item.startswith(prefixes)]
         warns = [item for item in warns if item.startswith(prefixes)]
         passed = [item for item in passed if item.startswith(prefixes)]
@@ -392,7 +418,8 @@ def main():
     if args.delivery is None and (txt.count("【画幅风格】") >= 2) and not re.search(
             r"资产提示词|角色四格板|场景母版|九宫格提示词", txt):
         args.delivery = "feed-only"
-        print("[i] 识别为「投喂单元」（≥2 组七段式、无资产模板段）→ 按 feed-only 核销（只核 CT5-/CT6-WIR）；"
+        print("[i] 识别为「投喂单元」（≥2 组七段式、无资产模板段）→ 按 feed-only 核销（核 CT5-/CT6-WIR + 资产 CT2-*）；"
+              "若资产已拆册交付，请在稿内写明「资产另册：{文件名}」以豁免 CT2；"
               "要做全项目核销请显式加 --delivery full-project")
     issues, warns, passed = audit_markdown(txt, mode=args.mode, director=args.director, delivery=args.delivery)
     print(f"=== 📋 全流程交付契约核销报告 ({os.path.basename(args.file)} | mode={args.mode}) ===")

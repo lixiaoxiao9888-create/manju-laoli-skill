@@ -56,17 +56,21 @@ class StabilityTests(unittest.TestCase):
         ]:
             with self.subTest(tail=tail, dialogue=dialogue):
                 self.path.write_text('素材形态：M0\n' + self.unit(dialogue=dialogue, tail=tail), encoding='utf-8')
-                _, out = self.cli(gate, [str(self.path), '--tol', '0'])
+                _, out = self.cli(gate, [str(self.path), '--tol', '0', '--syntax', 'off'])
                 self.assertEqual('真念不完' in out, overload)
 
     def test_global_ids(self):
+        # P14：闸门0 的「七段缺栏 / 接续状态残留」已移交 C 系，本层只留【】配对与镜号连续；
+        #   用例走 --syntax off，专测本层镜号判据（否则夹具缺【音效】栏会被 C7 判 FAIL，测不到镜号）。
         for first, second, valid in [(7, 8, True), (1, 1, True), (7, 9, False), (7, 7, False)]:
             self.path.write_text('素材形态：M0\n' + self.unit(first) + self.unit(second), encoding='utf-8')
-            code, out = self.cli(gate, [str(self.path)])
+            code, out = self.cli(gate, [str(self.path), '--syntax', 'off'])
             self.assertEqual(code == 0, valid, out)
 
     def test_scopes(self):
-        feed = 'M0\n【时间轴分镜】【站位声明】'
+        # ★P2 口径：feed-only 不再无条件豁免 CT2——只交投喂稿必须在稿内声明「资产另册」，
+        #   否则按「资产缺失」FAIL。故夹具须带上该声明（2026-10-23 体检修：本用例曾因此长期红灯）。
+        feed = 'M0\n资产另册：三天_资产提示词.md\n【时间轴分镜】【站位声明】'
         self.assertFalse(audit.audit_markdown(feed, delivery='feed-only')[0])
         self.assertTrue(audit.audit_markdown(feed, delivery='full-project')[0])
         self.assertTrue(audit.audit_markdown(feed, delivery='agent-bundle')[0])
@@ -79,7 +83,8 @@ class StabilityTests(unittest.TestCase):
             audit.audit_markdown(feed, delivery='typo')
 
     def test_render_parity(self):
-        self.path.write_text('M0\n【时间轴分镜】【站位声明】', encoding='utf-8')
+        # 同 test_scopes：feed-only 需声明资产另册（P2 口径），否则 CT2 FAIL 导致期望值失效
+        self.path.write_text('M0\n资产另册：三天_资产提示词.md\n【时间轴分镜】【站位声明】', encoding='utf-8')
         cases = [([], [], 0), (['--contract'], [], 1),
                  (['--delivery', 'feed-only'], [], 0),
                  (['--delivery', 'full-project'], [], 1),

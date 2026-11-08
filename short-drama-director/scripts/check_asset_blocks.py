@@ -36,7 +36,7 @@ import os
 import re
 import sys
 
-BLOCK_RE = re.compile(r"^#{2,6}\s*\*{0,2}\s*图\s*(\d+)\s*[*]{0,2}\s*[·:：\-—]?\s*(.*)$", re.M)
+BLOCK_RE = re.compile(r"^#{1,6}\s*\*{0,2}\s*图\s*(\d+)\s*[*]{0,2}\s*[·:：\-—]?\s*(.*)$", re.M)
 HEAD_RE = re.compile(r"^(#{1,6})\s", re.M)
 
 # 跨条引用：单条提示词复制出去即断
@@ -179,8 +179,53 @@ def check_block(number, title, body, kind):
     return errors, warns
 
 
+def self_test():
+    """内置正反例（★P9 补：本脚本此前是全包唯一没有 --self-test 的门禁脚本，
+    按惯例跑 `--self-test` 会掉进「无文件名 → 打印说明」分支，看起来像"不支持"，
+    实际是**根本没实现**——自检三件套在这里少了一件，包级自检也发现不了。）"""
+    ok = True
+
+    # 1) classify 四类判定顺序（道具必须先于角色，否则四格道具被当角色要五官/声纹）
+    cases = [
+        ("图1 · 道具·旧怀表（道具设定图）", "全图共 4 格，①正面视图…禁止手持展示", "道具"),
+        ("图2 · 场景·堂屋（场景母版）", "16:9 无人场景母版…", "场景母版"),
+        ("图3 · 林风（角色四格立绘）", "全图共 4 格，①面部特写…五官…声纹…", "角色"),
+        ("图4 · 堂屋九宫格", "全图共 9 格，九宫格摄影机矩阵…", "九宫格"),
+    ]
+    for title, body, want in cases:
+        got = classify(title, body)
+        if got != want:
+            print(f"FAIL self-test: classify「{title[:20]}」应判 {want}，实判 {got}")
+            ok = False
+
+    # 2) 跨条引用必须被抓（单条复制出去就是残缺指令）
+    _e, _w = check_block(1, "图1 · 林风（角色四格立绘）",
+                         "全图共 4 格，同规格见图2，①面部特写…五官…声纹…", "角色")
+    if not any("跨条引用" in x or "同图" in x or "见母版" in x for x in _e):
+        print("FAIL self-test: 跨条引用「同规格见图2」应报错", _e)
+        ok = False
+
+    # 3) 角色同时写「立绘/全身完整入画」+「四格」→ 模型做加法出 5 格，必须拦
+    _e2, _w2 = check_block(2, "图2 · 陈枭（角色四格立绘）",
+                           "全图共 4 格，全身完整入画，①面部特写…五官…声纹…", "角色")
+    if not _e2:
+        print("FAIL self-test: 「四格 + 全身完整入画」应报错（会出成 5 格）")
+        ok = False
+
+    # 4) 九宫格缺三字段 → 必须报
+    _e3, _w3 = check_block(4, "图4 · 堂屋九宫格", "全图共 9 格，随便画九张", "九宫格")
+    if not _e3:
+        print("FAIL self-test: 九宫格缺【场景定位】等字段应报错")
+        ok = False
+
+    print("[+] check_asset_blocks self-test", "PASSED" if ok else "FAILED")
+    return 0 if ok else 1
+
+
 def main():
     argv = sys.argv[1:]
+    if "--self-test" in argv:
+        sys.exit(self_test())
     files = [a for a in argv if not a.startswith("-")]
     if not files:
         print(__doc__)
@@ -205,7 +250,12 @@ def main():
 
     blocks = split_blocks(text)
     if not blocks:
-        print("[!] 未识别到任何「图N」资产块——请确认块标题形如 `#### 图1 · 场景名（母版）`")
+        # ★P2：零资产块是**硬失败**，不是提示。旧文案只有一行「[!] 未识别到…」，
+        #   读起来像"没东西可查"而不是"该有的东西没有"，实测被当成通过放行过。
+        print("[-] FAIL: A0 零资产块——本稿一个「图N」资产提示词都没有。")
+        print("    若这本来只该是投喂稿，请确认资产是否已另册交付，并在主稿写明「资产另册：{文件名}」；")
+        print("    若资产根本没写，先回 P2 补齐（角色四格立绘 / 场景母版+九宫格 / 道具四格板），再进 P3。")
+        print("    块标题形如 `## 图1 · 场景名（场景母版）`，1~6 级标题均可。")
         sys.exit(1)
 
     errors, warns, stats = [], [], {}
@@ -220,7 +270,7 @@ def main():
         print(f"[{'x' if block_errors else '+'}] 图{number:<3} {kind:<5} {state}  {title[:40]}")
 
     if len(blocks) < min_blocks:
-        warns.append(f"A8 资产块仅 {len(blocks)} 个，少于预期 {min_blocks} 个——核对是否有漏出的资产")
+        warns.append(f"A8 资产块仅 {len(blocks)} 个，少于预期 {min_blocks} 个——若本册是单场景/单角色分册可忽略；若是全集资产册，核对是否有漏出的资产")
 
     print("[i] 分类统计：" + " · ".join(f"{k}{v}" for k, v in sorted(stats.items())))
     for warning in warns:

@@ -136,8 +136,6 @@
 ② 精简标签（**进图 · 渲染于图底部 · 唯一入图文字**）：
 Voice Description Label: 〔音高/质感/情绪核心词，≤8词，如：deep, gravelly, feigned-weak voice, sharp eyes〕
 
-**填充示例（师傅·玄天宗掌门）：**
-① 完整版：A gravelly, lazy middle-aged male voice, medium pitch, with a slow drawl and variable tempo (slows down when feigning wisdom, speeds up when excited or caught off guard). Tone is often wise-cracking and theatrical, but can switch to a sincere or commanding register when needed. Ideal for short drama dubbing.
 
 **执行规则：**
 1. 每个角色立绘提示词按①②两项输出，缺一不可；图面另加**③ 声纹波形锚**（非文字）。
@@ -199,7 +197,6 @@ Voice Description Label: 〔音高/质感/情绪核心词，≤8词，如：deep
 | **⑦ 鞋袜** | 鞋型、材质、颜色；袜子款式（若可见） | 黑色粗布鞋，鞋面磨损露白，无袜 |
 | **⑧ 造型专属配饰** | 与服装搭配的穿戴物（围巾/斗篷/帽子/手套/护腕等），非固定角色配饰 | 头顶破毡帽，颈间围脏灰布巾 |
 
-**服装提示词填写示例（钱多多·B整洁造型）：**
 
 ```
 ① 服装整体类型：圆领长袍，内搭白色中衣，外罩青色长衫
@@ -236,13 +233,7 @@ Voice Description Label: 〔音高/质感/情绪核心词，≤8词，如：deep
 - 人物立绘（沿用已有）：`沿用第〔X〕集参考图，无需重新生成`
 - 多造型人物：每套造型单独占一行，内容栏写明`〔角色名〕·A〔造型A名称〕`、`〔角色名〕·B〔造型B名称〕`
 
-示例行：
 
-| 序号 | 图号 | 素材类型 | 内容 | 状态 | 备注 |
-|------|------|----------|------|------|------|
-| 3 | 图3 | 人物立绘 | 团团（与第1集服装一致） | ⏳待生成 | 完整音色文本交付；四格纯图板 + 声纹锚 + 音色速览标签 |
-| 6 | 图6 | 人物立绘 | 太监（若第5集已有参考图可沿用） | 🔄沿用已有 | 沿用第5集参考图；音色见文本 |
-| 7 | 图7 | 人物立绘 | 村妇（战天娇·新埋F9，本集新增造型） | ⏳待生成 | 完整音色文本交付；四格纯图板 + 声纹锚 + 音色速览标签 |
 
 ---
 

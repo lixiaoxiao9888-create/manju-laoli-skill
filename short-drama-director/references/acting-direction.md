@@ -251,6 +251,16 @@
 - **强者静而轻，弱者忙而吵**：危险不靠危险的人演，靠**周围所有人的紧张**演。**威胁不做铺垫**：没有威慑性停顿、没有慢镜转身——真实世界里，暴力不打招呼就到。
 - **磨损要累积**：一个角色在全片里被磨，就**累加地写在身体上**——更灰、更沉、反应更慢，**不要在场景之间重置**。
 
+> **★ 落地缺口与补齐（2026-10-24 P7）**：本节五条原则（波不成排 / 反应比动作值钱 / 威胁来临全体冻结 / 位移有动机 / 强者静弱者忙）
+> **此前只实现了反面**——机检 `C25b` 禁同步反应词（众人同时/齐声/异口同声/不约而同），
+> **正面从未落地**：没有任何一条规则要求背景人**必须有事务**。禁止同步 ≠ 让人有事做。
+> **禁止一群人"齐动"，不等于允许一群人"齐不动"**——后者正是用户实测的僵尸群像。
+> 本节原则的**投喂层翻译 + 机检载体**（正面）已由
+> **`short-drama-director/references/crowd-behavior-direction.md`** 承接：
+> 「常态是人群微动」→ §四 ①全员事务态；「反应成波不成排」→ §四 ②最多 1~2 人先反应 + 0.3~0.5 秒秒差；
+> 「威胁来临全体冻结」→ §四 ③全体停手（每段至多一次）；④各自恢复。机检 **C40**（条件触发）。
+> §4.2 的 Business（身体任务）是**单个角色**的业务；群像版业务在该文件 §三·1。
+
 ---
 
 ## 十一·补、 解剖级微表情目录 · 台词三拍呼吸 · 焦外听者错峰（2026-10-14 粉丝 shotlist-builder 吸收）
@@ -338,7 +348,7 @@
 |---|---|---|
 | **P1 · 视听圣经** | 为每个主要角色写**《角色表演档案》**（§六 模板，180~280 字/人，一段散文） | **不进投喂正文**，只作 P3/P4 的改写依据 |
 | **P3 · 分镜** | 每场写**节拍表**（2~4 拍：目标 → 障碍 → 战术 → 转折）；把行为落进镜行（Business / 距离变化 / 地位翻转 / 眼戏） | 行为写进**镜行动作段**，不新增栏位 |
-| **P4 · 投喂** | ①【核心人物】行尾补**声线锁**（≤1 句）；② 每场**压缩版表演句**（≤2 句，从档案改写而来，塞进首个该角色的镜行或其行内）；③ 语气位照常 | **严禁把整份档案粘进投喂**——**篇幅受 C3/闸门3 字数红线约束**（**按模型分档**：2.0 ≤1900 字 / 2000 硬上限；2.5 ≤2600 字 / 3000 硬上限） |
+| **P4 · 投喂** | ①【核心人物】行尾补**声线锁**（≤1 句）；② 每场**压缩版表演句**（≤2 句，从档案改写而来，塞进首个该角色的镜行或其行内）；③ 语气位照常 | **严禁把整份档案粘进投喂**——**篇幅受 C3/闸门3 字数红线约束**（**按模型分档**：2.0 ≤2900 字 / 3000 硬上限；2.5 ≤3600 字 / 4000 硬上限） |
 
 > ⚠️ **篇幅铁律（防撑爆字数门禁）**：档案是**全片资产**（P1 层，不进投喂）；投喂层只放**该场的压缩版**。**任何时候都不允许把 180~280 字的档案整段复制进投喂正文。**
 
@@ -359,34 +369,6 @@
 
 ---
 
-## 十七、 完整实战标准范例（VIKTOR 档案与车内戏改写全案 · 双语对照示范）
+## 十七、 完整实战改写流程（档案与车内戏改写全案）  ·  **（P14 已剔除示例内容）**  ·  **（P14 已剔除示例内容）**
 
-> 📌 **本案来源**：原版《ACTING SYSTEM》第 15、16 节官方标杆案例，展示从「角色主档案（是谁）」到「具体场景投喂（此刻）」的完整降维改写过程。
-
-### 17.1 角色表演主档案（Master Profile）
-
-**中文改写（P1 视听圣经事实来源）**：
-> 角色表演档案 · 维克托（VIKTOR）。60出头男性，退休夜班出租车司机，曾为业余拳击手；体格粗壮厚实，中段微发福，鼻梁平塌，双侧眉骨带有旧伤疤痕组织；无论坐立均保持极低、扎实的身体重心，重量始终稳稳压在整个脚掌上。他的内在心理引擎只有一条驱动力：数十年等待乘客、等待回合、等待麻烦的经历，让他把「耐心」磨成了最致命的武器。
-> 声音形象：低沉、沙哑、不疾不徐的男中音，带蓝领粗粝质感；短句输出，平淡节制；局势越凶险严肃，声线越慢、越轻——他绝不提高音量。
-> 标志习惯与动作：观察评估局势时，手指会漫不经心地在指节上翻滚一枚旧硬币；说「不」之前，必有一次缓慢、可听见的鼻吸气；当有人当着他的面撒谎时，他会完全静止，用长久的死寂施加压迫；他的日常面孔是一副眼皮沉重、看似厌倦的面具，用于掩盖全部注意力。
-> 眼神生命：沉重眼睑下的睡眼，眨眼缓慢刻意，视线持续无声地扫视后视镜、手部与出口——视线总是在头转动前半拍就已落在说话者身上；眼神光虽低但湿润有生命力。
-> 步态：沉重摇晃的「老拳击手步态」，步幅短而经济，双肩水平，双手放松戒备，从不匆忙。
-> 然而，当有人在他附近抬起手时，那副昏睡面具会在半秒内荡然无存：下颌骤然收紧，双手抬至半胸，双脚瞬间找到昔日拳台站位——随后他会意识到失态，尴尬地收起架势。
-> 软化目标：他的脸只有在看到流浪狗时才会真正变软，常从大衣口袋掏出碎肉喂食。
-
-**原版英文对照（用于出海与纯英文投喂）**：
-> Character acting as VIKTOR. Early 60s male, a retired night-shift taxi driver and former amateur boxer; heavy, thick-necked build gone soft at the middle, with a flat-nosed face and old scar tissue over both eyebrows; sits and stands with a low, grounded center of gravity, weight always on the whole foot. Runs on a single engine: decades of waiting — for fares, for rounds, for trouble — have made patience his weapon. Vocal profile: low, hoarse, unhurried baritone with a working-class rasp, short sentences delivered flat and economical, dropping to a slower, quieter register the more serious things get — he never speeds up. Key physical habits and tics: rolls an old coin across his knuckles when sizing a situation up; a slow, audible nose-breath before he says no; when lying is happening in front of him, he goes completely still and lets a long silence do the pressing; his default face is a heavy-lidded, bored mask that conceals total attention. Eye life: sleepy, hooded eyes with slow deliberate blinks and constant quiet scanning — mirrors, hands, exits — the gaze settling on a speaker a beat before his head turns; catchlights low but alive. Walking style: a heavy, rolling "old boxer's walk," short economical steps, shoulders level, hands loose and ready, never hurrying. However, when someone raises a hand near him, the sleepy mask vanishes in a half-second: the chin drops, the hands rise halfway, the feet find their old stance — then he catches himself and folds it away, embarrassed. His face only truly softens for stray dogs, which he feeds from his coat pocket.
-> Voice prompt: "A 60-year-old ex-boxer and night-cab driver, working-class city accent. Low, hoarse, unhurried baritone; short flat economical sentences with long comfortable pauses; calm and faintly amused, going quieter — never louder — as things get serious."
-
-### 17.2 场景改写实战（Scene Adaptation）
-
-**情境**：深夜停在路边的出租车内；后座一名慌乱的年轻乘客正在撒谎，称自己没带钱付车费。
-
-**中文投喂镜行描述（展示「档案如何被降维改写进此刻」）**：
-> 维克托（VIKTOR）在驾驶座上纹丝不动，体态厚重沉稳；他没有回头，而是通过后视镜审视后座乘客——沉重眼睑下的目光在后视镜、乘客双手与门锁之间以缓慢、安静的节奏来回扫视，眨眼极慢而克制，目光在头部有任何微动前就已牢牢咬死后视镜。指节上的一枚旧硬币在座椅扶手上漫不经心地翻滚，不急不躁；随着后座年轻人的谎言破绽百出，硬币在翻滚到一半时骤然停住——维克托任由死寂在车厢内蔓延施压，鼻腔发出一记缓慢、清晰可闻的深吸气，用沙哑平淡的男中音开口，声音比先前更平、更轻，语速没有丝毫加快。直到年轻人的声音带上哭腔破功时，维克托脸上的昏睡面具才松动了一分：一声长长的呼气，一次缓慢的眨眼，硬币在指节间重新转动起来——这是属于耐心的慈悲。
-
-**改写技法拆解（执行者必学）**：
-1. **转换而不是删除**：车内坐着，「老拳击手步态」物理上无法出现，但其内在稳重能量没有被删掉，而是改道为“后视镜静止审视”与“座椅上的硬币翻滚”；
-2. **小动作承载叙事标点**：翻滚的硬币“停在半空（interrupted action）”，把停顿当成了最重的一记标点符号；
-3. **眼戏死守铁律**：眼先于头转动，视线在后视镜、手与门锁之间扫视，眼神沉重但有活的眼神光；
-4. **声音与地位反差**：局势越紧，声音反而越轻、越平，不吼不躁，上位地位长在身体和沉静中。
+> 〔P14 · 案例示例已剔除：本节原附成稿示范，已整体移除。判据以本文件前述条文及对应机检项为准，不再提供可照抄范本。〕

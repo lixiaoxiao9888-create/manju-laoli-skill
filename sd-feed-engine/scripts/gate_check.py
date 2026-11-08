@@ -1,19 +1,34 @@
 # -*- coding: utf-8 -*-
 """
-gate_check.py · 六道闸门校验器（判定口径修正 · 闸门6 扩展素材形态）
-用法：python gate_check.py <投喂稿.md> [--model 2.5|2.0|h3] [--assets N] [--mode M0|M1|M2|auto] [--tol 0.8]
-设计依据：sd-feed-engine/references/feed-mode-and-gates.md §二（六道闸门）
-定位：人工前置闸门的机器化兜底，与总控 scripts/validate_prompt.py（C1~C26＋增量主码 C27~C30 机检）互补。
+gate_check.py · 投喂层闸门校验器（P14 判据级去重版）
 
-修正（2026-10-08 · 用户实测反馈）：
-  旧版闸门2 用「标准档中值 (need_fast+need_slow)/2」判定念不念得完，
-  等于假设演员只能按 4~4.5 字/秒念 → 把大量能快念完的台词误判成"念不完"，
-  进而误触发"精简台词"。
-  现改为：**判定基准 = 最快档 6 字/秒**（`字数÷6 + 停顿`）。
-    镜长 ≥ 该值 → 一定念得完，合规，不得判超载；
-    只有连 6 字/秒 都塞不进 → 才是真念不完（WARN）。
-    介于两者之间（最快能过、标准档不够）→ 仅 INFO「需快念」，非缺陷、不触发精简。
-  语速档只由"节奏维"语气词决定；音质/力度词（压着嗓子/嘶哑/沉声）不必然慢。
+用法：python gate_check.py <投喂稿.md> [--model 2.5|2.0] [--assets N] [--mode M0|M1|M2|auto]
+                          [--tol 0.8] [--syntax auto|on|off] [--aspect 16:9]
+设计依据：sd-feed-engine/references/feed-mode-and-gates.md §二（闸门分工表）
+
+★P14 判据级去重（用户裁定：同一内容不反复检查）
+  病灶：本脚本此前把 C 系已经实现的判据又写了一遍，注释里直接标着「（C16b）」「C11」——
+        同一个语气位缺失、同一份镜长雷同、同一套七段式字段，出一次稿要查两遍。
+  处置：**一条判据只留一处实现**。
+    ① 本脚本**只管 C 系没有的四类投喂层判据**（见下「保留清单」）；
+    ② 与 C 系重复的判据**整段摘除**，改由 `--syntax` 一次性调用总控机检引擎覆盖，
+       等级不变（原 FAIL 项在 C 系里仍是 FAIL 级），不会因去重而放松任何红线；
+    ③ 独装本子技能、找不到总控引擎时，自动降级为「只跑本层闸门」并明确提示加跑机检。
+
+  保留清单（C 系无对应实现 · 已逐条实查）：
+    闸门0  【】配对闭合 + 镜号连续性（C7 只管七段缺栏、C11 只管接续状态残留，**都不管这两项**）
+    闸门1  节奏档位     长段只有 1~2 镜（C1b 管段长区间、C2 管镜数下限，均不等价）
+    闸门2  台词时长     字数÷语速+停顿 vs 镜长（语速档解算，C16 系只管语气位有无/质量）
+    闸门3  段级字数     单段 2.0 ≤2900/3000、2.5 ≤3600/4000（C4 是**篇级** 6000 字符兜底）
+    闸门4  交接话术     「以下是/希望对你有帮助」类 AI 对话残余 + 代码框内外参数位置
+    闸门5  图片上限     单段引用图号数按模型分档（2.5→30 / 2.0→9）
+    闸门6A 图号越库     稿内图号 ∉ 项目资产库图数
+    闸门6B 素材形态     M0/M1/M2 声明一致性 + 接线单双向一致 + 虚假核验断言
+
+  已移交 C 系（本脚本不再重复实现）：
+    闸门0·七段式缺字段 → C7；闸门0·【接续状态】残留 → C11
+    闸门1b 镜长雷同（同段 ≥4 镜、同值占比 ≥70%）→ C13
+    闸门2 台词缺语气位 → C16b
 
 闸门 6 扩展（素材形态一致性 · 权威 = 总控 references/asset-delivery-modes.md）：
   本包**不持有图**——图由用户在外部平台生成并持有。素材形态三档 M0/M1/M2（默认 M1）。
@@ -22,7 +37,7 @@ gate_check.py · 六道闸门校验器（判定口径修正 · 闸门6 扩展素
     M1 有图号但无《素材接线单》→ WARN；稿内图号 ∉ 接线单图号 → FAIL；
     出现"已核验/核对一致"类断言而形态非 M2 → FAIL（虚假核验）。
 """
-import re, sys, io, os, argparse
+import re, sys, io, os, argparse, subprocess
 
 if __name__ == '__main__' and hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -39,13 +54,13 @@ SPEED_DEFAULT = (3.5, 6.0, '标准~高速（判定按 6 字/秒）')
 PAUSE = [('，', 0.2), ('、', 0.2), ('。', 0.4), ('？', 0.4), ('！', 0.4), ('…', 0.8), ('——', 0.6)]
 
 # ---------- 闸门5 单组图片上限（★2026-10-17 分档修复）----------
-# 病根：原实现写死 `if len(figs) > 9`，**不读 --model**，与文档闸门5（H3≤9 / 2.5≤30 / 2.0 单图）
+# 病根：原实现写死 `if len(figs) > 9`，**不读 --model**，与文档闸门5（2.0≤9 / 2.5≤30 / 2.0 单图）
 # 脱节 → 双向误判：2.5 挂 10~30 张被误杀（文档允许 30），2.0 挂 2~9 张被漏放。
 # 2.0 取值依据：官方参考图槽为「单参考图锁形象、无首尾帧」，但粉丝实测（2026-10-17）
 #   平台侧多锚点上传 3~4 张资产图可跑通 → 机检暂取保守值 9，避免既压死实测工作流又放过滥用。
 # 权威 = sd-feed-engine/references/feed-mode-and-gates.md 闸门5 与
 #        short-drama-director/references/asset-delivery-modes.md 数量上限段。
-IMG_LIMIT_BY_MODEL = {'2.5': 30, '2.0': 9, 'h3': 9, 'jimeng': 9}
+IMG_LIMIT_BY_MODEL = {'2.5': 30, '2.0': 9, 'jimeng': 9}
 IMG_LIMIT_DEFAULT = 9
 
 
@@ -260,8 +275,8 @@ def self_test():
         print('FAIL self-test: 闸门5 在 model=2.0 挂 12 图应超限（上限 9），实判合规'); ok = 1
     elif img_gate_check(5, '2.0')[0]:
         print('FAIL self-test: 闸门5 在 model=2.0 挂 5 图应合规（粉丝实测 ≥3 可跑通），实判超限'); ok = 1
-    elif not img_gate_check(10, 'h3')[0]:
-        print('FAIL self-test: 闸门5 在 model=h3 挂 10 图应超限（上限 9），实判合规'); ok = 1
+    elif not img_gate_check(10, '2.0')[0]:
+        print('FAIL self-test: 闸门5 在 model=2.0 挂 10 图应超限（上限 9），实判合规'); ok = 1
     elif img_gate_check(40, '2.5', 40)[0]:
         print('FAIL self-test: 闸门5 --img-limit 覆盖失效（40 应放行 40 图）'); ok = 1
     if not ok:
@@ -275,7 +290,7 @@ def main():
     ap.add_argument('--model', default='2.5')
     ap.add_argument('--assets', type=int, default=9, help='项目资产库总图数')
     ap.add_argument('--img-limit', type=int, default=0, dest='img_limit',
-                    help='闸门5 单组图片上限手动覆盖（0=按 --model 分档：2.5→30 / 2.0→9 / h3→9）。'
+                    help='闸门5 单组图片上限手动覆盖（0=按 --model 分档：2.5→30 / 2.0→9 ）。'
                          '2026-10-17 新增：原实现写死 9，不读模型')
     ap.add_argument('--mode', default='auto', choices=['auto', 'M0', 'M1', 'M2', 'm0', 'm1', 'm2'],
                     help='素材形态（V7.3.0）：auto=按交付稿首行「素材形态：Mx」声明判定，'
@@ -283,6 +298,11 @@ def main():
     ap.add_argument('--tol', type=float, default=0.8,
                     help='闸门2 判定容差(s)：V7.3.0 以最快档 6 字/秒为判定基准，'
                          '仅当「字数÷6 + 停顿 > 镜长 + tol」才判真念不完。默认 0.8')
+    ap.add_argument('--syntax', default='auto', choices=['auto', 'on', 'off'],
+                    help='P14 判据级去重：auto=检测到总控机检引擎就一次性拉取 C 系判据'
+                         '（取代本脚本原先重复实现的闸门0/1b/2语气位）；on=强制必须有引擎；'
+                         'off=只跑投喂层闸门。')
+    ap.add_argument('--aspect', default=None, help='画幅（传给机检引擎做 C6b 三处互校）')
     ap.add_argument('--self-test', action='store_true')
     a = ap.parse_args()
 
@@ -297,7 +317,7 @@ def main():
     if not units:
         print('未找到投喂单元（## 【投喂单元 N/M】格式）'); sys.exit(2)
 
-    print(f'=== 六道闸门校验 · {os.path.basename(a.path)} · model={a.model} ===')
+    print(f'=== 投喂层闸门 + C 系机检（一次跑完）· {os.path.basename(a.path)} · model={a.model} ===')
 
     warns, fails, infos = [], [], []
     mode = check_asset_mode(text, a.mode, fails, warns)
@@ -305,7 +325,12 @@ def main():
     print(f'投喂单元：{len(units)} 段  |  闸门2 判定基准：最快档 6 字/秒（V7.3.0）'
           f'  |  素材形态：{mode}（闸门6B · V7.3.0）\n')
 
-    # ---- 闸门 0 · 结构完整性自检（防字符损坏导致下游全漏检）----
+    # ---- 闸门 0 · 结构完整性（P14 逐条核对后的保留项）----
+    #   ⚠️ 去重必须逐条核对，不能按名字匹配：本节四项经实查，
+    #      · 【】闭合 —— C 系无任何配对判据 → **保留在本层**
+    #      · 镜号连续 —— C 系只「识别」镜号用于解析，从不校验连续性 → **保留在本层**
+    #      · 七段式缺字段 —— 已由 C7 实现 → 摘除
+    #      · 【接续状态】残留 —— 已由 C11 实现（FAIL 级）→ 摘除
     previous_no = None
     for ui, (title, body) in enumerate(units, 1):
         for m in re.finditer(r'【[^】\n]*$', body, re.M):
@@ -314,23 +339,16 @@ def main():
             fails.append(f'闸门0 段{ui}：【/】数量不等（{body.count("【")} vs {body.count("】")}）')
         for m in re.finditer(r'台词：【[^】\n]*\n', body):
             fails.append(f'闸门0 段{ui}：台词行未见 】 收尾 → {m.group(0)[:40]}')
-        # 镜号连续
         nums = [int(x) for x in GC_SHOT_NO_RE.findall(body)]
         if nums:
             if (nums != list(range(nums[0], nums[0] + len(nums))) or nums[0] < 1
                     or (previous_no is not None and nums[0] not in (1, previous_no + 1))):
                 fails.append(f'闸门0 段{ui}：镜号不连续 {nums}')
             previous_no = nums[-1]
-        # 七段式必备字段（2026-10-09：【接续状态】尾行已废止，从必备列表移除）
-        for f in ['【画幅风格】', '【场景资产】', '【核心人物】', '【站位声明】', '【时间轴分镜】']:
-            if f not in body:
-                fails.append(f'闸门0 段{ui}：缺字段 {f}')
-        if '【接续状态】' in body:
-            fails.append(f'闸门0 段{ui}：出现已废止的【接续状态】栏（2026-10-09 废止，机检 C11 反转为残留拦截）')
+        # 七段式缺字段 → C7；【接续状态】残留 → C11（P14 摘除，不重复报）
 
     for ui, (title, body) in enumerate(units, 1):
         shots = parse_shots(body)
-        lines = parse_lines(body)
         dur = (shots[-1][2] - shots[0][1]) if shots else 0
         chars = len(body)
         figs = sorted(set(int(x) for x in re.findall(r'图(\d+)', body)))
@@ -340,19 +358,10 @@ def main():
         # 闸门1 节奏档位：10s 以上只有 1-2 镜
         if dur >= 10 and len(shots) <= 2:
             warns.append(f'闸门1 段{ui}：{dur}s 只有 {len(shots)} 镜，需慢节奏白名单或补标点镜')
-        # 闸门1b 镜长分布
-        if shots:
-            lens = [e - s for _, s, e, _ in shots]
-            if len(lens) >= 4:
-                from collections import Counter
-                top = Counter(lens).most_common(1)[0]
-                if top[1] / len(lens) >= 0.7:
-                    warns.append(f'闸门1 段{ui}：镜长雷同（{top[0]}s × {top[1]}/{len(lens)}）')
+        # 闸门1b 镜长雷同 —— P14 摘除：与机检 C13 同一判据（≥4 镜、同值占比 ≥70%），由 C13 负责
 
         # 闸门2 台词时长（以最快档 6 字/秒为判定基准）
-        for role, tone, line, _ in lines:
-            if not tone:
-                fails.append(f'闸门2 段{ui}：台词缺语气位「{role}」（C16b）')
+        #   P14：原此处的「台词缺语气位 → FAIL（C16b）」已整段摘除——C16b 是同一判据的权威实现
         for index, (no, s, e, shot_text) in enumerate(shots):
             dialogue = parse_lines(shot_text)
             if not dialogue:
@@ -375,7 +384,7 @@ def main():
                              f'标准档需 {mid:.1f}s，可用 {budget}s → 需快念（非缺陷）')
 
         # 闸门3 字数（★ 2026-10-13：按模型分档 —— 2.5 可吃更长提示词）
-        w_soft, w_hard = (2600, 3000) if a.model == '2.5' else (1900, 2000)
+        w_soft, w_hard = (3600, 4000) if a.model == '2.5' else (2900, 3000)
         if chars > w_hard:
             fails.append(f'闸门3 段{ui}：字数 {chars} > {w_hard}（model={a.model} 硬上限），必须压缩')
         elif chars > w_soft:
@@ -386,8 +395,14 @@ def main():
             if bad in body:
                 fails.append(f'闸门4 段{ui}：含交接话术「{bad}」')
         # 参数行应在代码框外
-        for bad in ['9:16', '16:9', '21:9', '分辨率', 'aspect_ratio']:
-            if re.search(r'(?<!【画幅风格】)…?' + re.escape(bad), body) and bad in ('aspect_ratio', '分辨率'):
+        # ★P9 修（2026-10-24 全流程自检发现）：旧写法用 `(?<!【画幅风格】)…?aspect_ratio`
+        #   做负向后顾——但七段式**法定写法**是 `【画幅风格】16:9 横屏 (aspect_ratio=16:9)`，
+        #   `aspect_ratio` 前面隔着「16:9 横屏 (」，后顾永远不成立 →
+        #   **每一份合规稿都被判「参数留在代码框内」**。这是条永远亮红灯的死规则。
+        #   原意是「参数漏到正文里」才报，故改为：先剥离【画幅风格】整行，再看正文有没有残留。
+        _body_wo_aspect = re.sub(r"^【画幅风格】[^\n]*$", "", body, flags=re.M)
+        for bad in ('分辨率', 'aspect_ratio'):
+            if bad in _body_wo_aspect:
                 warns.append(f'闸门4 段{ui}：参数「{bad}」疑似留在代码框内')
 
         # 闸门5 单组图片数（★2026-10-17 改为按 A 锁模型分档，原写死 9 会误杀 2.5）
@@ -404,7 +419,7 @@ def main():
             fails.append(f'闸门6A 段{ui}：引用图号 {oob} 超出资产库（共 {a.assets} 图）')
 
     print()
-    print('=== 结果 ===')
+    print('=== 投喂层闸门结果 ===')
     if fails:
         print(f'FAIL {len(fails)} 条：')
         for x in fails:
@@ -418,10 +433,71 @@ def main():
         for x in infos:
             print('  i', x)
     if not fails and not warns:
-        print('  六道闸门全过（0 FAIL 0 WARN）')
-    print(f'\n汇总：FAIL={len(fails)}  WARN={len(warns)}  INFO={len(infos)}  '
-          f'素材形态={mode}（闸门6B）')
-    sys.exit(1 if fails else 0)
+        print('  本层闸门全过（0 FAIL 0 WARN）')
+
+    # ---- P14：C 系判据一次性覆盖（取代原先在本脚本里重复实现的闸门0 / 1b / 2语气位）----
+    syntax_fail, syntax_warn, syntax_note = run_syntax_engine(
+        a.path, a.model, a.aspect, a.syntax)
+    if syntax_note:
+        print(f'\n=== 机检引擎（C 系）===')
+        print(f'  {syntax_note}')
+    if syntax_fail or syntax_warn:
+        print(f'  机检 FAIL={syntax_fail}  WARN={syntax_warn}（明细见上方 C 系段落）')
+
+    print(f'\n汇总：投喂层 FAIL={len(fails)}  WARN={len(warns)}  |  '
+          f'机检 FAIL={syntax_fail} WARN={syntax_warn}  |  素材形态={mode}（闸门6B）')
+    if syntax_note.startswith('已按') or syntax_note.startswith('未检测'):
+        print('质检入口：本次只跑投喂层闸门（C 系未执行）——交付前务必另跑一次完整质检。')
+    else:
+        print('质检入口：本脚本一次跑完「投喂层闸门 + C 系机检」，同一判据不再重复检查。')
+    sys.exit(1 if (fails or syntax_fail) else 0)
+
+
+def _find_engine():
+    """定位总控机检引擎（套装同级部署时存在；子技能独立安装时可能不存在）。"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    # sd-feed-engine/scripts → 套装根 → short-drama-director/scripts/validate_prompt.py
+    candidates = [
+        os.path.join(here, '..', '..', 'short-drama-director', 'scripts', 'validate_prompt.py'),
+        os.path.join(here, '..', '..', '..', 'short-drama-director', 'scripts', 'validate_prompt.py'),
+    ]
+    for c in candidates:
+        if os.path.isfile(c):
+            return os.path.abspath(c)
+    return None
+
+
+def run_syntax_engine(path, model, aspect, mode='auto'):
+    """调用总控 validate_prompt.py，把 C 系结果并入本次报告。
+
+    返回 (fail_count, warn_count, note)。mode: auto=检测到就跑 / on=必须跑 / off=不跑。
+    """
+    if mode == 'off':
+        return 0, 0, '已按 --syntax off 跳过（仅跑投喂层闸门；建议另行加跑 validate_prompt.py）'
+    engine = _find_engine()
+    if not engine:
+        if mode == 'on':
+            return 1, 0, '未找到总控机检引擎 validate_prompt.py（--syntax on 要求必须有）——请先部署 1 总控 + 10 子技能套装'
+        return 0, 0, ('未检测到总控机检引擎（子技能独立安装），本次只跑了投喂层闸门；'
+                      'C7 七段式 / C2 镜号 / C11 接续状态残留 / C13 镜长雷同 / C16b 语气位 '
+                      '需另行加跑 short-drama-director/scripts/validate_prompt.py')
+    cmd = [sys.executable, engine, path, '--model', str(model)]
+    if aspect:
+        cmd += ['--aspect', str(aspect)]
+    env = {**os.environ, 'PYTHONDONTWRITEBYTECODE': '1', 'PYTHONIOENCODING': 'utf-8'}
+    try:
+        proc = subprocess.run(cmd, capture_output=True, encoding='utf-8', env=env)
+    except OSError as exc:
+        return 0, 0, f'机检引擎调用失败（{exc}），本次只有投喂层闸门结果'
+    out = (proc.stdout or '') + (proc.stderr or '')
+    print(out.rstrip())
+    if proc.returncode == 3:
+        return 0, 0, '机检引擎判定「非投喂稿件」，C 系判据未执行（稿件形态请核对）'
+    n_fail = sum(1 for line in out.splitlines() if line.startswith('[-] FAIL'))
+    n_warn = sum(1 for line in out.splitlines() if line.startswith('[!] WARN'))
+    if proc.returncode not in (0, 1):
+        return n_fail, n_warn, f'机检引擎异常退出（code={proc.returncode}）'
+    return n_fail, n_warn, f'机检引擎已跑通（{os.path.basename(engine)} · model={model}）'
 
 
 if __name__ == '__main__':

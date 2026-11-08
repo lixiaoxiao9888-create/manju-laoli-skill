@@ -7,7 +7,7 @@
 
 用法：
   python scripts/validate_prompt.py <提示词文件.md|.txt>
-      [--model 2.5|2.0|h3] [--mode new|extend] [--track 1|2|3|4] [--combat on|off|auto]
+      [--model 2.5|2.0] [--mode new|extend] [--combat on|off|auto]
       [--c23 on|off|auto] [--style-source 导演名] [--aspect 16:9|9:16|21:9] [--by-segment]
       [--json] [--self-test]
 
@@ -20,10 +20,6 @@
         不跑稿件级判据——见 _looks_like_feed 注）
 
   • --model 2.5 / 2.0 → C1~C26（Seedance 侧，本文件主体；另含增量主码 C27a~d / C28a~c / C29 / C30a~d · 编号不重排）
-  • --model h3        → H1~H12（MiniMax H3 格式支线，规程见 references/h3-adapter.md）
-  • --track 1|2|3|4   → 赛道分流（〇·0 强制分流锁：1 国内剧 / 2 海外剧 / 3 解说叙事 /
-                        4 其他）。默认 1。仅影响 C14 系列——赛道 3 走解说专线 C14n
-                        （豁免 VO 篇幅卡口），见「C14n」段说明。
   • --combat on|off|auto → **C21/C22 打戏护栏触发门**（C21 C22）。默认 auto：
                         打戏信号词达阈值即启用，文戏稿自动跳过。on/off 为强制开关。
   • --c23 on|off|auto → **C23 画风锁机检触发门**（I 画风锁）。默认 auto：
@@ -38,7 +34,7 @@
   C1b 分段粒度  2.5 默认 25~30s（吃满上限）；<12s 或 16~24s 碎段区告警
   C2 切镜上限   镜头数 ≤ ceil(段长/3s)；单镜 <3s 告警
   C3 时间轴     相邻镜头无断档/重叠；time 倒挂拦截
-  C4 字符预算   单文件 ≤4500 字符（篇级兜底 · 段级 1900/2000 由 sd-feed-engine/scripts/gate_check.py 判）
+  C4 字符预算   单文件 ≤6000 字符（篇级兜底 · 段级 2.0 2900/3000 · 2.5 3600/4000 由 sd-feed-engine/scripts/gate_check.py 判）
   C5 版本语法   2.0 禁 [SFX:] 与顿挫词；2.5 建议 [SFX:]
   C6 画幅回填   含 aspect_ratio= 或含画幅的【画幅风格】栏
       FAIL  C6b 画幅一致性（2026-10-10 新增 · aspect-ratio-adaptation.md §三）：文字比例
@@ -59,14 +55,6 @@
   C14 画外声（vo-os-weaving.md）：
       FAIL  OS 镜行画面段含开口词（声画分离红线）/ OS·VO 写进台词字段 / OS·VO 使用 {} 锁口型
       WARN  段内 OS 镜数 >2 或 VO 镜数 >1；段内 VO+OS 总字数超折算上限（≈20 字/15s 段）
-  C14n 解说叙事类专线（sd-jieshuo-engine §八 · --track 3）：
-      赛道③ 解说类是「全片 VO」，vo-os-weaving.md 的「VO+OS ≤30%、60~80 字/分钟」篇幅
-      钢性卡口对其不适用 → C14 三项 WARN（OS 镜数/VO 镜数/VO+OS 字数）**整体豁免**；
-      C14 三项 FAIL（声画分离红线/写进台词字段/使用 {} 字符）**依然生效**。误报会让整包
-      机检失效，故豁免必须显式声明，口径唯一权威在 sd-jieshuo-engine §八。
-      WARN  C14n 旁白镜无画面描述：解说类「一句旁白配 1~2 个画面」，旁白镜的画面段
-            （「声音：」前、剥掉时间戳/镜号/景别·角度·运镜词汇后）无实质画面描述 →
-            旁白成了"读稿"，画面失注释作用（判据见 narration-vo-script.md 声画信息差纪律）
   C15 拉伸凑时（时长由内容倒推）：
       WARN  无台词镜单镜 >5s / 全段无台词（纯氛围段）时长 >10s——禁止把氛围/过渡镜拉长
             凑满剧本标注的【本集时长】；总时长允许比剧本标注短至 -25%，宁短勿拉
@@ -108,7 +96,7 @@
             （实心石质/哑光/原色/光斑）也无声明 → 被渲染成自发光半透明"魔法道具"
       ---- 运镜门 C18g~l（2026-10-10 新增 · short-drama-camera-system.md §四）----
       病根：§四 把运镜约束写得极厚（固定≤10% / 禁连排固定 / 一镜一主运镜 / 重技法名额），
-      但**机检零覆盖**——运镜词此前只出现在 C14n 的剥离词表里，不参与校验。实测
+      但**机检零覆盖**——运镜词此前只出现在已下线专线的剥离词表里，不参与校验。实测
       「一镜之内同时完成推拉摇移跟升降环绕变焦八种运镜」「毫无动机地疯狂甩动、无动机变焦」
       两份病灶稿 → 全部 PASSED。本组把 §四 从"文档里的建议"变成"会响的检查"。
       WARN  C18g 镜行未标注运镜：镜行头「景别 · 视角 · 运镜。」缺运镜词 → 运镜留给模型自选，
@@ -237,7 +225,6 @@
       WARN  C28c 单句 ≥20 字且句内无任何停顿标点（，，、—…；：？！）
       ⛔ 只报不改——下游禁改台词（dialogue-speed-check.md §一·补二）；修复须回阶段⑤
          过《台词拟人化过站》。
-      豁免：赛道③ 解说叙事类（旁白 VO 本就是书面叙事语体）整体豁免。
 
   C29 资产状态偏离探测（2026-10-13 新增 · 增量主码 · 编号不重排 · 只报不改）：
       由来：用户实测——外卖员资产图**戴着头盔**，提示词让他坐家里**把头盔夹在怀里** →
@@ -249,7 +236,6 @@
       WARN  C29 镜行出现「脱离动词 + 名词」，该名词在【核心人物】行出现过（＝角色锁定项），
             且全稿无偏离声明（偏离 / 以本段为准 / 覆盖角色参考图）
       ⛔ 只报不改——修复须回 P4 补偏离标注，或回资产层登记 CHAR_STATE 出「脱离态」参考图。
-      豁免：赛道③ 解说叙事类（无角色资产锁定链）。
   C30 外挂指纹与跨阶段交接探针（2026-10-14 新增 · 增量主码 · 编号不重排 · --plugin auto|real|xuanhuan|combat|off）：
       WARN  C30a R3 玄幻外挂未生效：玄幻打戏稿未检出「尺度四件套」或「三层复合元素」指纹
       WARN  C30b R1 真武外挂未生效：真武打戏稿未检出「11 环动力链动词」或「防守三态+受击物理反馈」指纹
@@ -265,21 +251,6 @@
             光线二者其一即可）/ 模板骨架行与占位符行。**不设镜数下限**——逐镜缺陷，一镜到底的
             单镜段同样适用。规则权威：shot-economy-and-acting.md §九。
             ★ 编号：C30 已用于「外挂指纹与跨阶段交接探针」，本码取 C32（编号不重排）。
-
-H 系列（--model h3 · MiniMax H3 格式支线 · h3-adapter.md）：
-  H1 字段集       Ref2VA 六段齐全且顺序正确；基础模式三字段齐全
-  H2 镜号/切点    [Shot 1] 不得带时间戳；[Shot N] 切点 MM:SS.mmm 严格递增；切镜动词须用官方绑定短语（the camera/shot cuts to…）
-  H3 时长         声明时长落在 4–15s；最后切点 ≤15s
-  H4 语言         正文应为英文（2026-10-02 官方复核：base-en/ref-en "Write all six rewrite sections in English"）；
-                  <d> 内必须带语言标签（<d>[Chinese] …</d>），<d> 与双引号画内文字之外的正文出现中文 → WARN
-  H5 参考标签     标签先定义后引用；summary 不引新标签；定义项 >9 告警；定义了却未引用 → 告警
-  H6 保留度标记   只用合法英文固定值；retention_analysis 不写 (Sx)
-  H7 说话人       (Sx) 按首现顺序从 (S1) 递增编号
-  H8 泄漏         七段式栏名/`@` 资产锚点 → FAIL；工作流规则词/内部术语（含转场术语 J-cut/L-cut/Whip Pan/Match Cut/Sound Bridge）/否定式 → WARN
-  H9 画外声       画外声必须紧跟闭口证据；缺官方固定短语 says in an off-screen voiceover → WARN；禁用 {} 台词字符
-  H10 声音分层    soundscape/music 段不得含 <d>；BGM 段不得复述台词
-  H11 语气位继承  发言人首次出场缺语气/音色/语速描述 → WARN（对应法则 19）；声学词表含英文词（pitch/timbre/accent…）
-  H12 首镜锚定    对应 C18a/C20a/C20b：[Shot 1] 无具名主体 / 并列主体句式 / 悬空指示代词 → WARN
 """
 import json
 import os
@@ -287,10 +258,12 @@ import re
 import sys
 
 LIMITS = {"2.5": 30, "2.0": 15}
-# C4 篇级字符兜底：单个投喂稿文件 ≤4500 字符（≠ 段级字数闸门）。
-#   段级红线（投喂单元 ≤1900 字 / 2000 硬上限）由 sd-feed-engine/scripts/gate_check.py「闸门3」逐单元判。
+# C4 篇级字符兜底：单个投喂稿文件 ≤6000 字符（≠ 段级字数闸门）。
+#   段级红线（投喂单元 2.0 ≤2900 字 / 3000 硬上限 · 2.5 ≤3600 字 / 4000 硬上限）由 sd-feed-engine/scripts/gate_check.py「闸门3」逐单元判。
+#   换算口径（2026-11-03 P13 字数额度上移）：篇级兜底 = 段级最高硬上限 × 1.5 —— 4000 × 1.5 = 6000，
+#   保证「一个文件 = 一个 2.5 满段」时不会被篇级兜底先拦（旧值 4500 只够 3000 字档）。
 #   本判据按整份文件 len() 计（含标点/格式符）；假设「一个文件 = 一个投喂单元」，多单元合成一文件时会超限，以 gate_check 段级判定为准。
-MAX_CHARS = 4500
+MAX_CHARS = 6000
 
 # 总控时间码识别（三形态）：
 #   ① MM:SS(.ff) — 投喂稿原生格式（`00:00-00:05` / `00:00.0-00:03.0`）
@@ -345,7 +318,7 @@ def _strip_md_meta(text):
 
     仅供「交付层零人名」类**全文扫描型**判据使用——标题与说明性引用块属**元数据区**、
     不是投喂正文。不剔除会把「# 成稿示例 · 王家卫 15 秒」判成交付层出现三方名
-    （2026-10-11 实测：官方示例 demo-feed-wkw-15s / demo-feed-xuke-15s 双双因此假 FAIL）。
+    （2026-10-11 实测：官方示例 两份历史示例稿 双双因此假 FAIL）。
     """
     keep = []
     for ln in text.splitlines():
@@ -382,22 +355,6 @@ VO_OS_QUOTA = 20          # 每 15s 段 VO+OS 总字数折算上限（60~80 字/
 VO_OS_QUOTA_SLACK = 5     # 机检容差线
 OS_MAX_SHOTS = 2          # 段内 OS 镜数上限
 VO_MAX_SHOTS = 1          # 段内 VO 镜数上限
-
-# ---- C14n 解说叙事类专线（赛道③ · sd-jieshuo-engine/SKILL.md §八）----
-# 解说类的"台词"不是对白而是旁白，VO 占 80~100%——总控 vo-os-weaving.md 的「VO+OS ≤30%、
-# 60~80 字/分钟」篇幅钢性卡口对它**不适用**。若照剧情赛道跑 C14，解说稿会整篇误报，导致
-# 整包机检失效。故按赛道分流：赛道 3 豁免 C14 三项 WARN，只保留三项 FAIL（红线）并改判 C14n。
-NARR_TRACKS = {"3"}                        # 触发解说专线的赛道号（〇·0 分流锁 ③ 解说叙事类）
-NARR_SPEED_MIN, NARR_SPEED_MAX = 4.5, 6.5  # 解说语速口径 字/秒（narration-vo-script §一，供人工核对）
-# 旁白句-画面映射判据：剥掉镜行头部的时间戳 / [镜头N] / 景别·角度·运镜词汇后，看还剩多少
-# 画面描述中文字符。只剩机位规格 → 该镜没有"画面"承载旁白（解说类每句旁白须配 1~2 画面）。
-CINE_VOCAB = ("特写", "紧特写", "大特写", "极特写", "超特写", "近景", "中近景", "中景",
-              "中全景", "全景", "远景", "大全景", "平视", "仰视", "俯视", "略仰", "略俯",
-              "侧角", "正侧", "斜角", "顶拍", "过肩", "主观", "固定", "缓推", "慢推",
-              "推", "拉", "摇", "移", "跟", "升降", "手持", "环绕", "变焦", "甩", "旋转",
-              "横移", "垂直")
-CINE_VOCAB_SORTED = tuple(sorted(CINE_VOCAB, key=len, reverse=True))  # 长词优先剥（"中近景"先于"近景/中景"）
-NARR_PIC_MIN = 2           # 画面段实质中文字数下限（< 2 视为无画面描述）
 
 # ---- C25 表演层（references/acting-direction.md · 2026-10-09 新增）----
 #   a 画面段抽象神态词（结果词）→ WARN：神态必须是看得见的肌肉动作（与 C16c 同精神，靶位不同）
@@ -477,7 +434,7 @@ ANCHOR_EXEMPT = ("无背景锚点", "免锚点", "无锚点", "无背景", "空�
 LOWER_BODY_RE = re.compile(r"胸|腰|腹|臀|腿|膝|脚|鞋|下半身|下身|全身")
 # ★发力链豁免（2026-10-12 修复）：C18f 治的是「特写构图装不下胸部以下」，
 #   但打戏力量传递链**必然**要写「拧腰 / 蹬地 / 送肩 / 转胯 / 沉胯」——这是动作描写，
-#   不是构图越界。官方示例 storyboard-example.md 特写镜写「左足蹬地拧腰、脊椎如大弓崩弹」
+#   不是构图越界。官方示例 历史示例稿 特写镜写「左足蹬地拧腰、脊椎如大弓崩弹」
 #   （完全正确的发力链写法）却连报 2 条假告警。判定：命中词紧前 4 字内含发力动词 → 豁免。
 LOWER_BODY_ACTION = re.compile(r"[拧蹬转挺沉坐送折弓弹震扭摆收蓄绷顶撑挫旋翻仰含塌拔]")
 FULL_BODY_RE = re.compile(r"全身|完整站位|整个人|从头顶")
@@ -500,21 +457,28 @@ CONTAMINATION_WORDS = ("某角色", "待补充", "待定", "TBD", "TODO", "占�
 # 收窄口径（与包内合法用法划清界，防误报）：
 #   · 「甩镜」是 CAM_FAMILIES 合法运镜词（C18g~l 运镜门认它）——收它会和运镜机检自相矛盾，不收；
 #   · 「抽帧」是 C23 合法风格参数，但只放行两种法定写法：「Nfps 抽帧」（帧率实现，
-#     demo-feed-wkw 成稿在用）与「抽帧感」——裸「抽帧」缺帧率上下文，仍拦
+#     历史示例稿 A 成稿在用）与「抽帧感」——裸「抽帧」缺帧率上下文，仍拦
 #     （2026-10-13 交叉 Gemini 修法合入：场景化豁免比整体不收更精准）；
 #   · 「音桥」有法定投喂标注「音桥入/音桥出」（shot-economy-and-acting.md 音频字段）——不收。
 C12_TRANSITION_RE = re.compile(r"J-?cut|L-?cut|Whip\s*Pan|Match\s*Cut|Sound\s*Bridge|视线匹配|抽帧", re.I)
 
 # ---- 运镜门 C18g~l 常量（short-drama-camera-system.md §四 · 2026-10-10 新增）----
-# 病因：§四 的运镜约束此前**零机检载体**——运镜词只出现在 C14n 的剥离词表（用来把运镜词
+# 病因：§四 的运镜约束此前**零机检载体**——运镜词只出现在已下线专线的剥离词表（用来把运镜词
 #   从画面描述里扣掉），不参与任何校验。实测「一镜八种运镜」「无动机疯狂甩动」全部 PASSED。
 # 取多字词，避免与动作动词撞车（「推开」≠推镜、「把表固定在台上」≠固定运镜）。
 CAM_FAMILIES = {
     "固定": "固定",
     "推镜": "推", "缓推": "推", "慢推": "推", "快推": "推", "急推": "推", "推近": "推", "推入": "推",
     "拉镜": "拉", "拉远": "拉", "后拉": "拉",
+    # ★P11 修（2026-10-24 · 词表与规则库脱节）：规则库高频写「缓拉 / 慢拉 / 快拉 / 急拉」
+    #   （camera-system §四 运镜总表、segment-splicing §四 段缝收势），本表只收了「推」族的
+    #   缓/慢/快/急，**「拉」族一个都没收** → 照文档写就是 `fams=set()` → C18g 必报
+    #   「镜行未标注运镜」。这与 2026-10-12 平摇、2026-10-16 定格是同一类病：
+    #   **文档法定词 × 词表反向覆盖没做全**。补「拉」族四词 + 两个「极缓慢」变体。
+    "缓拉": "拉", "慢拉": "拉", "快拉": "拉", "急拉": "拉",
+    "极缓慢推": "推", "极缓慢拉": "拉",
     "横移": "横移", "平移": "横移", "竖移": "竖移",
-    # ★摇/移族同义词补全（2026-10-12 修复）：官方示例 storyboard-example.md 镜行头写
+    # ★摇/移族同义词补全（2026-10-12 修复）：官方示例 历史示例稿 镜行头写
     #   「快速平摇」「平摇」，原词表只有「摇镜」→ C18g 连报 2 条"镜行未标注运镜"假告警。
     #   这类"方向+摇/移"复合词是中文分镜稿的高频写法，缺一个就误报一条。
     "平摇": "摇", "横摇": "摇", "直摇": "摇", "摇摄": "摇", "纵摇": "俯仰", "跟摇": "跟",
@@ -557,6 +521,15 @@ CAM_FAMILIES = {
     # ★审计补丁P1 补录：中文分镜稿最高频的「轻X」前缀写法（此前全部解析为空集 → C18g 假告警）
     "轻推": "推", "微推": "推", "轻摇": "摇", "缓摇": "摇", "慢摇": "摇",
     "轻晃": "手持", "微晃": "手持", "轻移": "横移", "缓移": "横移",
+    # ★P8 补录（2026-10-24 · 采纳网友建议书 P-08 · 已端到端复现）：
+    #   病根同 2026-10-12 的「平摇」、2026-10-16 的「定格族」——**照文档写反被机检误报**。
+    #   「升降」在表里，但中文稿更常写「缓慢上升 / 镜头下降」；「固定」在表里，但更常写
+    #   「静止 / 场内在静止」→ 镜行头运镜族解析为空集 → C18g 连报「未标注运镜」假告警。
+    #   ⚠ 不收「定镜→固定」：本包已裁定定镜＝定格（时间技法族，见上方 2026-10-16 条），
+    #     改成固定会把它算进 C18j 打戏 10% 固定配额，制造新误报。
+    "上升": "升降", "下降": "升降", "升镜": "升降", "降镜": "升降",
+    "升起": "升降", "降下": "升降", "升空": "升降", "沉下": "升降",
+    "静止": "固定", "不动": "固定", "静态": "固定", "机位不动": "固定",
 }
 # C18i 无动机运镜（§四 手持三级烈度：烈度必须由情绪买单，禁止无理由晃动）
 CAM_MOTIVELESS = ("无动机", "毫无动机", "没有动机", "无理由晃动", "无理由地晃动",
@@ -587,269 +560,6 @@ CAM_HEAVY_LIMITS = (
     ("手持剧烈晃动", r"手持剧烈|剧烈晃动", 3, "seg"),
 )
 
-# ---- H 系列：MiniMax H3 格式支线（references/h3-adapter.md）----
-H3_SECTIONS = ["subject_definitions", "summary", "retention_analysis",
-               "detailed_description", "overall_soundscape", "non_diegetic_music"]
-H3_FIELDS = ["integrated_multimodal_description", "overall_soundscape", "non_diegetic_music"]
-H3_MARK_VIS = {"fully_preserved", "partially_preserved", "attribute_transfer", "weak_reference"}
-H3_MARK_AUD = {"fully_copy", "partially_copy", "reference", "weak_reference"}
-H3_LABEL_RE = re.compile(r"<(Subject|Picture|Video|Audio)\s+(\d+)>")
-H3_SHOT_RE = re.compile(r"\[Shot\s+(\d+)\]")
-H3_CUT_RE = re.compile(r"\[Shot\s+(\d+)\][^\n]{0,14}?(?:At|在)\s*(\d{1,2}):(\d{2})\.(\d{3})")
-H3_SEVEN_LEAK = ["【画幅风格】", "【场景资产】", "【核心人物】", "【站位声明】", "【时间轴分镜】",
-                 "【音效】", "【强制禁止项】", "【接续状态】"]
-# H8 内部术语（打击感语法词——H3 无 Hit-Stop 语法，须转译为可见物理描述）
-#   + 转场术语（2026-10-13 体检修复 A1：同 C12 口径，J-cut/L-cut/Whip Pan/Match Cut/Sound Bridge
-#     禁裸写进 H3 正文；「甩镜/抽帧/音桥」按 Seedance 侧同一收窄口径不收——运镜词/风格参数/法定标注）
-H3_JARGON = ["顿挫", "阻尼", "弹开", "微停顿",
-             "J-cut", "L-cut", "Whip Pan", "Match Cut", "Sound Bridge"]
-H3_WORKFLOW = ["末态继承", "拼接节点", "换机位", "同机位硬接"]
-H3_MIN_DUR, H3_MAX_DUR = 4, 15
-H3_PIC_MAX = 9
-H3_VO_EVID = re.compile(r"闭合|闭口|紧闭|lips\s+(?:remain|stay)\s+(?:completely\s+)?closed")
-# H9 画外声官方固定短语（base-en §4.4；2026-10-02 官方复核新增）
-H3_VO_PHRASE = re.compile(r"says\s+in\s+an\s+off[- ]screen\s+voiceover", re.I)
-# H2 切镜动词官方绑定短语（base-en §4.2；中文"镜头切至"不被绑定，会被做成叠化融脸）
-H3_CUT_VERB = re.compile(r"the\s+(?:camera|shot|image)\s+(?:cuts?|transitions?|changes?|switches?)\s+to", re.I)
-H3_BAD_CUT_VERB = re.compile(r"镜头切至|cross[- ]?dissolve|淡入淡出|叠化|\bfade\b|\bwipe\b", re.I)
-# H4 正文语言（2026-10-02：六段正文一律英文；此处只用于"检测 <d> 与双引号之外的中文"）
-H3_CJK = re.compile(r"[\u4e00-\u9fff]")
-H3_TONE_HINT = re.compile(r"音色|语气|语速|声线|嗓音|男声|女声|童声|气息|平直|平稳|低沉|沙哑|清亮|清冷|温润|明亮|"
-                          r"浑厚|尖锐|急促|缓慢|克制|冷淡|温和|冰冷|慵懒|疲惫|哽咽|颤|喘|轻声|低声|高声|低语|耳语|呢喃|"
-                          r"压着|斩钉截铁|喊|吼|"
-                          # 英文声学词（2026-10-02 官方复核：H3 正文英文口径，声学提示词表同步补英文）
-                          r"\bpitch\b|\btimbre\b|\baccent\b|speaking rate|\bmonotone\b|\bhusky\b|\bhoarse\b|"
-                          r"\bnasal\b|\bbreathy\b|low[- ]pitched|high[- ]pitched|soft[- ]spoken|\bgravelly\b|\bvelvet(?:y)?\b")
-# H8 否定式（对应 C19/法则 22：模型对否定不敏感、对词根敏感；H3 正文只写"有什么"）
-H3_NEG_PAT = re.compile(r"不要出现|不要有|禁止出现|不能出现|不得出现|"
-                        r"没有[\u4e00-\u9fa5]{0,4}(?:人物|角色|家具|背景|文字|字幕|水印)")
-# H12 首镜锚定 / 单主体（对应 C18a / C20a / C20b）
-H3_PARALLEL_PAT = re.compile(r"同框|同在画面|一同入画|同处一室")
-H3_DEIXIS_PAT = re.compile(r"(这只|那只|这个|那个|这双|那副)(手|脸|眼睛|脚|背影|身体)")
-
-
-def _h3_order(text):
-    """返回出现过的六段字段名，按文件顺序。"""
-    pat = re.compile(r"^\s*(" + "|".join(H3_SECTIONS) + r")\s*[:：]")
-    out = []
-    for line in text.splitlines():
-        m = pat.match(line)
-        if m and m.group(1) not in out:
-            out.append(m.group(1))
-    return out
-
-
-def _h3_sections(text):
-    """按行首字段名+冒号切分，返回 {字段: 内容}。"""
-    pat = re.compile(r"^\s*(" + "|".join(H3_SECTIONS) + r")\s*[:：]\s*(.*)$")
-    out, cur = {}, None
-    for line in text.splitlines():
-        m = pat.match(line)
-        if m:
-            cur = m.group(1)
-            out[cur] = [m.group(2)]
-        elif cur:
-            out[cur].append(line)
-    return {k: "\n".join(v).strip() for k, v in out.items()}
-
-
-def validate_h3(text, mode="new"):
-    """MiniMax H3 格式支线检查（H1~H12）。规程见 references/h3-adapter.md。"""
-    issues, warns = [], []
-    sec = _h3_sections(text)
-    order = _h3_order(text)
-    is_ref = "subject_definitions" in sec
-
-    # H1 字段集
-    if is_ref:
-        missing = [s for s in H3_SECTIONS if s not in sec]
-        if missing:
-            issues.append(f"H1 Ref2VA 缺段 {missing}（六段式：subject_definitions/summary/retention_analysis/"
-                          "detailed_description/overall_soundscape/non_diegetic_music，顺序不可调换）")
-        elif order != H3_SECTIONS:
-            issues.append(f"H1 Ref2VA 段序错误：实际 {order}")
-    else:
-        missing = [f for f in H3_FIELDS if f not in text]
-        if missing:
-            issues.append(f"H1 基础模式缺字段 {missing}（应为 integrated_multimodal_description / "
-                          "overall_soundscape / non_diegetic_music）")
-
-    # H2 镜号与切点（只看正文分镜段：Ref2VA 取 detailed_description，基础模式取全文）
-    body = sec.get("detailed_description", "") if is_ref else text
-    if re.search(r"\[Shot\s*1\][^\n]{0,14}?(?:At|在)\s*\d{1,2}:\d{2}", body):
-        issues.append("H2 [Shot 1] 不得带时间戳（首镜无切点，切点从 [Shot 2] 起）")
-    nums = [int(n) for n in H3_SHOT_RE.findall(body)]
-    uniq = list(dict.fromkeys(nums))
-    cuts = [(int(m[0]), int(m[1]) * 60 + int(m[2]) + int(m[3]) / 1000.0) for m in H3_CUT_RE.findall(body)]
-    if uniq:
-        if uniq != sorted(uniq):
-            issues.append(f"H2 [Shot N] 镜号未递增：{uniq}（首现顺序）")
-        want = [n for n in sorted(set(nums)) if n >= 2]
-        got = [n for n, _ in cuts]
-        miss_cut = [n for n in want if n not in got]
-        if miss_cut:
-            issues.append(f"H2 [Shot {miss_cut}] 缺切点时间码（MM:SS.mmm）")
-    for (n1, t1), (n2, t2) in zip(cuts, cuts[1:]):
-        if t2 <= t1:
-            issues.append(f"H2 切点未严格递增：[Shot {n1}] {t1}s -> [Shot {n2}] {t2}s")
-    if cuts and max(t for _, t in cuts) > H3_MAX_DUR + 0.001:
-        issues.append(f"H3 最后切点 {max(t for _, t in cuts)}s > {H3_MAX_DUR}s（H3 单段硬上限 15s；"
-                      "Seedance 2.5 的 15~30s 段必须再拆一刀）")
-
-    # H3 时长声明
-    decl = None
-    m = re.search(r'"?(?:duration_seconds|duration)"?\s*[:=]\s*(\d+(?:\.\d+)?)', text)
-    if m:
-        decl = float(m.group(1))
-    else:
-        m2 = re.search(r"时长\s*[:：]\s*(\d+(?:\.\d+)?)\s*(?:s|秒|seconds)", text)
-        if m2:
-            decl = float(m2.group(1))
-    if decl is not None:
-        if not (H3_MIN_DUR - 0.01 <= decl <= H3_MAX_DUR + 0.01):
-            issues.append(f"H3 声明时长 {decl}s 越界（H3 硬区间 {H3_MIN_DUR}–{H3_MAX_DUR}s）")
-    else:
-        warns.append(f"H3 未标注目标时长——H3 硬区间 {H3_MIN_DUR}–{H3_MAX_DUR}s，"
-                     "建议在稿头或载荷标注 duration_seconds 以便校验")
-
-    # H4 语言标签 + 正文语言（2026-10-02 官方复核：六段正文一律英文）
-    bad_d = re.findall(r"<d>(?!\s*\[)", text)
-    if bad_d:
-        issues.append(f"H4 <d> 缺语言标签 {len(bad_d)} 处——应为 <d>[Chinese] 原文</d>（语言标签保留原语言；"
-                      "正文语言见下，2026-10-02 起一律英文）")
-    _no_d = re.sub(r"<d>.*?</d>", "", text, flags=re.S)          # 台词/歌词保原语言，先摘除
-    _no_d = re.sub(r"[\"“][^\"”\n]{0,60}[\"”]", "", _no_d)       # 双引号内画内文字保原语言，摘除
-    if is_ref and order:                                          # 仅审 H3 原生格式稿（七段式旧稿不套用）
-        if H3_CJK.search(_no_d):
-            warns.append("H4 正文出现中文——官方 base-en/ref-en 明文「Write all six rewrite sections in English」，"
-                         "**六段正文一律英文**；只有 <d> 内台词/歌词与双引号内画内文字保留原语言"
-                         "（h3-adapter.md 2026-10-02 官方复核修订；旧「跟随内容主语言」口径已废止）")
-    if H3_BAD_CUT_VERB.search(text) and not H3_CUT_VERB.search(text):
-        warns.append("H2 切镜动词未用官方绑定短语——官方 base-en §4.2：the camera cuts to / the shot cuts to / "
-                     "the shot transitions to / the shot changes to / the shot switches to；"
-                     "中文「镜头切至」与 cross-dissolve/fade/wipe 会被做成叠化融脸（仅用户明确要求时才用过渡）")
-
-    # H5 参考标签（used 从“定义段之外”统计：标签在其定义行里出现不算被引用）
-    if is_ref:
-        defined = {(k, int(n)) for k, n in H3_LABEL_RE.findall(sec.get("subject_definitions", ""))}
-        rest = text.replace(sec.get("subject_definitions", ""), "")
-        used = {(k, int(n)) for k, n in H3_LABEL_RE.findall(rest)}
-        undef = sorted(used - defined)
-        if undef:
-            issues.append(f"H5 未定义标签 {[f'<{k} {n}>' for k, n in undef]}——须先在 subject_definitions 定义后再引用")
-        sum_new = {(k, int(n)) for k, n in H3_LABEL_RE.findall(sec.get("summary", ""))} - defined
-        if sum_new:
-            issues.append(f"H5 summary 引入了新标签 {sorted(sum_new)}（summary 只用已定义标签）")
-        if len(defined) > H3_PIC_MAX:
-            warns.append(f"H5 subject_definitions 定义 {len(defined)} 项 > H3 Ref2VA 素材上限提示（图 {H3_PIC_MAX} 张）——"
-                         "按 h3-adapter.md §四「9 张取材策略」裁剪或合并")
-        # 只查 Subject（可复用内容单元）：Picture/Video/Audio 允许只作为来源引用出现在定义行内
-        unused = sorted({(k, n) for (k, n) in defined - used if k == "Subject"})
-        if unused:
-            warns.append(f"H5 定义了却全文未引用 {[f'<{k} {n}>' for k, n in unused]}——白占 9 张额度，"
-                         "或人物凭空消失（摆位必入画 · 法则 20）；删掉或补进对应镜头")
-
-    # H6 保留度标记
-    ra = sec.get("retention_analysis", "")
-    if is_ref and ra:
-        for mm in re.finditer(r"[:：]\s*([a-z_]{3,})\s*[-–—]", ra):
-            if mm.group(1) not in (H3_MARK_VIS | H3_MARK_AUD):
-                issues.append(f"H6 retention_analysis 非法保留度标记「{mm.group(1)}」——合法值：画面 "
-                              "fully_preserved/partially_preserved/attribute_transfer/weak_reference；音频 "
-                              "fully_copy/partially_copy/reference/weak_reference")
-        if re.search(r"[（(]\s*S\d", ra):
-            issues.append("H6 retention_analysis 不得写 (Sx)——说话人编号只出现在 detailed_description")
-
-    # H7 说话人编号顺序（兼容半角/全角括号）
-    dd = sec.get("detailed_description", "") or text
-    seen = []
-    for m in re.finditer(r"[（(]\s*(S\d+(?:\s*[,，]\s*S\d+)*)\s*[)）]", dd):
-        for sid in re.split(r"[,，]", m.group(1)):
-            sid = sid.strip()
-            if sid and sid not in seen:
-                seen.append(sid)
-    if seen and seen != [f"S{i + 1}" for i in range(len(seen))]:
-        issues.append(f"H7 (Sx) 未按首现顺序编号：实际首现序 {seen}（应从 (S1) 起递增；未发声角色不给 ID）")
-
-    # H8 泄漏检查
-    leak = [s for s in H3_SEVEN_LEAK if s in text]
-    if leak:
-        issues.append(f"H8 七段式栏名泄漏进 H3 正文 {leak}——H3 支线用原生字段（三字段/六段式），栏名不进正文")
-    anchors = sorted(set(re.findall(r"@(?:CHR|SCN|PRP|AUD)-[\w\-]+", text)))
-    if anchors:
-        issues.append(f"H8 `@` 资产锚点泄漏 {anchors}——H3 用 <Subject N>/<Picture N>/<Video N>/<Audio N> 标签")
-    wf = sorted({w for w in H3_WORKFLOW if w in text})
-    if wf:
-        warns.append(f"H8 工作流规则词混入 {wf}——规则由执行者应用，H3 正文只写画面（同 C12 口径）")
-    _h3_low = text.lower()
-    jg = sorted({w for w in H3_JARGON if w.lower() in _h3_low})
-    if jg:
-        warns.append(f"H8 内部术语/转场术语混入 {jg}——H3 正文只写可见画面：打击感转译为可见物理描述"
-                     "（接触凝住一拍 + 反作用力），转场术语转译为画面怎么接（同 C12 口径，术语只在分镜层标注）")
-    neg = sorted({m.group(0) for m in H3_NEG_PAT.finditer(text)})
-    if neg:
-        warns.append(f"H8 正文出现否定式 {neg}——模型对否定不敏感、对词根敏感（C19/法则 22）："
-                     "删掉否定式，改为正向表述；负面清单不进 H3 正文")
-
-    # H9 画外声
-    if re.search(r"画外音|内心独白|旁白|voiceover|\bOS\b|\bVO\b", text):
-        if not H3_VO_EVID.search(text):
-            issues.append("H9 画外声缺闭口证据——官方要求紧跟「lips remain completely closed」"
-                          "（等同 vo-os-weaving 声画分离红线）")
-        if not H3_VO_PHRASE.search(text):
-            warns.append("H9 画外声未用官方固定短语「says in an off-screen voiceover」——官方 base-en §4.4 固定公式："
-                         "`<Subject N> (Sx) says in an off-screen voiceover: <d>[Language] …</d> "
-                         "while his/her lips remain completely closed.`；中文自创措辞压不住口型（2026-10-02 实测）")
-        if re.search(r"\{[^}]*\}", text):
-            issues.append("H9 画外声禁用 {} 台词字符（{} 是锁口型对白通道，画外声走官方公式英文标注）")
-
-    # H10 声音分层
-    for f in ("overall_soundscape", "non_diegetic_music"):
-        if "<d>" in sec.get(f, ""):
-            issues.append(f"H10 {f} 段不得包含对白 <d>——对白只进 detailed_description（基础模式为 integrated_multimodal_description）")
-    if re.search(r"台词", sec.get("overall_soundscape", "")):
-        warns.append("H10 overall_soundscape 出现「台词」字样——对白不进声音层汇总")
-    nd = sec.get("non_diegetic_music", "")
-    for m in re.finditer(r"<d>(.*?)</d>", text, re.S):
-        body_d = m.group(1).split("]", 1)[-1].strip()
-        if body_d and body_d in nd:
-            issues.append("H10 non_diegetic_music 复述了台词内容——BGM 段只写配器/速度/节奏/动态，不重复对白")
-            break
-
-    # H11 语气位继承（WARN · 对应法则 19 / 官方"发言人首次出现须给发声特征"）
-    first_pos = {}
-    for m in re.finditer(r"[（(]\s*(S\d+)\s*[)）]", dd):
-        sid = m.group(1)
-        if sid not in first_pos:
-            first_pos[sid] = m.start()
-    for sid, pos in first_pos.items():
-        if not H3_TONE_HINT.search(dd[max(0, pos - 120):pos + 120]):
-            warns.append(f"H11 {sid} 首次出现处缺语气/音色/语速描述——H3 要求发言人首次出场给出发声特征"
-                         "（音高/音质/语速/口音），丢了语气等于退掉法则 19（对白三要素之三）")
-
-    # H12 首镜锚定 / 单主体（对应 C18a / C20a / C20b）
-    shot1 = ""
-    ms = re.search(r"\[Shot\s*1\]([^\n]*(?:\n(?!\s*\[Shot)[^\n]*)*)", body)
-    if ms:
-        shot1 = ms.group(1)
-    if shot1:
-        # 首镜锚 = 具名主体（只认 <Subject N>；<Picture/Video/Audio N> 不是主体锚）
-        if not re.search(r"<Subject\s+\d+>", shot1):
-            warns.append("H12a 首镜无具名主体锚——[Shot 1] 未引用任何 <Subject N>（对应 C18a 首镜人物锚）："
-                         "空镜开场须写明「空镜：…」且每段至多 1 镜；否则给首镜一个具名主体（人名或注明归属的部位）")
-        par = H3_PARALLEL_PAT.search(shot1)
-        if par:
-            warns.append(f"H12b 首镜出现并列主体/同框句式「{par.group(0)}」——模型会读成画面里有两个主体"
-                         "（C20a：同一主体的手与脸被渲染成两张脸）；锚定句只由**一个具名主体**统摄")
-    dei = H3_DEIXIS_PAT.search(body)
-    if dei:
-        warns.append(f"H12c 悬空指示代词「{dei.group(0)}」——指代词没有先行词，模型自行补一个主体（C20b）："
-                     "改写为「她的/其+部位」")
-
-    stats = {"duration_s": decl or (max((t for _, t in cuts), default=0)),
-             "shots": len(nums), "chars": len(text)}
-    return issues, warns, stats
-
 # ---- C16 对白语气（model-adapters §5.2 对白三要素之三）----
 # 判据收窄（防 C12/C14 式误报）：① 错位只对"有台词的镜行"判——无台词镜里的声音词属
 #   环境音描述（归"声音："段管）；② 可作面部表情理解的词（冷笑/讥诮）须排除表情动词修饰。
@@ -872,10 +582,10 @@ TONE_TAG_RE = re.compile(r"[^（()【】\[\]]{1,16}?\s*[（(]\s*([^）)]{1,40}?)
 
 # ---- C17 摆位必入画（model-adapters §5.0.1 人物账连续）----
 # ★内部 ID 前缀兼容（2026-10-12 修复）：包内 12 个规范文件（model-adapters / seedance-render-engine /
-#   h3-adapter / acting-direction / production-ledger-handbook 等）的示例长期写成 `@CHR-老周` /
+#   acting-direction / production-ledger-handbook 等）的示例长期写成 `@CHR-老周` /
 #   `@SCN-地下拳房` 编号式，而镜行正文按惯例用简称「老周」。原正则把 `CHR-老周` 整体捕获，
 #   与镜行简称永远匹配不上 → C17 摆位必入画 / C17b 关系镜 / C17c 背景锚点 / C17d 跨段漂移 /
-#   C19c 首镜主体优先 **五条判据对编号式稿件全体误报**（实测 storyboard-example.md 连报 4 条）。
+#   C19c 首镜主体优先 **五条判据对编号式稿件全体误报**（实测 历史示例稿 连报 4 条）。
 #   前缀列为非捕获组，group(1) 恒为裸人名；`@老周` 纯净式不受影响。
 #   ⚠️ 注意：`asset-delivery-modes.md` 红线 11 明令「接线单不写内部 ID」——本兼容只为让机检
 #   不误伤存量示例，**不构成对编号式写法的认可**，新稿仍应写 `@人名`。
@@ -1254,19 +964,6 @@ def parse_time_ranges(text):
     return out
 
 
-def _pic_content_len(pic_seg):
-    """C14n 判据：剥掉时间戳 / [镜头N] / 景别·角度·运镜词汇后，画面段剩余的中文字数。
-
-    解说类旁白句必须配画面（画面是注释不是复述）。只剩机位规格的镜行 = 没有画面承载旁白。
-    只做保守判定（阈值 NARR_PIC_MIN），宁漏勿误——误报会让整包机检失效。
-    """
-    s = TIME_RE.sub("", pic_seg)
-    s = SHOT_TAG_RE.sub("", s)
-    for tok in CINE_VOCAB_SORTED:
-        s = s.replace(tok, "")
-    return len(re.findall(r"[\u4e00-\u9fa5]", s))
-
-
 # ---- C23 画风锁机检（references/style-bible/director-to-prompt-protocol.md §六）----
 # 来源：审计工作区原型 c23_check.py（自检三轮 loop 定稿），判据与实现保持一致。
 # 触发门 = --c23 on 强制 / off 关闭 / 默认 auto（稿内存在【STYLE/【PERFORMANCE 块或
@@ -1609,6 +1306,15 @@ def _shot_head(line):
     tm = TIME_RE.match(rest)
     if tm:
         rest = rest[tm.end():].lstrip(" 	,，")
+    # ★P11 修（2026-10-24 · 冒号形态镜行的头部污染）：
+    #   V7 现行镜行用「：」分隔头部与正文 —— `[镜头1] 中景 · 35mm · 平视 · 固定：画面主体：@苏念 目光跟随对方`。
+    #   旧版只按句号 `。` 切头，正文第一分句被整段吞进头部，于是正文里的
+    #   「跟随 / 静止 / 定住 / 推近」被 `_cam_families()` 当成第二种运镜 →
+    #   C18h「一镜多运镜」误报（实测：fams 从 {'固定'} 变成 {'固定','跟'}）。
+    #   冒号截断必须**先于**句号截断，且只在冒号不在行首时生效。
+    _colon = re.search(r"[：:]", rest)
+    if _colon and _colon.start() > 0:
+        rest = rest[:_colon.start()]
     head = rest.split("。", 1)[0]
     # 若逗号分隔且未用句号结头（如 `中景·平视，@剑修 冲向…`），只取含景别/视角/运镜的前导分句
     if "，" in head or "," in head:
@@ -1625,14 +1331,14 @@ def _shot_head(line):
     return head
 
 
-def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto",
+def validate(text, model="2.5", mode="new", combat="auto", c23="auto",
              style_source=None, aspect=None, plugin="auto", state_data=None):
     issues, warns = [], []
     # ---- Markdown 元数据剥离（2026-10-12 修复 · 根治「官方示范稿过不了自家机检」）----
     # 病根：2026-10-11 已发现「# 标题 / > 引用 / | 表格」等说明性文字被当成投喂正文扫描，
-    #   导致官方示例 demo-feed-wkw-15s / demo-feed-xuke-15s 双双假 FAIL——但当时只给
+    #   导致官方示例 两份历史示例稿 双双假 FAIL——但当时只给
     #   「交付层零人名」单条判据打了 _strip_md_meta 补丁，**未推广到其余全文扫描型判据**。
-    #   2026-10-12 同根因复发：sd-real-engine/references/storyboard-example.md 的小标题
+    #   2026-10-12 同根因复发：历史示例稿 的小标题
     #   「（单参考图绑定 · 无首尾帧）」触发 C8 假 FAIL（首尾帧禁词出现在说明文字里）。
     #   修法：入口统一剥离，一次根治所有全文扫描型判据（C6/C8/C12/C17/C19/C26…）。
     #   保留：C4 篇级字数按**原始整份文件** len() 计（该判据口径即"文件级兜底"）。
@@ -1684,9 +1390,13 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
             issues.append(f"C1 [{_sn}] 段时长 {_d}s 超 {model} 上限 {LIMITS[model]}s")
         # C1b 分段粒度（2.5 专属）：默认 25~30s 吃满上限，禁碎段
         if model == "2.5":
-            if _d < 12:
-                warns.append(f"C1b [{_sn}] 段时长 {_d}s < 12s 下限（2.5 建议 25~30s 吃满上限，过短会显著增加段数与段缝）")
-            elif 15 < _d < 25:
+            # ★P6.3 豁免：衔接段/过渡段/过场段/空镜段——用户明确的「段间过渡」产物，
+            #   本来就是几秒的短段（4~8s），拿「25~30s 吃满上限」去卡它等于禁止做过渡。
+            #   识别位：段标题与段缝说明区（段首 240 字）。
+            _is_link_seg = bool(re.search(r"衔接段|过渡段|过场段|空镜段", _st))
+            if _d < 12 and not _is_link_seg:
+                warns.append(f"C1b [{_sn}] 段时长 {_d}s < 12s 下限（2.5 建议 25~30s 吃满上限，过短会显著增加段数与段缝；若这是刻意的段间过渡段，请在段标题或段缝说明里写明「衔接段/过渡段」即豁免）")
+            elif 15 < _d < 25 and not _is_link_seg:
                 warns.append(f"C1b [{_sn}] 段时长 {_d}s 落在碎段区（2.5 默认 25~30s；16~24s 既吃不到长镜头红利又比 15s 更碎，除非打戏快节奏/单段信息量小，否则合并到 ≥25s）")
         _n = len(_tr_seg)
         # C2 镜头数上限 —— 对话段例外（2026-10-13 用户实测反馈）：
@@ -1731,7 +1441,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
         for _sn, _sb, _st in _segments_time:
             if len(_st) > MAX_CHARS:
                 issues.append(f"C4 [{_sn}] {len(_st)} 字符 > 预算 {MAX_CHARS}（多段文件按段判；"
-                              f"段级红线 ≤1900 字 / 2000 硬上限见 gate_check.py 闸门3。按 seedance-render-engine 压缩顺序裁删）")
+                              f"段级红线 2.0 ≤3000 字 / 2.5 ≤4000 字见 gate_check.py 闸门3。按 seedance-render-engine 压缩顺序裁删）")
     elif len(text) > MAX_CHARS:
         issues.append(f"C4 共 {_raw_len} 字符 > 预算 {MAX_CHARS}（篇级兜底·按整份文件 len() 计；段级字数见 gate_check.py 闸门3。按 seedance-render-engine 压缩顺序裁删）")
 
@@ -1749,7 +1459,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
 
     # C6 画幅回填
     # ★段名独立成行兼容（2026-10-12 修复）：原正则要求画幅值与【画幅风格】同在一行，
-    #   但 sd-real-engine/references/storyboard-example.md 用「段名独立成行、内容下一行」写法
+    #   但 历史示例稿 用「段名独立成行、内容下一行」写法
     #   （`【画幅风格】\n16:9 横屏, …`）——该稿自称"可直接整组复制投喂"，用户照抄即 C6 FAIL。
     #   `[^【\n]` 保证不跨到下一个段名（不会把【场景资产】里的画幅词误算作本段回填）。
     if not re.search(r"aspect_ratio\s*=", text) and not re.search(
@@ -1841,6 +1551,46 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
                       "调在前面，后面就不要（V7.3.6 · 规则命名沿革）")
     elif _pre_n > 1:
         issues.append(f"C24a 禁项重复（前置禁项块出现 {_pre_n} 份）——全稿只保留一处（V7.3.6 · 规则命名沿革）")
+
+    # ★P6.2 新增 C24c：镜行内嵌禁项（禁项已在段7 写过，镜行里不该再重复一遍）。
+    #   用户实测反馈（2026-10-23）：「你在后面放了禁止项了，前面的那里面就不要放了」。
+    #   病根：段7 已有禁项，镜行里又写「（禁转移给他人）」「（禁横穿教室）」——同一禁令出现两次，
+    #   模型会把镜行里的那一句当**画面描述**读（画一个"禁止"的状态），既占字数又抢正面描述的权重。
+    #   规则权威：model-adapters.md「禁项单点纪律：调在前面，后面就不要」。
+    _c24c = []
+    for ln_i, line in enumerate(text.splitlines(), 1):
+        if not TIME_RE.search(line) or "【强制禁止项" in line:
+            continue
+        _snd = line.find("声音：")
+        _pic = line[:_snd] if _snd >= 0 else line
+        _hits = re.findall(r"禁[^\s，。；、）]{1,12}", _pic)
+        if _hits:
+            _c24c.append(f"第{ln_i}行（{'、'.join(_hits[:2])}）")
+    if _c24c:
+        warns.append(
+            "C24c 镜行内嵌禁项：" + "；".join(_c24c[:6]) +
+            "——段7【强制禁止项】已写过禁令，镜行里不要再重复。镜行只写**正面的画面结果**"
+            "（「已坐直、双手收回桌上」而不是「（禁转移给他人）」）：重复的禁项会被模型当成画面内容读，"
+            "既抢正面描述的权重又白占字数。要禁的写进段7 一次，镜行只留怎么做")
+
+    # ★P6.2 新增 C24d：禁项条目超限（权威口径「极简四项 · 禁再加长清单」）。
+    #   病根：禁项长期只加不删，实测积累到 16~22 条（379 字）——长清单里每一条都在稀释真正的致命伤，
+    #   模型读到的是一锅平均权重。口径：四项基础（字幕/水印/背景音乐/旁白）+ 最多 2 条该段特有致命伤。
+    _c24d = []
+    for ln_i, line in enumerate(text.splitlines(), 1):
+        if not line.lstrip().startswith("【强制禁止项】"):
+            continue
+        _items = [x for x in re.split(r"[；;]", line) if "禁" in x]
+        _cnt = len(re.findall(r"禁[^、；。]{0,14}", line))
+        if _cnt > 6:
+            _c24d.append(f"第{ln_i}行（约 {_cnt} 条）")
+    if _c24d:
+        warns.append(
+            "C24d 禁项条目超限：" + "；".join(_c24d) +
+            "——权威口径是**极简四项**（画面：禁字幕、禁水印（含 Logo）；音频：禁背景音乐、禁旁白），"
+            "最多再加 2 条该段特有致命伤，共 ≤6 条（model-adapters.md「禁项极简 · 禁再加长清单」）。"
+            "长清单的害处：每条都在稀释真正的致命伤，模型读到一锅平均权重；"
+            "能靠正面描述写死的（服装状态/姿态/位移）一律正面写死，不要塞进禁项")
 
     # ---- C25 表演层（acting-direction.md · 2026-10-09 新增）----
     #   a 画面段抽象神态词 → WARN（神态须是看得见的肌肉动作）
@@ -1963,7 +1713,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
     # C12 转场术语（2026-10-13 体检修复 A1）：文档三处声称拦、机检词表曾未覆盖 → 补机检兜底。
     #   术语只在分镜层标注（段缝两侧逐对标接缝式别），投喂稿转译成「画面怎么接」。
     #   抽帧豁免（2026-10-13 交叉 Gemini 修法合入）：「12fps 抽帧」「抽帧感」是 C23 法定风格参数
-    #   写法（王家卫 step-printing 语法，demo-feed-wkw 成稿在用），前置 Nfps 或后接「感」即放行。
+    #   写法（王家卫 step-printing 语法，历史示例稿 A 成稿在用），前置 Nfps 或后接「感」即放行。
     trans = []
     for _m in C12_TRANSITION_RE.finditer(_feed_probe):
         if _m.group(0) == "抽帧":
@@ -1979,11 +1729,8 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
                      "进入，画面还停在上一场」）；规则权威 creative-transition-library.md §1.3")
 
     # C14 画外声（OS/VO）——规程见 vo-os-weaving.md
-    # C14n 解说叙事类专线（赛道③）——规程见 sd-jieshuo-engine/SKILL.md §八
-    is_narr = track in NARR_TRACKS
     os_shots = vo_shots = 0
     vo_os_chars = 0
-    vo_lines = []          # 赛道③：收集旁白镜 (行号, 画面段) 供 C14n 旁白-画面映射判据
     for ln_i, line in enumerate(text.splitlines(), 1):
         # 只统计【时间轴分镜】的镜行：OS/VO 是"在某镜里发声"的行为，
         # 【强制禁止项】/【音效】里出现"画外音/旁白"等字样不是使用，计入会误报配额。
@@ -1999,8 +1746,6 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
         pic_seg = line[:snd_idx] if snd_idx >= 0 else line[:dlg_idx] if dlg_idx >= 0 else line
         snd_seg = line[snd_idx:] if snd_idx >= 0 else ""
         dlg_seg = line[dlg_idx:] if dlg_idx >= 0 else ""
-        if is_narr and is_vo:
-            vo_lines.append((ln_i, pic_seg))
         # ① 声画分离红线：OS 镜行画面段含开口词
         if is_os and MOUTH_PAT.search(pic_seg):
             issues.append(f"C14 第{ln_i}行 OS 声画分离红线：画面段出现开口词——独白发声时角色必须闭口，"
@@ -2014,8 +1759,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
         # 配额统计（中文字符）
         seg = snd_seg if snd_seg else pic_seg
         vo_os_chars += len(re.findall(r"[\u4e00-\u9fa5]", seg))
-    if not is_narr:
-        # 剧情演绎赛道（①②④）：VO/OS 是配额制调味料，三项篇幅卡口按段独立核算（防多段稿全篇累加误报）
+        # VO/OS 是配额制调味料，三项篇幅卡口按段独立核算（防多段稿全篇累加误报）
         _c14_segs = _segments_time if _segments_time else [("全文", 1, text)]
         for _sn14, _sb14, _st14 in _c14_segs:
             _os14 = _vo14 = _ch14 = 0
@@ -2043,15 +1787,6 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
             _bdg14 = VO_OS_QUOTA * max(1, round(_dur14 / 15)) if _dur14 else VO_OS_QUOTA
             if _ch14 > _bdg14 + VO_OS_QUOTA_SLACK:
                 warns.append(f"C14 {_pfx14}段内 VO+OS 总字数≈{_ch14} 字 > 折算上限 {_bdg14} 字（60~80 字/分钟钢性卡口，容差线 +{VO_OS_QUOTA_SLACK}）——删到只剩点题句")
-    else:
-        # 赛道③ 解说叙事：VO 即主体（80~100%），篇幅卡口整体豁免（sd-jieshuo-engine §八）。
-        # 改判 C14n 旁白句-画面映射：每句旁白须配画面承载（画面是注释不是复述）。
-        for ln_i, pic in vo_lines:
-            if _pic_content_len(pic) < NARR_PIC_MIN:
-                warns.append(f"C14n 第{ln_i}行 旁白镜无画面描述——解说类「一句旁白配 1~2 个画面」，"
-                             "旁白走「声音：」段、画面段必须给注释画面（不许只剩机位规格）；"
-                             "把旁白删掉画面信息量不得减少（sd-jieshuo-engine §八 · 声画信息差纪律）")
-
     # C13 镜长雷同（节奏呼吸 · quality-gate-review P1 反例）
     # 对话段豁免（2026-10-13 用户裁定「对话段全面豁免」）：回合制正反打的镜长本就
     #   高度整齐（2s 一切是标准形态），C13 会把这种整齐误判成「机械等分」。
@@ -2081,7 +1816,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
                              "总时长允许比剧本标注短至 -25%，宁短勿拉")
         if not has_dialogue and dur > PURE_AMBIENT_SEG_MAX:
             # ★打戏稿豁免（2026-10-12 修复）：动作段全程"台词：无"是**常态而非病症**——
-            #   sd-real-engine/references/storyboard-example.md（官方完整示例）四镜全无台词，
+            #   历史示例稿（官方完整示例）四镜全无台词，
             #   却因本判据误报"纯氛围段拉伸凑时"。C15 治的是文戏"拿氛围镜凑时长"，
             #   对打戏/动作段不适用；与 C21/C22 同属「打戏档按豁免表放行」族（combat-rhythm-and-load-guardrails.md §七）。
             if not _combat_on(text, combat):
@@ -2332,6 +2067,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
     #   C27b 对话段台词密度 < 2.0 字·秒⁻¹（15s 段 < 30 字）→ WARN
     #   C27c 对话段开口次数 < 6 次/15s（按段长等比折算，下限 3）→ WARN
     #   C27d 同一说话人连续占据 ≥2 个完整镜行开口 → WARN（站桩式对话）
+    #        ※P8（2026-10-24）：镜内出现 ≥2 个不同说话人 = 已换嘴，豁免并打断连排
     # 豁免（**2026-10-13 用户补充「灵活、服务剧情」后扩写**）：
     #   ① 空镜段 / 转场段 / 打斗段 —— 不设下限；
     #   ② **该慢的戏** —— 静场 / 宣判 / 留白 / 氛围 / 长镜 等**显式标注**的段落，三条全跳过。
@@ -2391,8 +2127,31 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
                     continue
                 _chars += len(re.sub(r"[\s，。！？、；：…—\"'（）()《》【】\[\],.!?;:]+", "", _q))
                 _open_cnt += 1
-                _spm = re.findall(r"@?([^\s@（(【，,、]{1,8})\s*[（(]", _seg_txt)
-                _speakers.append(_spm[0] if _spm else "?")
+            # ★P8 修（2026-10-24 · 网友实跑反馈 P-03 核验后修正）：
+            #   判据原文是「同一说话人连续占据 ≥2 个完整**镜行**」，旧实现「一个镜行只记第一个
+            #   【】括注里的人名」→ **镜内换嘴（一镜两人对答）被记成同一人独占**。
+            #   实测：连续两镜都写 `台词：【甲（冷）："…"】【乙（急）："…"】`（V7 允许、正反打
+            #   高频写法）→ 误报「甲 连续 ≥2 镜独占开口」。真写了一半的稿子被判站桩，
+            #   用户会以为自己写得差（网友原话：改成「每镜只留一人开口 + 严格交替」仍报）。
+            #   现改为：本镜行内出现 **≥2 个不同说话人 = 已换嘴**，记为 __MULTI__，
+            #   既不进独占连排统计，还**打断连排**（换嘴就是换嘴，不管换在第几镜）。
+            _ln_sps = []
+            for _br in re.findall(r"【([^】]*)】", _seg_txt):
+                # 名字只取括注**开头**，避免把引号内台词里的「某某（…）」当成第二个说话人
+                _msp = re.match(r"\s*@?\s*([^\s@（(【，,、:：]{1,8})\s*[（(]", _br)
+                if _msp and _msp.group(1) not in _ln_sps:
+                    _ln_sps.append(_msp.group(1))
+            if not _ln_sps:
+                # 无【】格式的旧稿：退化为「名字（」扫描，按出现顺序去重
+                for _msp in re.finditer(r"@?([^\s@（(【，,、:：]{1,8})\s*[（(]", _seg_txt):
+                    if _msp.group(1) not in _ln_sps:
+                        _ln_sps.append(_msp.group(1))
+            if len(_ln_sps) >= 2:
+                _speakers.append("__MULTI__")
+            elif _ln_sps:
+                _speakers.append(_ln_sps[0])
+            else:
+                _speakers.append("?")
         _need_chars = int(_seg_len * 2.0)
         if _chars < _need_chars:
             warns.append(f"C27b 对话段台词密度不足（{_n}）：{_seg_len:.0f} 秒仅 {_chars} 字"
@@ -2408,9 +2167,13 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
                          f"（下限 {_need_open} 次 ≈15 秒 6 次）——正反打来回不够，"
                          "读起来是「一个人说完另一个人说」的站桩式对话。补法：短句化 + 换嘴切镜 + OS 补位")
         # C27d 同一说话人连续占据 ≥2 个完整镜行开口（站桩式对话）
+        #   镜内换嘴行（__MULTI__）不算独占，且打断连排
         _prev_sp, _run = None, 0
         _run_hit = []
         for _sp in _speakers:
+            if _sp == "__MULTI__":
+                _prev_sp, _run = None, 0
+                continue
             if _sp == _prev_sp and _sp != "?":
                 _run += 1
                 if _run >= 2:
@@ -2424,6 +2187,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
                          + " 连续 ≥2 镜独占开口——切镜点应按「**回合**」切（每切一次换嘴），"
                            "不是按「内容块」切。判据：一次切镜至少换 说话人/景别/角度/主体 之一；"
                            "⛔「只为这句说完了而切、其余变量全不变」= 废切"
+                           "（镜内两人对答的一镜已按「已换嘴」豁免，不参与本判据）"
                            "（shot-economy-and-acting.md §五·七·①）")
 
     # C27x 跳过率元告警（2026-10-13 新增 · 治「保守跳过型检查静默全绿」）
@@ -2450,52 +2214,50 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
     #   C28a 台词出现现代书面虚词（§2.2 A 类表，任何题材的口语台词都不这么说）→ WARN
     #   C28b 对话段台词 ≥40 字且语气词数为 0（机械化最典型指纹）→ WARN
     #   C28c 单句 ≥20 字且句内无任何停顿标点（人说话会断）→ WARN
-    # 豁免：赛道③ 解说叙事类（旁白 VO 本就是书面叙事语体）整体豁免。
     # ⛔ 本码只报不改——下游禁改台词；修复须回阶段⑤ 过《台词拟人化过站》。
     C28_BOOKISH = ("是否", "因此", "从而", "鉴于", "予以", "加以", "可否", "何以",
                    "颇为", "甚为", "以及", "然而", "由于", "进行")
     C28_PARTICLE = ("啊", "吧", "呢", "嘛", "呗", "啦", "呀", "哦", "咯", "嗯",
                     "唉", "哎", "嘿", "哟", "罢了", "而已")
     C28_PAUSE = ("，", "、", "—", "…", "；", "：", "?", "？", "!", "！")
-    if track != "3":
-        _c28_words, _c28_b, _c28_c = set(), [], []
-        for (_n, _b, _l, _blk, _ppl, _shots, _dlgs) in seg_zw:
-            if not _dlgs:
-                continue
-            _styp28 = _c27_seg_type(_l)
-            _s_chars, _s_part = 0, 0
-            for _ln_no, _ln, _pos in _dlgs:
-                _seg_txt = _ln[_pos + len("台词："):]
-                for _q in re.findall(r"[\"“]([^\"”]*)[\"”]", _seg_txt):
-                    if not _q.strip():
-                        continue
-                    for _w in C28_BOOKISH:
-                        if _w in _q:
-                            _c28_words.add(_w)
-                    _s_chars += len(re.sub(r"[\s，。！？、；：…—\"'（）()《》【】\[\],.!?;:]+", "", _q))
-                    _s_part += sum(1 for _p in C28_PARTICLE if _p in _q)
-                    for _sent in re.split(r"[。！？!?]+", _q):
-                        _s = _sent.strip()
-                        if len(_s) >= 20 and not any(_p in _s for _p in C28_PAUSE):
-                            _c28_c.append((_n, _s[:24]))
-            if _styp28 == "dialogue" and _s_chars >= 40 and _s_part == 0:
-                _c28_b.append((_n, _s_chars))
-        if _c28_words:
-            warns.append("C28a 台词出现现代书面虚词：" + "、".join(sorted(_c28_words))
-                         + " —— 口语台词不这么说（「是否」→「是不是」、「因此」→「所以」、"
-                           "「以及」→「还有」、「进行+名词」→ 直接用动词）。"
-                           "⛔ 本码只报不改（下游铁律：台词逐字保留）；修复须回阶段⑤ 过"
-                           "《台词拟人化过站》（dialogue-naturalization.md §二·2 词汇表 + §三 撒碎屑四法）")
-        if _c28_b:
-            _seg_s = "、".join(_x for _x, _ in _c28_b[:3])
-            warns.append(f"C28b 对话段零语气词（{_seg_s}）：整段对话没有任何「啊/吧/呢/嘛」类句尾助词"
-                         "——这是机械化台词最典型的指纹。补法见 dialogue-naturalization.md §三·4"
-                         "（⚠️ 宣判段/静场留白段属刻意处理，须在段首显式标注段落意图）")
-        if _c28_c:
-            _n0, _s0 = _c28_c[0]
-            warns.append(f"C28c 长句无停顿（{_n0}）：「{_s0}…」单句 ≥20 字且句内无任何停顿标点"
-                         "——人说话会断气。拆法：加逗号/破折号/省略号，或按 §三·1·2 打断掉尾"
-                         "（dialogue-naturalization.md §二·4 句式层）")
+    _c28_words, _c28_b, _c28_c = set(), [], []
+    for (_n, _b, _l, _blk, _ppl, _shots, _dlgs) in seg_zw:
+        if not _dlgs:
+            continue
+        _styp28 = _c27_seg_type(_l)
+        _s_chars, _s_part = 0, 0
+        for _ln_no, _ln, _pos in _dlgs:
+            _seg_txt = _ln[_pos + len("台词："):]
+            for _q in re.findall(r"[\"“]([^\"”]*)[\"”]", _seg_txt):
+                if not _q.strip():
+                    continue
+                for _w in C28_BOOKISH:
+                    if _w in _q:
+                        _c28_words.add(_w)
+                _s_chars += len(re.sub(r"[\s，。！？、；：…—\"'（）()《》【】\[\],.!?;:]+", "", _q))
+                _s_part += sum(1 for _p in C28_PARTICLE if _p in _q)
+                for _sent in re.split(r"[。！？!?]+", _q):
+                    _s = _sent.strip()
+                    if len(_s) >= 20 and not any(_p in _s for _p in C28_PAUSE):
+                        _c28_c.append((_n, _s[:24]))
+        if _styp28 == "dialogue" and _s_chars >= 40 and _s_part == 0:
+            _c28_b.append((_n, _s_chars))
+    if _c28_words:
+        warns.append("C28a 台词出现现代书面虚词：" + "、".join(sorted(_c28_words))
+                     + " —— 口语台词不这么说（「是否」→「是不是」、「因此」→「所以」、"
+                       "「以及」→「还有」、「进行+名词」→ 直接用动词）。"
+                       "⛔ 本码只报不改（下游铁律：台词逐字保留）；修复须回阶段⑤ 过"
+                       "《台词拟人化过站》（dialogue-naturalization.md §二·2 词汇表 + §三 撒碎屑四法）")
+    if _c28_b:
+        _seg_s = "、".join(_x for _x, _ in _c28_b[:3])
+        warns.append(f"C28b 对话段零语气词（{_seg_s}）：整段对话没有任何「啊/吧/呢/嘛」类句尾助词"
+                     "——这是机械化台词最典型的指纹。补法见 dialogue-naturalization.md §三·4"
+                     "（⚠️ 宣判段/静场留白段属刻意处理，须在段首显式标注段落意图）")
+    if _c28_c:
+        _n0, _s0 = _c28_c[0]
+        warns.append(f"C28c 长句无停顿（{_n0}）：「{_s0}…」单句 ≥20 字且句内无任何停顿标点"
+                     "——人说话会断气。拆法：加逗号/破折号/省略号，或按 §三·1·2 打断掉尾"
+                     "（dialogue-naturalization.md §二·4 句式层）")
 
     # C29 资产状态偏离探测（2026-10-13 新增 · 增量主码 · 编号不重排 · 只报不改）
     # 由来（用户实测）：外卖员资产图**戴着头盔**，提示词让他坐家里、**把头盔夹在怀里** →
@@ -2505,52 +2267,55 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
     #   + asset-spatial-ledger.md §四·B·补 CHAR_STATE）。
     # 判据：镜行出现「脱离动词 + 名词」，且该名词在【核心人物】行中出现（＝属角色锁定项），
     #   而全稿无偏离声明（"偏离 / 以本段为准 / 覆盖角色参考图"）→ WARN。
-    # 豁免：赛道③ 解说类（无角色资产锁定链）。
     # ⛔ 只报不改——修复须回 P4 补偏离标注（或回资产层登记 CHAR_STATE 出脱离态参考图）。
     C29_DETACH = ("摘下", "脱下", "取下", "解开", "夹在", "夹着", "拎着", "拎在",
                   "捧在", "捧起", "抱在怀", "挂在", "别在", "端在")
     C29_DECL = ("偏离", "以本段为准", "覆盖角色参考图", "覆盖参考图")
-    if track != "3":
-        _h29 = []
-        _c29_segs = _segments_time if _segments_time else [("全文", 1, text)]
-        _all_ch29 = "\n".join(m.group(1) for m in re.finditer(r"【核心人物】([\s\S]*?)(?=\n【|$)", text))
-        for _sn29, _sb29, _st29 in _c29_segs:
-            _m_ch29 = re.search(r"【核心人物】([\s\S]*?)(?=\n【|$)", _st29)
-            _ch29 = _m_ch29.group(1) if _m_ch29 else _all_ch29
-            _dec29 = any(_d in _st29 for _d in C29_DECL)
-            if _ch29 and not _dec29:
-                for _line29 in _st29.splitlines():
-                    _l29 = _line29.strip()
-                    if not _l29 or _l29.startswith("【"):
+    _h29 = []
+    _c29_segs = _segments_time if _segments_time else [("全文", 1, text)]
+    _all_ch29 = "\n".join(m.group(1) for m in re.finditer(r"【核心人物】([\s\S]*?)(?=\n【|$)", text))
+    for _sn29, _sb29, _st29 in _c29_segs:
+        _m_ch29 = re.search(r"【核心人物】([\s\S]*?)(?=\n【|$)", _st29)
+        _ch29 = _m_ch29.group(1) if _m_ch29 else _all_ch29
+        _dec29 = any(_d in _st29 for _d in C29_DECL)
+        if _ch29 and not _dec29:
+            for _line29 in _st29.splitlines():
+                _l29 = _line29.strip()
+                if not _l29 or _l29.startswith("【"):
+                    continue
+                # ★审计补丁P1 修：台词里的「摘下来」是人物在说话，不是画面指令 → 先剥台词再判
+                _l29 = re.sub(r"台词：.*$", "", _l29)
+                if not _l29:
+                    continue
+                for _dv29 in C29_DETACH:
+                    _i29 = _l29.find(_dv29)
+                    if _i29 < 0:
                         continue
-                    # ★审计补丁P1 修：台词里的「摘下来」是人物在说话，不是画面指令 → 先剥台词再判
-                    _l29 = re.sub(r"台词：.*$", "", _l29)
-                    if not _l29:
-                        continue
-                    for _dv29 in C29_DETACH:
-                        _i29 = _l29.find(_dv29)
-                        if _i29 < 0:
+                    # 名词可能在动词**前**（"把头盔夹在…"）或**后**（"夹着头盔"）→ 前后都扫；
+                    # 取「在【核心人物】行中出现过的最长中文串」作为命中词（防碎片误匹配）
+                    _ctx29 = _l29[max(0, _i29 - 10):_i29 + len(_dv29) + 10]
+                    _best29 = ""
+                    for _st_i in range(len(_ctx29)):
+                        for _ln29 in (5, 4, 3, 2):
+                            _w29 = _ctx29[_st_i:_st_i + _ln29]
+                            if len(_w29) == _ln29 and _w29 in _ch29 and len(_w29) > len(_best29):
+                                _best29 = _w29
+                    if _best29:
+                        # ★P6.3 修误报：命中的「名词」若本身是角色名，不算锁定物品—— 
+                        #   实测「书包挂在左肩，@沈甜 侧头…」会把「沈甜」当被脱离的物品（假 WARN）。
+                        _names29 = set(re.findall(r"@([^\s（(，、）]+)", _ch29))
+                        if _best29.lstrip("@") in _names29:
                             continue
-                        # 名词可能在动词**前**（"把头盔夹在…"）或**后**（"夹着头盔"）→ 前后都扫；
-                        # 取「在【核心人物】行中出现过的最长中文串」作为命中词（防碎片误匹配）
-                        _ctx29 = _l29[max(0, _i29 - 10):_i29 + len(_dv29) + 10]
-                        _best29 = ""
-                        for _st_i in range(len(_ctx29)):
-                            for _ln29 in (5, 4, 3, 2):
-                                _w29 = _ctx29[_st_i:_st_i + _ln29]
-                                if len(_w29) == _ln29 and _w29 in _ch29 and len(_w29) > len(_best29):
-                                    _best29 = _w29
-                        if _best29:
-                            _h29.append(_dv29 + "·" + _best29)
-        if _h29:
-            warns.append("C29 疑似资产状态偏离未声明：" + "、".join(sorted(set(_h29))[:4])
-                         + " —— 该物品出现在【核心人物】行（属角色锁定项），"
-                           "但本段要求它脱离身体、且全稿无偏离声明。"
-                           "⚠️ 参考图锁定的是「它长什么样」，不是「它必须在身上」；"
-                           "缺替换声明时**模型会【叠加】而非【替换】**（实测表现：头上一个 + 手里一个 的双现）。"
-                           "补法：①【核心人物】行尾加偏离标注（须含「以本段提示词为准，覆盖角色参考图」替换语）；"
-                           "② 补脱离后本体的物理后果（如「额前头发被压扁」）；③ 禁项兜底。"
-                           "（权威：model-adapters.md §5.0.6；跨 2 镜以上改走 CHAR_STATE 出脱离态参考图）")
+                        _h29.append(_dv29 + "·" + _best29)
+    if _h29:
+        warns.append("C29 疑似资产状态偏离未声明：" + "、".join(sorted(set(_h29))[:4])
+                     + " —— 该物品出现在【核心人物】行（属角色锁定项），"
+                       "但本段要求它脱离身体、且全稿无偏离声明。"
+                       "⚠️ 参考图锁定的是「它长什么样」，不是「它必须在身上」；"
+                       "缺替换声明时**模型会【叠加】而非【替换】**（实测表现：头上一个 + 手里一个 的双现）。"
+                       "补法：①【核心人物】行尾加偏离标注（须含「以本段提示词为准，覆盖角色参考图」替换语）；"
+                       "② 补脱离后本体的物理后果（如「额前头发被压扁」）；③ 禁项兜底。"
+                       "（权威：model-adapters.md §5.0.6；跨 2 镜以上改走 CHAR_STATE 出脱离态参考图）")
 
     # C18m 段缝景别落差（2026-10-11 新增 · 用户实测反馈 · 当日二次确权 · segment-splicing.md §四·补）
     # 病根：段缝换机位铁律只要求「换视角或换景别其一」——于是「末镜拉全景收束 → 下段首镜
@@ -2961,7 +2726,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
             body_local = re.search(r"的手|的脚|的脸|的手背|的肩膀|的侧脸|的眼|画面主体", first_clause)
             # ★群体主语识别（2026-10-12 修复）：打戏/群戏开场惯用「两人同时向前抢步」「双方对峙」
             #   这类**不含具体人名**的群体主语——它本身就在写人物，不是环境前置。
-            #   原判据只认 `她/他/其` 与站位人名，导致官方示例 storyboard-example.md 连报 2 条假告警。
+            #   原判据只认 `她/他/其` 与站位人名，导致官方示例 历史示例稿 连报 2 条假告警。
             crowd_subject = re.search(
                 r"^[^，。；]{0,8}(?:两人|二人|双方|对阵|对峙|缠斗|交手|对打|互殴|搏斗|群演|人群|众人|士兵们|双方同时|两人同时)",
                 first_clause)
@@ -3139,7 +2904,7 @@ def validate(text, model="2.5", mode="new", track="1", combat="auto", c23="auto"
                 )
 
     # ---- 运镜门 C18g~l（short-drama-camera-system.md §四 · 2026-10-10 新增）----
-    # 病根：§四 把运镜约束写得极厚，但**零机检载体**——运镜词此前只出现在 C14n 的剥离词表里
+    # 病根：§四 把运镜约束写得极厚，但**零机检载体**——运镜词此前只出现在已下线专线的剥离词表里
     # （用来把运镜词从画面描述里扣掉），不参与校验。实测「一镜之内同时完成推拉摇移跟升降环绕
     # 变焦八种运镜」「毫无动机地疯狂甩动、无动机变焦」两份病灶稿 → 全部 PASSED。本组补上。
     _cam_heads = [(ln_i, _shot_head(l)) for ln_i, l in shot_lines]
@@ -3921,43 +3686,6 @@ def _self_test():
     if any("C14" in w and "总字数" in w for w in warns):
         print("FAIL self-test: 禁止项中的画外音字样不应计入 C14 配额", warns); ok = 0
 
-    # ---- C14n 解说叙事类专线（--track 3）----
-    # 合规解说稿：两镜全长 VO（总字数远超剧情卡口）+ 每镜带画面描述
-    t_narr = ("【画幅风格】16:9 横屏, 年代质感, 胶片颗粒 (aspect_ratio=16:9)\n"
-              "【场景资产】@SCN-深宅门楼（外观以场景参考图锁定）\n"
-              "【核心人物】@CHR-女主（以插画形象出场，不做跨镜连续表演）\n"
-              "【站位声明】：@女主（画面中 · 立于门楼前 · 侧身45°朝左 · 双手交握）；轴线锁定：单人无轴线；位移：全员原位，无位移。\n"
-              "【时间轴分镜】\n"
-              "00:00-00:05 [镜头1] 中景 · 平视 · 缓推。青灰门楼上悬着褪色匾额，女主立在阶下仰头。"
-              "声音：画外·旁白（VO·沉稳）：\"公元一八九八年冬天，十九岁的她走进这座深宅，此后再没出来过。\"。台词：无。\n"
-              "00:05-00:10 [镜头2] 近景 · 略俯 · 固定。女主指尖抚过门环，铜环上结着一层薄霜。"
-              "声音：画外·旁白（VO·沉稳）：\"没人知道她那晚在门里说了什么，只知道第二天，整座城的规矩都变了。\"。台词：无。\n"
-              "【音效】风雪声、铜环轻响\n"
-              "【强制禁止项】画面：角色变形、穿模、现代元素；文字：无字幕水印\n")
-    # 20a) 赛道③：全片 VO + 超篇幅 → C14 篇幅卡口豁免，不报任何 C14 WARN
-    iss, warns, _ = validate(t_narr, "2.5", "new", "3")
-    if any("C14" in w for w in warns):
-        print("FAIL self-test: 赛道③ 应豁免 C14 篇幅告警（豁免失效）", [w for w in warns if "C14" in w]); ok = 0
-    # 20b) 同一稿走剧情赛道（track=1）→ 卡口照常报（证明豁免只对赛道③，未污染剧情赛道）
-    _, warns_n1, _ = validate(t_narr, "2.5", "new", "1")
-    if not any("C14" in w and ("VO 旁白" in w or "总字数" in w) for w in warns_n1):
-        print("FAIL self-test: 剧情赛道应对解说式长 VO 照常报 C14", warns_n1); ok = 0
-    # 20c) 赛道③ C14n：旁白镜只剩机位规格、无画面描述 → WARN
-    t_narr_nopic = t_narr.replace(
-        "00:05-00:10 [镜头2] 近景 · 略俯 · 固定。女主指尖抚过门环，铜环上结着一层薄霜。",
-        "00:05-00:10 [镜头2] 近景 · 略俯 · 固定。")
-    _, warns, _ = validate(t_narr_nopic, "2.5", "new", "3")
-    if not any("C14n" in w for w in warns):
-        print("FAIL self-test: 赛道③ 旁白镜无画面描述应报 C14n", warns); ok = 0
-    # 20d) 赛道③ 回归：合规解说稿（每镜带画面）不应报 C14n
-    _, warns, _ = validate(t_narr, "2.5", "new", "3")
-    if any("C14n" in w for w in warns):
-        print("FAIL self-test: 合规解说稿不应报 C14n", warns); ok = 0
-    # 20e) 赛道③ C14 FAIL 红线不可豁免：旁白写进台词字段 → FAIL
-    t_narr_bad = t_narr.replace("台词：无。", "台词：【旁白：\"公元一八九八年冬天。\"】", 1)
-    iss, _, _ = validate(t_narr_bad, "2.5", "new", "3")
-    if not any("C14" in x for x in iss):
-        print("FAIL self-test: 赛道③ 仍应拦截 VO 写进台词字段（C14 FAIL 不可豁免）", iss); ok = 0
     # 21) C16a 语气错位：有台词镜行的画面段出现声音词 → WARN
     t_tone_mis = (t_ok.replace("她从袖中抽出信件。", "她嘶哑地抬起头。")
                        .replace("台词：无。", "台词：【女主（气音·发颤）：\"你也配提她。\"】", 1))
@@ -4229,30 +3957,30 @@ def _self_test():
                    "【音效】骨肉闷响、碎石崩落\n"
                    "【强制禁止项】字幕、水印。\n")
     # 48) 合规打戏样例（每区间有位移 + 有接触 + 机位变化）→ 不报 C21
-    _, warns, _ = validate(t_combat_ok, "2.0", "new", "1", "on")
+    _, warns, _ = validate(t_combat_ok, "2.0", "new", "on")
     _c21 = [w for w in warns if w.startswith("C21")]
     if _c21:
         print("FAIL self-test: 合规打戏样例不应报 C21", _c21); ok = 0
     # 48b) C21 触发门：文戏稿（auto）不启用 → 不报 C21
-    _, warns, _ = validate(t_ok, "2.5", "new", "1", "auto")
+    _, warns, _ = validate(t_ok, "2.5", "new", "auto")
     if any(w.startswith("C21") for w in warns):
         print("FAIL self-test: 文戏稿不应触发 C21（触发门失效）", [w for w in warns if w.startswith("C21")]); ok = 0
     # 48c) C21 强制关闭：打戏稿 --combat off → 不报 C21
-    _, warns, _ = validate(t_combat_ok, "2.0", "new", "1", "off")
+    _, warns, _ = validate(t_combat_ok, "2.0", "new", "off")
     if any(w.startswith("C21") for w in warns):
         print("FAIL self-test: --combat off 不应报 C21"); ok = 0
     # 49) C21a 位移缺失：连续 3 个区间站着不动（只有发光）→ WARN
     t_c21a = (t_combat_ok.replace("冲向 @魔主，一拳击中其胸口，@魔主 滑退三步", "站定，周身灵力暴涨")
                           .replace("反手扫腿踹中 @剑修 小腹，@剑修 翻滚两圈撞碎碎石", "站定，周身黑气鼓荡")
                           .replace("跃起劈掌砸中 @魔主 肩甲，@魔主 横飞撞塌石柱", "站定，剑芒暴涨"))
-    _, warns, _ = validate(t_c21a, "2.0", "new", "1", "on")
+    _, warns, _ = validate(t_c21a, "2.0", "new", "on")
     if not any("C21a" in w for w in warns):
         print("FAIL self-test: 连续区间无位移应报 C21a", [w for w in warns if w.startswith("C21")]); ok = 0
     # 50) C21b 零实体接触：全片只剩隔空发光 → WARN
     t_c21b = (t_combat_ok.replace("冲向 @魔主，一拳击中其胸口，@魔主 滑退三步", "冲向 @魔主，一道剑气掠出")
                           .replace("反手扫腿踹中 @剑修 小腹，@剑修 翻滚两圈撞碎碎石", "抬手，一道黑气激荡")
                           .replace("跃起劈掌砸中 @魔主 肩甲，@魔主 横飞撞塌石柱", "腾空，一道剑罡暴涨"))
-    _, warns, _ = validate(t_c21b, "2.0", "new", "1", "on")
+    _, warns, _ = validate(t_c21b, "2.0", "new", "on")
     if not any("C21b" in w for w in warns):
         print("FAIL self-test: 全片零实体接触应报 C21b", [w for w in warns if w.startswith("C21")]); ok = 0
     # 51) C21c 贴身时长不足：15s 片中仅前 3s 有接触（20% < 33%）→ WARN
@@ -4261,7 +3989,7 @@ def _self_test():
               "[镜头2] 3-6秒，近景·仰视，@魔主 滑退，@剑修 追击冲出画框。声音：风声。\n"
               "[镜头3] 6-9秒，全景·俯视，@剑修 跃起翻滚落地。声音：落地声。\n"
               "[镜头4] 9-15秒，远景·平视，@魔主 暴退腾空。声音：呼啸。\n")
-    _, warns, _ = validate(t_c21c, "2.0", "new", "1", "on")
+    _, warns, _ = validate(t_c21c, "2.0", "new", "on")
     if not any("C21c" in w for w in warns):
         print("FAIL self-test: 贴身对招占比不足应报 C21c", [w for w in warns if w.startswith("C21")]); ok = 0
     # 52) C21d 构图未变：连续 3 个区间同为「中景·平视」→ WARN
@@ -4269,141 +3997,17 @@ def _self_test():
               "[镜头1] 0-3秒，中景·平视，@剑修 冲向 @魔主，一拳击中其胸口。\n"
               "[镜头2] 3-6秒，中景·平视，@魔主 滑退，@剑修 追击扑上。\n"
               "[镜头3] 6-9秒，中景·平视，@剑修 跃起翻滚落地。\n")
-    _, warns, _ = validate(t_c21d, "2.0", "new", "1", "on")
+    _, warns, _ = validate(t_c21d, "2.0", "new", "on")
     if not any("C21d" in w for w in warns):
         print("FAIL self-test: 连续区间机位未变应报 C21d", [w for w in warns if w.startswith("C21")]); ok = 0
 
-    # ---- H 系列：MiniMax H3 格式支线（--model h3）----
-    h3_ok = ("subject_definitions:\n"
-             "<Subject 1> 为 <Picture 1> 中的年轻女子：长发挽低髆、白玉簪，炭灰色高领窄袖长袍。\n"
-             "<Subject 2> 为 <Picture 2> 中的年轻男子：深色短发束于脑后，左眉上方一道细疤。\n"
-             "<Audio 1> 为 <Subject 1>（S1）的音色参考：低而略带沙哑的女声。\n\n"
-             "summary:\n[reference generation + audio reference] 目标视频为 <Subject 1> 与 <Subject 2> 雨夜对坐，"
-             "以 <Audio 1> 作 <Subject 1> 的音色参考。\n\n"
-             "retention_analysis:\n"
-             "<Subject 1>（出现于 [Shot 1]、[Shot 2]）：fully_preserved - 长发低髆与炭灰长袍保留。\n"
-             "<Subject 2>（出现于 [Shot 1]、[Shot 2]）：fully_preserved - 深色短发与眉上细疤保留。\n"
-             "<Audio 1>：reference - 只取其音色引导念白，不复制原始信号。\n\n"
-             "detailed_description:\n目标视频为实拍武侠文戏，夜雨冷青色调，35mm 浅景深。\n"
-             "[Shot 1] 全景确立回廊。<Subject 1> 立于木栏旁，以 <Audio 1> 所参考的低而沙哑音色（S1）说：<d>[Chinese] 你迟了半刻。</d> 说完闭口。\n"
-             "[Shot 2] 在 00:05.000 处，镜头切至 <Subject 2> 的中近景。<Subject 2>（S2）以平直语速说：<d>[Chinese] 名册，我拿来了。</d>\n\n"
-             "overall_soundscape:\n雨打石板，风铃轻响两声。\n\n"
-             "non_diegetic_music:\n古琴单音起于慢速，末帧前收掉。\n")
-    iss, _, _ = validate_h3(h3_ok)
-    if iss:
-        print("FAIL self-test: 合规 H3 Ref2VA 样例不应报错", iss); ok = 0
-    # H1 缺段
-    iss, _, _ = validate_h3(h3_ok.replace("<Subject 1>（出现于 [Shot 1]、[Shot 2]）：fully_preserved - 长发低髆与炭灰长袍保留。\n", "")
-                               .replace("<Subject 2>（出现于 [Shot 1]、[Shot 2]）：fully_preserved - 深色短发与眉上细疤保留。\n", "")
-                               .replace("<Audio 1>：reference - 只取其音色引导念白，不复制原始信号。\n", "")
-                               .replace("retention_analysis:\n", ""))
-    if not any("H1" in i for i in iss):
-        print("FAIL self-test: Ref2VA 缺段应报 H1", iss); ok = 0
-    # H2 首镜带时间戳
-    iss, _, _ = validate_h3(h3_ok.replace("[Shot 1] 全景确立回廊。", "[Shot 1] 在 00:00.000 处，全景确立回廊。"))
-    if not any("H2" in i for i in iss):
-        print("FAIL self-test: [Shot 1] 带时间戳应报 H2"); ok = 0
-    # H3 时长越界
-    iss, _, _ = validate_h3(h3_ok + '"duration_seconds": 20\n')
-    if not any("H3" in i and "越界" in i for i in iss):
-        print("FAIL self-test: 声明时长 20s 应报 H3"); ok = 0
-    # H4 <d> 缺语言标签
-    iss, _, _ = validate_h3(h3_ok.replace("<d>[Chinese] 你迟了半刻。</d>", "<d>你迟了半刻。</d>"))
-    if not any("H4" in i for i in iss):
-        print("FAIL self-test: <d> 缺语言标签应报 H4"); ok = 0
-    # H5 未定义标签
-    iss, _, _ = validate_h3(h3_ok.replace("雨夜对坐", "与 <Subject 9> 雨夜对坐"))
-    if not any("H5" in i for i in iss):
-        print("FAIL self-test: 未定义标签应报 H5"); ok = 0
-    # H5 定义了却未引用 → WARN
-    _, warns, _ = validate_h3(h3_ok.replace("<Audio 1> 为 <Subject 1>（S1）的音色参考：低而略带沙哑的女声。\n",
-                                          "<Audio 1> 为 <Subject 1>（S1）的音色参考：低而略带沙哑的女声。\n"
-                                          "<Subject 7> 为 <Picture 7> 中的道具：一只未启用的空碗。\n"))
-    if not any("H5" in w and "未引用" in w for w in warns):
-        print("FAIL self-test: 定义未引用应报 H5 WARN", warns); ok = 0
-    # H6 非法保留度标记
-    iss, _, _ = validate_h3(h3_ok.replace("fully_preserved - 长发低髆", "preserved - 长发低髆"))
-    if not any("H6" in i for i in iss):
-        print("FAIL self-test: 非法保留度标记应报 H6"); ok = 0
-    # H7 (Sx) 顺序错
-    iss, _, _ = validate_h3(h3_ok.replace("低而沙哑音色（S1）说", "低而沙哑音色（S2）说"))
-    if not any("H7" in i for i in iss):
-        print("FAIL self-test: (Sx) 顺序错应报 H7"); ok = 0
-    # H8 栏名 / @ 锚点泄漏
-    iss, _, _ = validate_h3(h3_ok + "【站位声明】：@女主（画面左）；@CHR-女主\n")
-    if not any("H8" in i for i in iss):
-        print("FAIL self-test: 栏名/锚点泄漏应报 H8"); ok = 0
-    # H8 否定式（对应 C19）→ WARN
-    _, warns, _ = validate_h3(h3_ok + "不要出现人物，没有背景。\n")
-    if not any("H8" in w and "否定式" in w for w in warns):
-        print("FAIL self-test: 正文否定式应报 H8 WARN", warns); ok = 0
-    # H8 转场术语（2026-10-13 体检修复 A1：同 C12 口径，H3 侧词表并入）→ WARN
-    _, warns, _ = validate_h3(h3_ok.replace("说完闭口。", "说完闭口。Match cut to the corridor.\n"))
-    if not any("H8" in w and "转场术语" in w for w in warns):
-        print("FAIL self-test: H3 正文转场术语应报 H8 WARN", warns); ok = 0
-    # H9 画外声缺闭口证据
-    t_h9 = h3_ok.replace("说完闭口。", "说完移开视线。") + "她的内心独白：<d>[Chinese] 再也退不回去了。</d>\n"
-    iss, _, _ = validate_h3(t_h9)
-    if not any("H9" in i for i in iss):
-        print("FAIL self-test: 画外声缺闭口证据应报 H9"); ok = 0
-    # H10 声音层含对白
-    iss, _, _ = validate_h3(h3_ok.replace("雨打石板，风铃轻响两声。", "雨打石板，风铃轻响两声。<d>[Chinese] 测试</d>"))
-    if not any("H10" in i for i in iss):
-        print("FAIL self-test: soundscape 含 <d> 应报 H10"); ok = 0
-    # H11 语气位缺失应 WARN（两个发言人首次出场都去掉发声特征）
-    _, warns, _ = validate_h3(h3_ok.replace("以 <Audio 1> 所参考的低而沙哑音色（S1）说", "（S1）说")
-                                     .replace("（S2）以平直语速说", "（S2）说"))
-    if not any("H11" in w for w in warns):
-        print("FAIL self-test: 发言人首次出场缺语气描述应报 H11 WARN", warns); ok = 0
-    # H12a 首镜无具名主体 → WARN
-    _, warns, _ = validate_h3(h3_ok.replace("[Shot 1] 全景确立回廊。<Subject 1> 立于木栏旁",
-                                           "[Shot 1] 空镜：雨落回廊。"))
-    if not any("H12a" in w for w in warns):
-        print("FAIL self-test: 首镜无主体锚应报 H12a WARN", warns); ok = 0
-    # H12b 并列主体/同框句式 → WARN
-    _, warns, _ = validate_h3(h3_ok.replace("[Shot 1] 全景确立回廊。",
-                                           "[Shot 1] 全景确立回廊，<Subject 1> 与她的一只手同框。"))
-    if not any("H12b" in w for w in warns):
-        print("FAIL self-test: 首镜同框句式应报 H12b WARN", warns); ok = 0
-    # H12c 悬空指示代词 → WARN
-    _, warns, _ = validate_h3(h3_ok.replace("立于木栏旁", "立于木栏旁，这只手搭在栏上"))
-    if not any("H12c" in w for w in warns):
-        print("FAIL self-test: 悬空指示代词应报 H12c WARN", warns); ok = 0
-    # ---------- 2026-10-02 官方复核新增（H3 支线：正文英文 / 官方切镜动词 / 官方画外声短语）----------
-    # H4b 正文中文（<d> 与双引号画内文字除外）→ WARN
-    _, warns, _ = validate_h3(h3_ok)
-    if not any("H4" in w and "中文" in w for w in warns):
-        print("FAIL self-test: H3 中文正文应报 H4 WARN（官方要求六段正文英文）", warns); ok = 0
-    # H2 中文「镜头切至」→ 切镜动词告警
-    _, warns, _ = validate_h3(h3_ok)
-    if not any("H2" in w and "切镜动词" in w for w in warns):
-        print("FAIL self-test: 中文「镜头切至」应报 H2 切镜动词告警", warns); ok = 0
-    # H2 反例：官方绑定短语 → 不报切镜告警
-    _, warns, _ = validate_h3(h3_ok.replace("镜头切至", "the shot cuts to"))
-    if any("H2" in w and "切镜动词" in w for w in warns):
-        print("FAIL self-test: 官方绑定短语不应报 H2 切镜告警", warns); ok = 0
-    # H9 画外声未用官方固定短语 → WARN；用了则不报
-    _, warns, _ = validate_h3(h3_ok.replace("说完闭口。", "说完闭口。她以画外音说：") + "<d>[Chinese] 再也退不回去了。</d>\n")
-    if not any("H9" in w and "官方固定短语" in w for w in warns):
-        print("FAIL self-test: 画外声未用官方短语应报 H9 WARN", warns); ok = 0
-    _h3_vo_ok = h3_ok.replace(
-        "说完闭口。",
-        "说完闭口。<Subject 1> (S1) says in an off-screen voiceover: <d>[Chinese] 再也退不回去了。</d> "
-        "while her lips remain completely closed.")
-    _, warns, _ = validate_h3(_h3_vo_ok)
-    if any("H9" in w and "官方固定短语" in w for w in warns):
-        print("FAIL self-test: 已用官方画外声短语不应报 H9 WARN", warns); ok = 0
-    # H11 英文声学词（pitch/timbre/accent…）应被识别为已给发声特征
-    _, warns, _ = validate_h3(h3_ok.replace("（S1）说", "(S1) speaks in a low, gravelly timbre at a slow speaking rate"))
-    if any("H11" in w and "S1" in w for w in warns):
-        print("FAIL self-test: 英文声学词应满足 H11（不再告警缺发声特征）", warns); ok = 0
     # ---------- C23 画风锁机检（style-bible/director-to-prompt-protocol.md §六）----------
     # 50a) 触发门 auto：未启用 I 锁的旧稿（无【STYLE/无来源）不触发 C23
-    iss23, _, _ = validate(t_ok, "2.5", "new", "1", "auto")
+    iss23, _, _ = validate(t_ok, "2.5", "new", "auto")
     if any(i.startswith("C23") for i in iss23):
         print("FAIL self-test: 未启用 I 锁的旧稿不应触发 C23（auto 门失效）", iss23); ok = 0
     # 50b) --c23 on 强制：缺段8/段9 → C23a
-    iss23, _, _ = validate(t_ok, "2.5", "new", "1", "auto", "on")
+    iss23, _, _ = validate(t_ok, "2.5", "new", "auto", "on")
     if not any(i.startswith("C23a") for i in iss23):
         print("FAIL self-test: --c23 on 时缺段8/段9 应报 C23a", iss23); ok = 0
     # 合规画风稿基座（段8 十一槽位 + 段9 + 区间闭合）
@@ -4429,31 +4033,31 @@ def _self_test():
                "【音效】风声\n"
                "【强制禁止项】画面：穿模；文字：无字幕\n")
     # 50c) 合规画风稿（auto 门：段8/9 存在即启用）→ 不报 C23
-    iss23, warns23, _ = validate(t_style, "2.0", "new", "1", "auto")
+    iss23, warns23, _ = validate(t_style, "2.0", "new", "auto")
     if any(i.startswith("C23") for i in iss23):
         print("FAIL self-test: 合规画风稿不应报 C23", iss23); ok = 0
     # 50d) 三方名 → C23d1（含影片名）
-    iss23, _, _ = validate(t_style + "参考徐克《狄仁杰》的视觉风格\n", "2.0", "new", "1", "auto")
+    iss23, _, _ = validate(t_style + "参考徐克《狄仁杰》的视觉风格\n", "2.0", "new", "auto")
     if not any(i.startswith("C23d1") for i in iss23):
         print("FAIL self-test: 交付层人名/影片名应报 C23d1", iss23); ok = 0
     # 50e) 题材越界：含打斗稿 + 来源=王家卫（打斗★0）→ C23e
     t_c23e = t_style + "4s-8s [镜头2] 近景 · 24mm。主角 挥剑劈向 对手，兵刃相向。\n"
-    iss23, _, _ = validate(t_c23e, "2.0", "new", "1", "auto", "auto", "王家卫")
+    iss23, _, _ = validate(t_c23e, "2.0", "new", "auto", "auto", "王家卫")
     if not any(i.startswith("C23e") for i in iss23):
         print("FAIL self-test: 打斗稿用打斗★0 来源风格应报 C23e", iss23); ok = 0
     # 50f) C23f-B1：一镜建立两全身人物（入画语义 · 无互动/单人声明）→ FAIL
     t_c23f = t_style + "4s-8s [镜头2] 中全景 · 24mm。主角与对手入画并立，全身铠甲持剑而立。\n"
-    iss23, _, _ = validate(t_c23f, "2.0", "new", "1", "auto")
+    iss23, _, _ = validate(t_c23f, "2.0", "new", "auto")
     if not any("C23f" in i and "B1" in i for i in iss23):
         print("FAIL self-test: 一镜建立两全身人物应报 C23f-B1", iss23); ok = 0
     # 50g) C23f-B2：单镜动作意图 >2（拧身/错步/换位/挥剑/崩裂 一并计入）→ FAIL
     t_c23g = t_style + "4s-8s [镜头2] 中景 · 24mm。主角 拧身错步换位，挥剑斩落，崖壁崩裂碎石扑面。\n"
-    iss23, _, _ = validate(t_c23g, "2.0", "new", "1", "auto")
+    iss23, _, _ = validate(t_c23g, "2.0", "new", "auto")
     if not any("C23f" in i and "B2" in i for i in iss23):
         print("FAIL self-test: 单镜动作意图 >2 应报 C23f-B2", iss23); ok = 0
     # 50h) C23b 区间越界：镜头 35mm 掉出段8 [21mm, 28mm] → FAIL
     t_c23h = t_style.replace("21mm 低机位仰拍", "35mm 低机位仰拍")
-    iss23, _, _ = validate(t_c23h, "2.0", "new", "1", "auto")
+    iss23, _, _ = validate(t_c23h, "2.0", "new", "auto")
     if not any(i.startswith("C23b") for i in iss23):
         print("FAIL self-test: 焦段越界应报 C23b", iss23); ok = 0
     # 50i) C23d2 转译丢失：登记来源但段8 被掏空（只剩一句空话）→ FAIL
@@ -4470,7 +4074,7 @@ def _self_test():
         "针对性禁项：禁塑料感三渲二，禁游戏 CG 打光\n"
         "[本段为全片风格锁定，镜头段取值须落在上述区间内]\n",
         "【STYLE｜视觉风格 · 全片锁死】\n电影感画风，高级灰调，高级质感\n")
-    iss23, _, _ = validate(t_c23i, "2.0", "new", "1", "auto", "auto", "徐克")
+    iss23, _, _ = validate(t_c23i, "2.0", "new", "auto", "auto", "徐克")
     if not any(i.startswith("C23d2") for i in iss23):
         print("FAIL self-test: 段8 未落到成组参数组应报 C23d2", iss23); ok = 0
     # ---- C24 禁项单点纪律----
@@ -4680,7 +4284,7 @@ def _self_test():
     if not any(x.startswith("C6b") for x in _i_ar):
         print("FAIL self-test: 画幅文字与字段矛盾应报 C6b", _i_ar); ok = 0
     # 68b) 与 --aspect 任务锁不符 → C6b FAIL
-    _i_ar2, _, _ = validate(t_ok, "2.5", "new", "1", "auto", "auto", None, "9:16")
+    _i_ar2, _, _ = validate(t_ok, "2.5", "new", "auto", "auto", None, "9:16")
     if not any(x.startswith("C6b") for x in _i_ar2):
         print("FAIL self-test: 画幅与 --aspect 不符应报 C6b", _i_ar2); ok = 0
     # 68c) 合规稿 → 不报 C6b
@@ -4734,6 +4338,39 @@ def _self_test():
                         ("SPIN", "环绕"), ("轨迹跟焦", "跟")):
         if _cam_families(_w_fz) != {_exp}:
             print(f"FAIL self-test: 运镜词「{_w_fz}」应解析为 {{{_exp}}}", sorted(_cam_families(_w_fz))); ok = 0
+    # 69i) ★P8（2026-10-24 · 网友建议书 P-08 核验属实）：升降/固定两族的**中文同义写法**
+    #      入表。此前「升降」「固定」在表里，但稿子写「缓慢上升」「镜头静止」→ 空集 → C18g 误报。
+    for _w_fz, _exp in (("上升", "升降"), ("下降", "升降"), ("升镜", "升降"),
+                        ("静止", "固定"), ("不动", "固定"), ("静态", "固定")):
+        if _cam_families(_w_fz) != {_exp}:
+            print(f"FAIL self-test: 运镜同义词「{_w_fz}」应解析为 {{{_exp}}}", sorted(_cam_families(_w_fz))); ok = 0
+    #      端到端：镜行头写「缓慢上升」「镜头静止」→ 不得报 C18g
+    _t_syn = t_ok.replace("[镜头2] 特写 · 侧角 · 固定。", "[镜头2] 特写 · 侧角 · 缓慢上升。")
+    _t_syn = _t_syn.replace("[镜头3] 中景 · 平视 · 缓推。", "[镜头3] 中景 · 平视 · 镜头静止。")
+    _, _w_syn, _ = validate(_t_syn, "2.5", "new")
+    if any(x.startswith("C18g") for x in _w_syn):
+        print("FAIL self-test: 「缓慢上升」/「镜头静止」不应报 C18g（同义词应入词表）", _w_syn); ok = 0
+    #      反向：定镜仍归定格族，不得被「静止/不动」拉进固定族（防污染 C18j 打戏配额）
+    if _cam_families("定镜收束") != {"定格"}:
+        print("FAIL self-test: 「定镜收束」被同义词补录污染（应仍为定格族）"); ok = 0
+
+    # 69j) ★P9（2026-10-24 全流程自检发现）：C20m 与 C33 的分工必须成立——
+    #      焦段写**镜行头**是 C33 的要求，不得被 C20m 当「摄影机废话」误杀；
+    #      同一套相机术语写进**正文**才是 C20m 该管的。此前两条规则的文档表述对打
+    #      （C20m 反例里点了「85mm F1.4」，C33 又要求每镜标焦段），编译器因此干脆不写焦段。
+    #      注：t_ok 本身不是全绿稿（它自带 C1b/C18o/C32 等），故断言**只针对 C20m**，
+    #      不夹带其他码——否则测的是「它合规吗」而不是「这条分工成立吗」。
+    _t_focal_ok = t_ok.replace("00:04-00:08 [镜头2] 特写 · 侧角 · 固定。",
+                               "00:04-00:08 [镜头2] 特写 · 85mm · 侧角 · 固定。")
+    _, _w_fo, _ = validate(_t_focal_ok, "2.5", "new")
+    if any(x.startswith("C20m") for x in _w_fo):
+        print("FAIL self-test: 镜行头标焦段被 C20m 误判为相机废话",
+              [x for x in _w_fo if x.startswith("C20m")]); ok = 0
+    _t_focal_bad = t_ok.replace("指尖微颤。", "指尖微颤，85mm F1.4 极浅景深，焦平面全程死锁面部无漂移。")
+    _, _w_fb, _ = validate(_t_focal_bad, "2.5", "new")
+    if not any(x.startswith("C20m") for x in _w_fb):
+        print("FAIL self-test: 正文塞「焦平面全程死锁」应报 C20m",
+              [x[:40] for x in _w_fb]); ok = 0
 
     # ---- 70) 多段稿：C17 逐段自查 + C1/C2/C3/C4/C24 不误报（2026-10-10）----
     _seg1 = ("【画幅风格】16:9 横屏 (aspect_ratio=16:9)\n"
@@ -4828,6 +4465,24 @@ def _self_test():
     if not any(x.startswith("C27d") for x in _w_c2):
         print("FAIL self-test: 同一人连续两镜开口应报 C27d", _w_c2); ok = 0
 
+    #   70q) ★P8 回归锁（2026-10-24 · 网友实跑反馈 P-03 核验后补）：
+    #   镜内换嘴 = 一镜里两人对答（`【甲（冷）："…"】【乙（急）："…"】`），是 V7 合法写法，
+    #   且是"短段里凑够开口次数却不切碎镜头"的唯一手段。旧实现只记本行第一个说话人，
+    #   连续两镜同序即误报「甲 连续 ≥2 镜独占开口」——真写了正反打的稿子被判站桩。
+    _c27_multi = ("【画幅风格】16:9 横屏 (aspect_ratio=16:9)\n"
+                  "【场景资产】@SCN-堂屋\n【核心人物】\n- @甲（男，40岁）\n- @乙（男，35岁）\n"
+                  "【站位声明】@甲（画面左 · 桌旁 · 朝右 · 立 · 身后是木柜）、"
+                  "@乙（画面右 · 门边 · 朝左 · 立 · 身后是门框）\n"
+                  "【时间轴分镜】本段为对话段\n"
+                  "00:00-00:05 [镜头1] 中景 · 平视 · 固定。两人对峙。声音：无。"
+                  "台词：【甲（冷）：\"房子归我，白纸黑字。\"】【乙（急）：\"凭啥？你也敢糊弄居委会？\"】\n"
+                  "00:05-00:10 [镜头2] 中景 · 平视 · 固定。两人对峙。声音：无。"
+                  "台词：【甲（平）：\"备案都在，你自己去看。\"】【乙（怒）：\"我不认。\"】\n"
+                  "【音效】环境音\n【强制禁止项】画面：禁字幕；音频：禁背景音乐\n")
+    _i_c2b, _w_c2b, _ = validate(_c27_multi, "2.0", "new")
+    if any(x.startswith("C27d") for x in _w_c2b):
+        print("FAIL self-test: 镜内换嘴（连续两镜同序对答）不应报 C27d", _w_c2b); ok = 0
+
     #   反向：改成回合制正反打（每切换嘴 + 短句 + OS），密度与开口都达标 → C27b/c/d 全消失
     _c27_ok = ("【画幅风格】16:9 横屏 (aspect_ratio=16:9)\n"
                "【场景资产】@SCN-堂屋\n【核心人物】\n- @甲（男，40岁）\n- @乙（男，35岁）\n"
@@ -4904,11 +4559,6 @@ def _self_test():
     _i_j2, _w_j2, _ = validate(_c28_good, "2.0", "new")
     if any(x.startswith("C28") for x in _w_j2):
         print("FAIL self-test: 口语化台词不应报 C28a/b/c", _w_j2); ok = 0
-
-    #   豁免：赛道③ 解说叙事类（旁白 VO 本就是书面叙事语体）→ 同样文本改 track=3 → C28 全不报
-    _i_j3, _w_j3, _ = validate(_c28_bad, "2.0", "new", "3")
-    if any(x.startswith("C28") for x in _w_j3):
-        print("FAIL self-test: 赛道③ 解说类应豁免 C28", _w_j3); ok = 0
 
     # 70k) C29 资产状态偏离（2026-10-13 新增 · 双向断言）
     #   正向：镜行「把头盔夹在腋下」，【核心人物】行列了「头盔」（锁定项）、全稿无偏离声明 → 必报 C29
@@ -5076,7 +4726,7 @@ def _self_test():
             "00:00-00:03 [中景·平视·固定] 陈舟 停在高架桥柱旁，低头看手机屏。声音：车流。台词：无。\n\n"
             "【音效】车流与远处无人机嗡鸣。\n"
             "【强制禁止项】不要字幕，画面无任何文字与水印。\n")
-    _, _w26, _ = validate(_t26, "2.5", "new", "1", "off")
+    _, _w26, _ = validate(_t26, "2.5", "new", "off")
     _bad26 = [w for w in _w26 if w.startswith("C26")]
     if _bad26:
         print("FAIL self-test: 合规锚点稿不应报 C26", _bad26); ok = 0
@@ -5084,25 +4734,25 @@ def _self_test():
     _, _w, _ = validate(_t26.replace("2035 年近未来都市，冷蓝调", "电影级质感")
                             .replace("@SCN-街头：2035 年南京城西高架桥下，湿沥青路面，全息广告牌与无人机航道。",
                                      "@SCN-街头：城西高架桥下，湿沥青路面，全息广告牌与无人机航道。"),
-                       "2.5", "new", "1", "off")
+                       "2.5", "new", "off")
     if not any("C26a" in w for w in _w):
         print("FAIL self-test: 缺世界锚应报 C26a WARN", [w for w in _w if w.startswith("C26")]); ok = 0
     # C26b 年代锚与正文物证冲突（声明 2035 却出马车）→ WARN
     _, _w, _ = validate(_t26.replace("停在高架桥柱旁，低头看手机屏",
                                      "站在青砖巷口，身旁停着一辆马车，手里提着煤油灯"),
-                       "2.5", "new", "1", "off")
+                       "2.5", "new", "off")
     if not any("C26b" in w for w in _w):
         print("FAIL self-test: 年代锚与正文物证冲突应报 C26b WARN", [w for w in _w if w.startswith("C26")]); ok = 0
     # C26c 人物缺年龄锚 → WARN
     _, _w, _ = validate(_t26.replace("28~32岁男性，橙色骑手冲锋衣、黑色头盔、胸前外卖箱工牌、旧疤小臂",
                                      "男性，橙色骑手冲锋衣、黑色头盔、胸前外卖箱工牌"),
-                       "2.5", "new", "1", "off")
+                       "2.5", "new", "off")
     if not any("C26c" in w for w in _w):
         print("FAIL self-test: 核心人物缺年龄锚应报 C26c WARN", [w for w in _w if w.startswith("C26")]); ok = 0
     # C26d 人物缺身份可渲染外观 → WARN
     _, _w, _ = validate(_t26.replace("@CHR-陈舟：28~32岁男性，橙色骑手冲锋衣、黑色头盔、胸前外卖箱工牌、旧疤小臂。",
                                      "@CHR-陈舟：28~32岁男性（外卖员）。"),
-                       "2.5", "new", "1", "off")
+                       "2.5", "new", "off")
     if not any("C26d" in w for w in _w):
         print("FAIL self-test: 核心人物缺身份可渲染外观应报 C26d WARN", [w for w in _w if w.startswith("C26")]); ok = 0
     # C26 全码落 warns.append（结构定位自检，防"只写在注释里"）
@@ -5111,7 +4761,7 @@ def _self_test():
             print(f"FAIL self-test: {_c} 未真实落在 warns.append 中"); ok = 0
 
     # ---------- 非稿件早退 _looks_like_feed（2026-10-12 新增 · 防规则库文档被当稿件咬）----------
-    # 四份形态样本：规则库文档（反例多、无镜行）/ 真镜行稿 / 纯文生短片（无时间轴但七段齐全）/ H3 六段式
+    # 三份形态样本：规则库文档（反例多、无镜行）/ 真镜行稿 / 纯文生短片（无时间轴但七段齐全）
     _md_rule_doc = ("# 打戏铁律\n\n> 反例：\"禁止站桩对峙、摆 pose\"\n\n"
                     "## 铁律1\n一镜一主任务。\n\n"
                     "- ❌ 错误示范：镜头同时推拉摇移，画面必乱。\n")
@@ -5120,9 +4770,6 @@ def _self_test():
     _md_feed_seven = ("【画幅风格】\n16:9 横屏。\n\n【场景资产】\n@屋内\n\n【核心人物】\n- @她（28岁女性）\n\n"
                       "【站位声明】\n@她（画面左 · 背靠墙 · 正面朝右）\n\n"
                       "【时间轴分镜】\n一只女人的手伸向窗台，指尖触到积灰。\n\n【音效】\n无。\n\n【强制禁止项】\n画面：禁止变形。\n")
-    _md_h3_doc = ("subject_definitions:\n<Subject 1> 男性青年。\n\nsummary:\n测试。\n\n"
-                  "retention_analysis:\n<Subject 1>：fully_preserved - 外观。\n\n"
-                  "detailed_description:\n[Shot 1] 全景。<Subject 1> (S1) 说：<d>[Chinese] 你好。</d>\n")
     # 安全关键：误杀真稿件 = 机检对真稿静默失效（比假 FAIL 更危险），故双向断言。
     if _looks_like_feed(_md_rule_doc):
         print("FAIL self-test: 规则库文档（无镜行/栏位不足）应判为非稿件"); ok = 0
@@ -5130,8 +4777,6 @@ def _self_test():
         print("FAIL self-test: 含时间轴镜行的真稿件应判为稿件"); ok = 0
     if not _looks_like_feed(_md_feed_seven):
         print("FAIL self-test: 七段式≥6 栏（纯文生短片无时间轴）应判为稿件"); ok = 0
-    if not _looks_like_feed(_md_h3_doc):
-        print("FAIL self-test: H3 六段式字段稿应判为稿件"); ok = 0
 
     # ---- 70l) TIME_RE 第三形态 `N-N秒`（2026-10-14 用户裁定「更宽容」纳入）----
     # 病灶：打戏/玄幻分镜稿惯用 `0-3秒` 整数秒时码，旧 TIME_RE 只认 MM:SS 与 Xs-Ys
@@ -5324,7 +4969,7 @@ def _self_test():
                "[镜头1] 0-4秒，中景·平视·固定，@甲 沉肩蓄力，随即暴起一拳砸中，"
                "命中瞬间 1~2 帧微停顿，接触点火星特写，随即卸力侧滑收势。声音：闷响。\n"
                "【音效】闷响\n【强制禁止项】字幕。\n")
-    _, _w_beat, _ = validate(_t_beat, "2.0", "new", "1", "on")
+    _, _w_beat, _ = validate(_t_beat, "2.0", "new", "on")
     if any("缺「顿」" in x for x in _w_beat):
         print("FAIL self-test: 镜行写「微停顿」应被 C22c 认作顿拍", [w for w in _w_beat if "C22c" in w]); ok = 0
 
@@ -5362,6 +5007,284 @@ def _self_test():
     if not re.search(_zf_pat, "滑动变焦（Dolly Zoom）"):
         print("FAIL self-test: 滑动变焦/Dolly Zoom 应命中滑动变焦名额正则"); ok = 0
 
+    # ---- 74b) C24c/C24d 禁项重复投影与条目超限（P6.2 新增 · 2026-10-23）----
+    # 用户实测：「禁止项太多了；后面放了禁止项，前面就不要放了」
+    # 74b1) 镜行内嵌禁项 → C24c WARN
+    _t_c24c = t_ok.replace("她从袖中抽出信件。", "她抽出信件（禁转身）。")
+    _, _w_c24c, _ = validate(_t_c24c, "2.5", "new")
+    if not any(x.startswith("C24c") for x in _w_c24c):
+        print("FAIL self-test: 镜行内嵌禁项应报 C24c", _w_c24c); ok = 0
+    # 74b2) 正例：镜行只写正面结果 → 不报
+    _, _w_c24c_ok, _ = validate(t_ok, "2.5", "new")
+    if any(x.startswith("C24c") for x in _w_c24c_ok):
+        print("FAIL self-test: 镜行无禁项不应报 C24c", _w_c24c_ok); ok = 0
+    # 74b3) 禁项条目 >6 → C24d WARN
+    _t_c24d = t_ok.replace(
+        "【强制禁止项】画面：角色变形、穿模；文字：无字幕水印",
+        "【强制禁止项】画面：禁字幕、禁水印、禁磨皮脸、禁多指、禁双脸、禁服装突变、禁家具移位、"
+        "禁体积光束；音频：禁背景音乐、禁旁白")
+    _, _w_c24d, _ = validate(_t_c24d, "2.5", "new")
+    if not any(x.startswith("C24d") for x in _w_c24d):
+        print("FAIL self-test: 禁项超 6 条应报 C24d", _w_c24d); ok = 0
+    # 74b4) 正例：极简四项 → 不报
+    _t_c24d_ok = t_ok.replace(
+        "【强制禁止项】画面：角色变形、穿模；文字：无字幕水印",
+        "【强制禁止项】画面：禁字幕、禁水印（含 Logo）、场景内可读文字；音频：禁背景音乐、禁旁白")
+    _, _w_c24d_ok, _ = validate(_t_c24d_ok, "2.5", "new")
+    if any(x.startswith("C24d") for x in _w_c24d_ok):
+        print("FAIL self-test: 极简四项不应报 C24d", _w_c24d_ok); ok = 0
+
+    # ---- 75) C36/C37 连续动作拆解与背景多人同动（P5 新增 · 2026-10-22）----
+    # 病根出处：blooper-prevention-playbook.md §一/§三（长镜连续路径一句带过 + 群体动作未点名实测）
+    # 注意：C35/C36/C37 实现在 finalize_checks（main 流程才跑），self-test 须直接调它——
+    # 直调 validate() 永不触发这三条（2026-10-22 发现的静默区，C35 长期无自测即因此）。
+    # ★P6 修订：C36 只判单镜 ≥6s（长镜），短镜豁免——SD 2.5 单镜 3~5s 装不下连续长路径。
+    def _fc(text_in):
+        _i, _w = [], []
+        finalize_checks(text_in, _i, _w)
+        return _i, _w
+
+    _p5_head = ("【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+                "【场景资产】@SCN-大殿（外观以场景参考图锁定）\n"
+                "【核心人物】@CHR-男主、@CHR-女主（外观以人物参考图锁定）\n"
+                "【站位声明】：@男主（画面右 · 立 · 身后为立柱）、@女主（画面左 · 立 · 身后为桌案）；"
+                "轴线锁定：左右对站；位移：全员原位，无位移。\n"
+                "【时间轴分镜】\n```text\n")
+    _p5_tail = "```\n【音效】环境音\n【强制禁止项】画面：角色变形、穿模；文字：无字幕水印\n"
+    # 75a) 负例：长镜（15s）里"从门框摸到窗沿"一句带过 → C36 WARN
+    _t_c36_bad = (_p5_head +
+                  "- 00:00-00:15 [镜头1] 中景 · 平视 · 固定：画面主体：@男主 从门框一路摸到窗沿，"
+                  "指尖沿墙面不停顿地滑过去。声音：无。台词：无。\n" + _p5_tail)
+    _i_c36_b, _w_c36_b = _fc(_t_c36_bad)
+    if not any(x.startswith("C36") for x in _w_c36_b):
+        print("FAIL self-test: 长镜「从门框摸到窗沿」应报 C36", _w_c36_b); ok = 0
+    # 75b) 正例：拆成离散镜、每镜三件套 → 不报 C36
+    _t_c36_good = (_p5_head +
+                   "- 00:00-00:03 [镜头1] 特写 · 平视 · 固定：画面主体：@男主 的指尖落在门框边沿，"
+                   "左手扶着门板；@女主 站在门内半步外、肩膀微微一缩。声音：无。台词：无。\n"
+                   "- 00:03-00:06 [镜头2] 特写 · 平视 · 缓慢横移：画面主体：@男主 的指尖移到墙面中段，"
+                   "右手抬高半尺；@女主 的视线跟着他的手移了半格。声音：无。台词：无。\n"
+                   "- 00:06-00:09 [镜头3] 特写 · 平视 · 沿斜轴移动：画面主体：@男主 的指尖停在窗沿上，"
+                   "左手垂在身侧；@女主 的下巴朝画左偏了一点。声音：无。台词：无。\n" + _p5_tail)
+    _i_c36_g, _w_c36_g = _fc(_t_c36_good)
+    if any(x.startswith("C36") for x in _w_c36_g):
+        print("FAIL self-test: 离散镜三件套写法不应报 C36", _w_c36_g); ok = 0
+    # 75b2) ★P6 短镜豁免：单镜 5s（SD 2.5 常规镜长）里出现连续路径 → 不报 C36
+    _t_c36_short = (_p5_head +
+                    "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@男主 从门框一路摸到窗沿，"
+                    "指尖沿墙面滑过去。声音：无。台词：无。\n" + _p5_tail)
+    _i_c36_s, _w_c36_s = _fc(_t_c36_short)
+    if any(x.startswith("C36") for x in _w_c36_s):
+        print("FAIL self-test: 单镜 <6s 的短镜不应报 C36（SD 2.5 常规镜长豁免）", _w_c36_s); ok = 0
+    # 75c) 负例：群体动作未点名（"只抬手起哄"没限定人数）→ C37 WARN
+    _t_c37_bad = (_p5_head +
+                  "- 00:12-00:17 [镜头4] 中景 · 平视 · 固定：画面主体：@男主 自画右走进过道；"
+                  "画右后是 @周越 与两个男生虚焦的侧影，只抬手起哄。声音：无。台词：无。\n" + _p5_tail)
+    _i_c37_b, _w_c37_b = _fc(_t_c37_bad)
+    if not any(x.startswith("C37") for x in _w_c37_b):
+        print("FAIL self-test: 群体动作未点名应报 C37", _w_c37_b); ok = 0
+    # 75d) 正例：点到人头（仅X一人 + 其余静坐）→ 不报 C37
+    _t_c37_good = (_p5_head +
+                   "- 00:12-00:17 [镜头4] 中景 · 平视 · 固定：画面主体：@男主 自画右走进过道；"
+                   "画右后是 @周越 与两个男生虚焦的侧影，仅 @周越 一人抬手起哄，另两个男生静坐不动。"
+                   "声音：无。台词：无。\n" + _p5_tail)
+    _i_c37_g, _w_c37_g = _fc(_t_c37_good)
+    if any(x.startswith("C37") for x in _w_c37_g):
+        print("FAIL self-test: 点到人头写法不应报 C37", _w_c37_g); ok = 0
+    # 75e) 误报回归：群体词与动作词之间出现具名人物 → 动作已有主，不报 C37
+    _t_c37_named = (_p5_head +
+                    "- 00:12-00:17 [镜头4] 中景 · 平视 · 固定：画面主体：@男主 停在两个男生面前，"
+                    "@周越 抬手拍他肩。声音：无。台词：无。\n" + _p5_tail)
+    _i_c37_n, _w_c37_n = _fc(_t_c37_named)
+    if any(x.startswith("C37") for x in _w_c37_n):
+        print("FAIL self-test: 动作主是具名人物时不应报 C37", _w_c37_n); ok = 0
+    # 75f) C35 回归：借 C35 同址实现补上它从未有过的自测（同镜两人无层次 → WARN）
+    _t_c35_bad = (_p5_head +
+                  "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@男主 俯身贴住 @女主，"
+                  "两人并肩挨在一处。声音：无。台词：无。\n" + _p5_tail)
+    _i_c35_b, _w_c35_b = _fc(_t_c35_bad)
+    if not any(x.startswith("C35") for x in _w_c35_b):
+        print("FAIL self-test: 同镜两人未标层次应报 C35", _w_c35_b); ok = 0
+    _t_c35_good = _t_c35_bad.replace(
+        "@男主 俯身贴住 @女主，两人并肩挨在一处。",
+        "@男主 在前景清晰、俯身贴住 @女主；@女主 在后景虚焦。")
+    _i_c35_g, _w_c35_g = _fc(_t_c35_good)
+    if any(x.startswith("C35") for x in _w_c35_g):
+        print("FAIL self-test: 已标层次不应报 C35", _w_c35_g); ok = 0
+
+    # ---- 76) C38 段间缺桥接声明（P6 新增 · 2026-10-22 · 规则权威：军规手册 §十）----
+    # 病根：多段稿每段内部写死、段间各生成各的——上段话音落下，下段主角空降（「太跳脱了」）。
+    def _mk_c38(seam_note, seg2_body):
+        return ("## 段1|测试一\n\n```text\n"
+                "【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+                "【时间轴分镜】\n"
+                "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@甲 坐在桌旁写卷子。声音：无。台词：无。\n"
+                "```\n\n---\n\n## 段2|测试二\n\n"
+                + seam_note + "\n\n```text\n"
+                "【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+                "【时间轴分镜】\n" + seg2_body + "```\n")
+    # 76a) 负例：段缝说明只写机位跨度、没写内容怎么接 → C38 WARN
+    _i_c38_b, _w_c38_b = _fc(_mk_c38(
+        "> 段缝：上段末镜 中景 35mm 至 本段首镜 特写 85mm，景别跨 2 级 + 机位换轴。",
+        "- 00:00-00:05 [镜头1] 特写 · 平视 · 固定：画面主体：@甲 推开本站起身。声音：无。台词：无。\n"))
+    if not any(x.startswith("C38") for x in _w_c38_b):
+        print("FAIL self-test: 段缝只写机位跨度应报 C38", _w_c38_b); ok = 0
+    # 76b) 正例：段缝说明写了桥接（反应镜承接）→ 不报
+    _i_c38_g, _w_c38_g = _fc(_mk_c38(
+        "> 段缝：上段末镜 中景 35mm 至 本段首镜 特写 85mm；上段尾句落下后先以 @乙 捅肘的反应镜承接，本段 @甲 顺势开口。",
+        "- 00:00-00:05 [镜头1] 特写 · 平视 · 固定：画面主体：@甲 推开本站起身。声音：无。台词：无。\n"))
+    if any(x.startswith("C38") for x in _w_c38_g):
+        print("FAIL self-test: 段缝已写桥接不应报 C38", _w_c38_g); ok = 0
+    # 76c) 正例：显式声明硬切跳（刻意跳切）→ 不报（机检不拦刻意，只拦没想过）
+    _i_c38_hc, _w_c38_hc = _fc(_mk_c38(
+        "> 段缝：硬切跳（刻意跳切，两段时间差一夜，不接棒）。",
+        "- 00:00-00:05 [镜头1] 特写 · 平视 · 固定：画面主体：@甲 推开本站起身。声音：无。台词：无。\n"))
+    if any(x.startswith("C38") for x in _w_c38_hc):
+        print("FAIL self-test: 显式硬切跳不应报 C38", _w_c38_hc); ok = 0
+    # 76d) 误报回归：单段稿（无相邻段）→ 不报
+    _i_c38_s, _w_c38_s = _fc(
+        "## 段1|测试一\n\n```text\n"
+        "【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+        "【时间轴分镜】\n"
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@甲 坐在桌旁写卷子。声音：无。台词：无。\n"
+        "```\n")
+    if any(x.startswith("C38") for x in _w_c38_s):
+        print("FAIL self-test: 单段稿不应报 C38", _w_c38_s); ok = 0
+
+    # ---- 77) C39 竖屏空镜冗余（P6.4 新增 · 2026-10-23 · 规则权威：军规手册 §十·10.0）----
+    # 竖屏 9:16 节奏优先，空镜是负资产；横屏 16:9 空镜是表现手段，不该误伤。
+    def _mk_c39(ratio, shot):
+        return ("## 段1|测试一\n\n```text\n"
+                f"【画幅风格】{ratio} 画幅, 电影级质感 (aspect_ratio={ratio})\n"
+                "【时间轴分镜】\n" + shot + "```\n")
+    # 77a) 负例：9:16 竖屏 + 空镜镜 → C39 WARN
+    _i_c39_b, _w_c39_b = _fc(_mk_c39("9:16",
+        "- 00:00-00:03 [镜头1] 远景 · 平视 · 缓慢横移：画面主体：空镜，无人物入画——只拍走廊与窗。"
+        "声音：无。台词：无。\n"))
+    if not any(x.startswith("C39") for x in _w_c39_b):
+        print("FAIL self-test: 竖屏空镜应报 C39", _w_c39_b); ok = 0
+    # 77b) 正例：竖屏但标了「刻意空镜」→ 放行
+    _i_c39_k, _w_c39_k = _fc(_mk_c39("9:16",
+        "- 00:00-00:01 [镜头1] 特写 · 平视 · 固定：画面主体：刻意空镜，只拍桌面上那只奶茶杯。"
+        "声音：无。台词：无。\n"))
+    if any(x.startswith("C39") for x in _w_c39_k):
+        print("FAIL self-test: 竖屏刻意空镜不应报 C39", _w_c39_k); ok = 0
+    # 77c) 正例（最关键）：16:9 横屏 + 空镜 → 绝不报（横屏空镜是手段）
+    _i_c39_h, _w_c39_h = _fc(_mk_c39("16:9",
+        "- 00:00-00:03 [镜头1] 远景 · 平视 · 缓慢横移：画面主体：空镜，无人物入画——只拍教室的课桌与窗。"
+        "声音：吊扇低频。台词：无。\n"))
+    if any(x.startswith("C39") for x in _w_c39_h):
+        print("FAIL self-test: 横屏空镜不应报 C39（横屏空镜是表现手段）", _w_c39_h); ok = 0
+
+    # ---- 78) C40 群像行为缺失（P7 新增 · 2026-10-24 · 条件触发，无全局默认值）----
+    # 关键：C40 **不要求每段都有群像**。C 类段（密闭双人/打戏/纯特写）只查一句「无其他人物」声明，
+    # 群像行为一条都不查——否则就是把病从「全静」搬到「全动」。
+    def _mk_c40(seats, shots, scene=""):
+        return ("## 段1|测试一\n\n```text\n"
+                + scene
+                + "【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+                "【场景资产】@SCN-教室（外观以场景参考图锁定）\n"
+                "【核心人物】@周越、" + seats + "\n"
+                "【站位声明】：" + seats + "\n"
+                "【时间轴分镜】\n" + shots + "```\n"
+                "【音效】环境音\n【强制禁止项】画面：角色变形；文字：无字幕\n")
+    # 78a) 负例：教室场景 + 裸（在场）→ C40a WARN
+    _i_c40a, _w_c40a = _fc(_mk_c40(
+        "@同学甲（在场）",
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@周越 抬手起哄，另两个男生静坐不动。"
+        "声音：教室嘈杂。台词：周越·起哄：「都退学了还装什么？」\n"))
+    if not any(x.startswith("C40a") for x in _w_c40a):
+        print("FAIL self-test: 裸（在场）应报 C40a", _w_c40a); ok = 0
+    # 78b) 正例：（在场·事务：…）→ 不报 C40a
+    _i_c40b, _w_c40b = _fc(_mk_c40(
+        "@同学甲（在场·事务：低头抄板书）",
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@周越 抬手起哄；"
+        "@同学甲 笔尖停在纸面上方，被「退学」二字入耳才抬眼望向讲台。声音：教室嘈杂。"
+        "台词：周越·起哄：「都退学了还装什么？」\n"))
+    if any(x.startswith("C40") for x in _w_c40b):
+        print("FAIL self-test: 合规（在场·事务）不应报 C40", _w_c40b); ok = 0
+    # 78c) 负例：聚合词 + 零事务动词 → C40b WARN
+    _i_c40c, _w_c40c = _fc(_mk_c40(
+        "@同学甲（画面左后 · 伏桌 · 坐姿）",
+        "- 00:00-00:05 [镜头1] 全景 · 平视 · 固定：画面主体：@周越 站在过道；众人围观，"
+        "周围人群看着他。声音：嘈杂。台词：无。\n"))
+    if not any(x.startswith("C40b") for x in _w_c40c):
+        print("FAIL self-test: 聚合词无事务应报 C40b", _w_c40c); ok = 0
+    # 78d) 正例（最关键）：C 类段（密闭双人）显式写「无其他人物」→ 一声不吭
+    _i_c40d, _w_c40d = _fc(
+        "## 段1|测试一\n\n```text\n"
+        "【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+        "【核心人物】@CHR-男主、@CHR-女主\n"
+        "【站位声明】：@男主（画面右 · 靠椅背 · 正面朝左）、@女主（画面左 · 侧身朝右）\n"
+        "【时间轴分镜】\n"
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@男主 靠回椅背；车内仅此二人，"
+        "无其他人物。声音：胎噪。台词：男主·低：「你早就知道。」\n"
+        "```\n【音效】环境音\n【强制禁止项】画面：角色变形\n")
+    if any(x.startswith("C40") for x in _w_c40d):
+        print("FAIL self-test: C 类段写「无其他人物」不应报 C40", _w_c40d); ok = 0
+    # 78e) 负例：C 类沉默（摆位 2 人，既不说有人也不说没人）→ C40d WARN
+    _i_c40e, _w_c40e = _fc(
+        "## 段1|测试一\n\n```text\n"
+        "【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+        "【核心人物】@CHR-男主、@CHR-女主\n"
+        "【站位声明】：@男主（画面右 · 靠椅背 · 正面朝左）、@女主（画面左 · 侧身朝右）\n"
+        "【时间轴分镜】\n"
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@男主 靠回椅背。"
+        "声音：胎噪。台词：男主·低：「你早就知道。」\n"
+        "```\n【音效】环境音\n【强制禁止项】画面：角色变形\n")
+    if not any(x.startswith("C40d") for x in _w_c40e):
+        print("FAIL self-test: 群像开关沉默应报 C40d", _w_c40e); ok = 0
+    # 78f) 误报回归：单人特写段（无场景词、无在场、摆位 1 人）→ 全码不报
+    _i_c40f, _w_c40f = _fc(
+        "## 段1|测试一\n\n```text\n"
+        "【画幅风格】16:9 横屏, 电影级质感 (aspect_ratio=16:9)\n"
+        "【核心人物】@CHR-女主\n"
+        "【站位声明】：@女主（画面中 · 伏案 · 正身朝前）\n"
+        "【时间轴分镜】\n"
+        "- 00:00-00:04 [镜头1] 特写 · 平视 · 固定：单人入画，@CHR-女主 双唇抿紧，"
+        "右手握笔悬在纸面上方。声音：无。台词：女主·冷：「我不同意。」\n"
+        "```\n【音效】环境音\n【强制禁止项】画面：角色变形\n")
+    if any(x.startswith("C40") for x in _w_c40f):
+        print("FAIL self-test: 单人特写段不应报 C40", _w_c40f); ok = 0
+
+    # ---- 79) C41 已废除旧口径残留（P8 新增 · 2026-10-24 · 采纳网友 check_storyboard 判据 1）----
+    # 79a) 负例：稿内把「单镜 3~5 秒、一组 3~4 镜」当硬约束抄了 → 必报 C41
+    _i_c41a, _w_c41a = _fc(
+        "## 段1|测试一\n\n```text\n"
+        "【画幅风格】16:9 横屏 (aspect_ratio=16:9)\n"
+        "【核心人物】@CHR-甲\n"
+        "【站位声明】：@甲（画面中 · 桌旁 · 正身朝前）\n"
+        "【节奏约束】单镜 3~5 秒、一组 3~4 镜，不得超过。\n"
+        "【时间轴分镜】\n"
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@甲 抬手。声音：无。台词：甲·平：「走。」\n"
+        "```\n【音效】环境音\n【强制禁止项】画面：角色变形\n")
+    if not any(x.startswith("C41") for x in _w_c41a):
+        print("FAIL self-test: 稿内残留「单镜3~5秒/一组3~4镜」应报 C41", _w_c41a); ok = 0
+    # 79b) 正例（防误报）：**讨论旧口径**（写明「已废/不再」）不报
+    _i_c41b, _w_c41b = _fc(
+        "## 段1|测试一\n\n```text\n"
+        "【画幅风格】16:9 横屏 (aspect_ratio=16:9)\n"
+        "【核心人物】@CHR-甲\n"
+        "【站位声明】：@甲（画面中 · 桌旁 · 正身朝前）\n"
+        "【节奏说明】旧版的「一组 3~4 镜」已废止，本段按台词字数推镜长。\n"
+        "【时间轴分镜】\n"
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@甲 抬手。声音：无。台词：甲·平：「走。」\n"
+        "```\n【音效】环境音\n【强制禁止项】画面：角色变形\n")
+    if any(x.startswith("C41") for x in _w_c41b):
+        print("FAIL self-test: 写明「已废止」的旧口径追述不应报 C41", _w_c41b); ok = 0
+    # 79c) 正例：只描述性提及「SD2.5 常规镜长 3~5s」而无约束词 → 不报（防把描述当规则）
+    _i_c41c, _w_c41c = _fc(
+        "## 段1|测试一\n\n```text\n"
+        "【画幅风格】16:9 横屏 (aspect_ratio=16:9)\n"
+        "【核心人物】@CHR-甲\n"
+        "【站位声明】：@甲（画面中 · 桌旁 · 正身朝前）\n"
+        "【时间轴分镜】\n"
+        "- 00:00-00:05 [镜头1] 中景 · 平视 · 固定：画面主体：@甲 抬手，SD2.5 单镜 3~5s 属常规。"
+        "声音：无。台词：甲·平：「走。」\n"
+        "```\n【音效】环境音\n【强制禁止项】画面：角色变形\n")
+    if any(x.startswith("C41") for x in _w_c41c):
+        print("FAIL self-test: 描述性提及镜长不应报 C41", _w_c41c); ok = 0
+
     print("[+] self-test", "PASSED" if ok else "FAILED")
     return ok
 
@@ -5378,20 +5301,15 @@ def _looks_like_feed(text):
     判据取「最硬、最不会漏杀真稿件」的组合：
       ① 有真实镜行（`TIME_RE` 时间戳 + `SHOT_TAG_RE` 镜头号 同现）→ 稿件
       ② 七段式栏 ≥6 个 → 稿件（覆盖无时间轴的纯文生短片）
-      ③ H3 六段式字段出现 → 稿件
-    三者皆无 → 非稿件，机检拒绝跑并给出明确指引（exit 3）。
+    二者皆无 → 非稿件，机检拒绝跑并给出明确指引（exit 3）。
 
     ✅ 安全性实测（2026-10-12 · 全包 138 个 md）：三份真正的示例稿
-       storyboard-example.md / demo-feed-wkw-15s.md / demo-feed-xuke-15s.md
+       三份历史示例稿
        **全部正确判为稿件，零漏杀**。
     """
     if TIME_RE.search(text) and SHOT_TAG_RE.search(text):
         return True
     if sum(1 for s in SEVEN_SEGMENTS if s in text) >= 6:
-        return True
-    if re.search(r"^\s*(?:subject_definitions|summary|retention_analysis|"
-                 r"detailed_description|overall_soundscape|non_diegetic_music)\s*:",
-                 text, re.M):
         return True
     return False
 
@@ -5444,6 +5362,80 @@ def _split_feed_segments(text):
     return segs
 
 
+# ★P11 修（2026-10-24 · 根治「多段稿 24 个高危码全部降级放行」）：
+#   病根：逐段模式在 main() 里给每条告警拼了 `[段N] ` 前缀，而 finalize_checks()
+#   用 `w.startswith(FATAL_WARN_PREFIXES)` 判高危——前缀一加，开头就不再是 "C20c"，
+#   24 个必崩码在**任何 ≥2 段的稿子**上全部降级成普通 WARN，脚本照打 PASSED。
+#   更根本的问题：**告警码靠字符串开头承载**，这是一条隐式契约，任何上游做字符串
+#   拼接的层（加标签、加来源、加时间戳）都会把它弄碎。
+#   修法：不再假设「码在开头」，而是**显式解析出机器码**。标签格式将来再变，
+#   只要还带 `[段N]` 形态就照样能取到码。判定点也从「startswith 原始串」改为
+#   「startswith 解析后的码」。
+_SEG_LABEL_RE = re.compile(
+    r"^\s*\[\s*(?:段\s*\d+(?:\s*[/／]\s*\d+)?|全篇|整份)[^\]]*\]\s*")
+
+
+def _warn_code(w):
+    """从告警文本解析机器码，剥离 `[段N] ` 一类单元标签。
+
+    只剥「段」形态的标签——不能剥任意方括号，否则 `[高危实拍必崩阻断] C20c`
+    这类已加工过的串会被继续剥掉，反而判错。
+    """
+    s = (w or "").strip()
+    if s.startswith("[高危实拍必崩阻断]"):
+        return ""
+    # 标签只承担展示职责；只认告警头部独立机器码，不扫描正文引用。
+    m = re.match(r"^(?:\[[^\]\n]*\]\s*)*(C\d+[a-z]?)(?=\s|[：:]|$)", s)
+    return m.group(1) if m else ""
+
+
+# ★P11 新增（2026-10-24 · 根治「六条跨段判据在多段稿上 100% 静默失明」）：
+#   病根：main() 默认把多段稿 `_split_feed_segments()` 拆成单段再逐段校验，理由是
+#   整份合并解析会把多段时长/镜数累计、误触 C21/C22。但这一步同时**杀掉了跨段判据的输入**：
+#     · C11b（段缝末镜定格）——代码直接 `[] if _BY_SEG else seg_zw`，逐段模式整段跳过；
+#     · C17d（跨段站位漂移）/ C17e（人数变化）/ C18m（段缝景别落差）——依赖
+#       `zip(seg_zw, seg_zw[1:])`，单段时 `seg_zw` 只有一项，切片永远为空；
+#     · C26f（跨段道具跟随）——依赖 `len(_segments_time) > 1`，单段恒等于 1。
+#   于是真实生产稿（3 分钟剧 ≈14 段）上，这五条一次都不会触发。
+#   修法：逐段跑完后再**整份跑一次，只取跨段码**。既不把时长/镜数累计放回主判据，
+#   又让跨段铁律真正通电。这是「按段切分」与「整份语义」两种粒度的正确分工：
+#   **段内判据按段跑，段间判据按全篇跑，两者在出口处合并。**
+_CROSS_SEG_CODES = ("C11b", "C17d", "C17e", "C18m", "C26f")
+
+
+def cross_segment_alerts(text, model, mode, combat, c23,
+                         style_source=None, aspect=None, plugin="auto", state_data=None):
+    """整份复查「跨段 / 全篇」判据，只返回这几条码的告警。
+
+    整份跑必然伴随时长/镜数累计，会顺带触发 C21/C22 等**与段长有关**的告警——
+    那些不是本函数的目的，一律丢弃。跨段码本身不受累计影响（它们比的是段与段）。
+    """
+    _missing = object()
+    _prev = globals().get("_BY_SEG", _missing)
+    globals()["_BY_SEG"] = False          # 让 C11b 的逐段跳过逻辑失效，走全篇
+    try:
+        _issues, _warns, _stats = validate(
+            text, model, mode, combat, c23,
+            style_source, aspect, plugin=plugin, state_data=state_data)
+    except Exception as exc:
+        raise RuntimeError(f"跨段复查失败，不能判定通过：{exc}") from exc
+    finally:
+        if _prev is _missing:
+            globals().pop("_BY_SEG", None)
+        else:
+            globals()["_BY_SEG"] = _prev
+    _seen, _out = set(), []
+    for _w in _warns:
+        _code = _warn_code(_w)
+        if not _code.startswith(_CROSS_SEG_CODES):
+            continue
+        if _w in _seen:
+            continue
+        _seen.add(_w)
+        _out.append(_w)
+    return _out
+
+
 def finalize_checks(text, issues, warns, *, delivery=None, contract=False,
                     allow_warn=False, director=None):
     """渲染前统一最终判定；依赖故障不得视为检查通过。"""
@@ -5453,10 +5445,354 @@ def finalize_checks(text, issues, warns, *, delivery=None, contract=False,
     _stage_markers = re.search(r"情绪锚点表|世界锚卡|人物锚卡|角色四格|九宫格|场面调度|连续性台账|故事板",
                                text)
     _feed_units = text.count("【画幅风格】")
-    _is_feed_unit = (_feed_units >= 2
-                     and not re.search(r"资产提示词|角色四格板|场景母版|九宫格提示词", text))
+    # ★P8 修（2026-10-24 · 网友建议书 P-06 核验属实）：
+    #   病根：M1 素材形态**必须**附《素材接线单》，而接线单正文必然写「你该挂：角色四格板 /
+    #   场景母版 / 九宫格提示词」→ 命中下面这串禁用词 → `_is_feed_unit=False` →
+    #   投喂稿被当成「项目文档」→ C31 按项目级契约去要 CT1/CT2/CT4 全套 → 报一串**假缺失**。
+    #   两条要求直接打架：「自包含、附接线单」 vs 「出现资产词就不是投喂稿」。
+    #   修法：判定前**先剥离接线单区块**（`## 附 · 素材接线单` / `### 素材接线单` 到下一个同级标题），
+    #   只看剥离后的正文有没有资产提示词——这才是「这份稿里是不是真有资产段」的原意。
+    _text_for_form = re.sub(
+        r"^#{2,4}[^\n]{0,16}接线单[^\n]*\n[\s\S]*?(?=^#{1,4}[ \t]|\Z)",
+        "\n", text, flags=re.M)
+    # ★P9 修（自测暴露出的一处链路断裂）：旧判据要求「≥2 个【画幅风格】」才算投喂稿，
+    #   于是**单段投喂稿永远被判成项目文档** → C31 按项目级契约去要 P0B/P1/P3/P5 全套 → 全 FAIL。
+    #   但单段 M1 投喂稿恰是 compile_feed.py 的**标准产物**——链在自己包的门口断掉。
+    #   改为按**形态**判定：七段式结构齐全 +（段数≥2 或 稿内声明了素材形态）+ 剥离附属区后无真实资产段。
+    #   剥离区扩到「资产另册：…」声明行——M1 稿必然写这句，而它自带「角色四格/场景母版/九宫格」字样。
+    _text_for_form = re.sub(r"^>.*资产另册[^\n]*\n", "\n", _text_for_form, flags=re.M)
+    _has_seven_sections = ("【画幅风格】" in text and "【时间轴分镜】" in text
+                           and "【强制禁止项】" in text)
+    _declares_mode = bool(re.search(r"素材形态[:：]\s*M[012]", text))
+    _has_real_asset_block = bool(re.search(r"资产提示词|角色四格板|场景母版|九宫格提示词",
+                                           _text_for_form))
+    _is_feed_unit = (_has_seven_sections
+                     and (_feed_units >= 2 or _declares_mode)
+                     and not _has_real_asset_block)
     project_doc = (bool(re.search(r"^#{1,3}\s+", text, re.M)) and len(text) > 1500
                    and not _is_feed_unit)
+    # ★P3 新增 C35：同镜 ≥2 具名人物，却没标层次（虚焦 / 前景 / 后景）。
+    #   病根（2026-10-22 实测）：投喂稿在过肩镜里给两个人都写了独立动作和位置
+    #   （「A 趴着探身；B 坐在她左手边低头看卷子」），模型读到两个都是主体，
+    #   就把两人铺成并排——故事板里的「一前一后」在成片里变成「两个人并肩站着」。
+    #   视频生成结果与故事板对不上，八成是这个，而不是参考图或模型能力。
+    _c35 = []
+    for _ci35, _blk35 in enumerate(re.findall(r'```text\n(.*?)```', text, re.S), 1):
+        for _ln35 in _blk35.split('\n'):
+            _m35 = re.match(r'- \d\d:\d\d-\d\d:\d\d \[镜头\s*(\d+)\].*?：画面主体：(.*?)(?=声音：|台词：|$)',
+                            _ln35)
+            if not _m35:
+                continue
+            _body35 = _m35.group(2)
+            _names35 = set(re.findall(r'@([^\s，。；、（）]{1,4})', _body35))
+            if len(_names35) >= 2 and not re.search(r"虚焦|前景|后景|散焦", _body35):
+                _c35.append(f"段{_ci35} 镜{_m35.group(1)}（{'、'.join(sorted(_names35))}）")
+    if _c35:
+        warns.append(
+            "C35 多人物镜未标层次：" + "；".join(_c35) +
+            "——同镜出现 ≥2 个具名人物时，必须写明谁是清晰主体、谁是虚焦陪衬"
+            "（如「画面左前景是 @苏念 虚焦的肩背」或「@苏念 在前景清晰，@江野 在后景」）。"
+            "不标层次，模型会把两人平铺成并排：过肩镜头一前一后的关系会丢失，"
+            "成片人物位置与故事板对不上。陪衬者只写虚焦形态，禁写独立动作与「坐在某人身旁」这类并排定位")
+
+    # ★P5 新增 C36：连续动作一句带过（模型只看终态，中间跳帧）。
+    #   ★P6 修订：① 只在**单镜 ≥6s** 时判——SD 2.5 单镜 3~5s（C10 报 >6s），
+    #     短镜物理上装不下「从A到B」的长路径，写了也会被压成硬切，报它没有意义；
+    #     长镜才需要这条兜底。② 动词表只留**接触类移动动词**（摸/抚/蹭/拂/扫/划），
+    #     不含任何亲密动作词——本码治的是「连续路径被跳帧」，与题材无关。
+    #   病根（实测）：单镜里写「从A一路摸到B」一句带过 → 成片上一秒在A、下一秒已在B，中间瞬移。
+    #   修法：一区一镜，每镜三件套（当前接触点 + 主动方手位 + 被动方身体反应）。
+    #   规则权威：short-drama-director/references/blooper-prevention-playbook.md §一
+    _c36 = []
+    for _ci36, _blk36 in enumerate(re.findall(r'```text\n(.*?)```', text, re.S), 1):
+        for _ln36 in _blk36.split('\n'):
+            _m36 = re.match(r'- (\d\d):(\d\d)-(\d\d):(\d\d) \[镜头\s*(\d+)\].*?：画面主体：(.*?)(?=声音：|台词：|$)',
+                            _ln36)
+            if not _m36:
+                continue
+            _dur36 = (int(_m36.group(3)) * 60 + int(_m36.group(4))) - \
+                     (int(_m36.group(1)) * 60 + int(_m36.group(2)))
+            if _dur36 < 6:
+                continue  # 短镜豁免：SD 2.5 单镜 3~5s 装不下连续长路径
+            _body36 = _m36.group(6)
+            if re.search(r"从[^，。；\"'（）]{1,10}(?:摸|抚|蹭|拂|扫|划)到[^，。；\"'（）]{1,10}",
+                         _body36):
+                _c36.append(f"段{_ci36} 镜{_m36.group(5)}")
+    if _c36:
+        warns.append(
+            "C36 连续动作一句带过：" + "；".join(_c36) +
+            "——长镜（单镜 ≥6s）的画面主体出现「从A摸/抚到B」这类连续路径。模型看不懂连续路径、只看终态，"
+            "中间过程直接跳帧（实测：上一秒手还在 A 处，下一秒已经到 B 处，中间瞬移）。"
+            "必须拆成带路径的离散镜：一区一镜，每镜写全三件套（当前接触点 + 主动方手位 + 被动方身体反应），"
+            "并在禁止项点名禁跳帧/禁瞬移。※ SD 2.5 单镜 3~5s 不触发本条（短镜装不下长路径，C10 已管超时）")
+
+    # ★P5 新增 C37：背景多人同动未点名（"只抬手"是人家的动作，不是人数）。
+    #   病根（2026-10-22 实测）：镜4 写"@周越 与两个男生虚焦的侧影，只抬手起哄"
+    #   ——没限定这个动作只属于一个人 → 成片 12-13 秒两个男生同时比划。
+    #   修法：群体动作点到人头——"仅 @周越 一人抬手起哄，另两个男生静坐不动"。
+    #   规则权威：short-drama-director/references/blooper-prevention-playbook.md §三
+    _c37_group_re = re.compile(r"(?:[两二三四五]|\d+)\s*[个名]\s*(?:男生|同学|人|男人|女生|女孩|家伙|身影)")
+    _c37_action_re = re.compile(r"抬手|比划|挥手|挥拳|点头|摇头|起身|起哄|回头|转头|探身|站起|开口|说话|喊|同时")
+    _c37_assign_re = re.compile(
+        r"仅[^，。；\n]{0,8}一人|只[^，。；\n]{0,8}一人|唯[^，。；\n]{0,8}一人"
+        r"|其余[^，。；\n]{0,12}(?:静|不动|坐|定)|另[^，。；\n]{0,12}(?:静|不动|坐|定)"
+        r"|其他人?[^，。；\n]{0,12}(?:静|不动|坐|定)")
+    _c37 = []
+    for _ci37, _blk37 in enumerate(re.findall(r'```text\n(.*?)```', text, re.S), 1):
+        for _ln37 in _blk37.split('\n'):
+            _m37 = re.match(r'- \d\d:\d\d-\d\d:\d\d \[镜头\s*(\d+)\].*?：画面主体：(.*?)(?=声音：|台词：|$)',
+                            _ln37)
+            if not _m37:
+                continue
+            _body37 = _m37.group(2)
+            _hit37 = False
+            for _g37 in _c37_group_re.finditer(_body37):
+                _win37 = _body37[_g37.end():_g37.end() + 24]
+                if re.search(r"@[^\s，。；、（）]{1,4}", _win37):
+                    continue  # 群体词与动作词之间出现具名人物 → 动作已有主
+                if _c37_action_re.search(_win37):
+                    _hit37 = True
+                    break
+            if _hit37 and not _c37_assign_re.search(_body37):
+                _c37.append(f"段{_ci37} 镜{_m37.group(1)}")
+    if _c37:
+        warns.append(
+            "C37 背景多人同动未点名：" + "；".join(_c37) +
+            "——画面主体写了「两个/N个 + 同学/男生/人」群体又给了群体动作，却没限定动作归属。"
+            "「只抬手」是人家的动作、不是人数，模型会默认全群体一起动（实测：两个男生同时比划）。"
+            "必须点到人头：「仅 @X 一人抬手起哄，另两个男生静坐不动」——一个声音 + 一个动作，"
+            "其余是静；或写明该镜就是要的集体反应节拍")
+
+    # ★P6 新增 C38：段间缺桥接声明（段与段之间跳脱）。
+    #   病根（2026-10-22 用户实测反馈）：多段稿每段内部都写死了，段与段之间却各生成各的——
+    #   上一段话音落下，下一段主角直接空降开讲，情绪断在半空、动作没有由来。用户原话：
+    #   「太跳脱了」「连个空镜都没有」「前后的关联性有点差」。
+    #   本质：段内管「这一秒发生什么」，段间接管「观众凭什么走到下一秒」；后者不写，模型不会补。
+    #   修法（军规十章）：每段结尾交出接力棒（段尾三问）、下段开头接住；反应者一拍/声音先入/
+    #   时间锚任选；段缝说明必须写桥接方式。真跳切就显式声明「硬切跳」——机检不拦刻意，只拦没想过。
+    #   规则权威：short-drama-director/references/blooper-prevention-playbook.md §十
+    _c38_bridge_re = re.compile(
+        r"承接|接住|接过|桥接|声音桥|反应镜|反应者|先入|时间锚|话头|递进|因果|于是|顺势"
+        r"|因此|所以|紧接|铃|广播|脚步|未回应|未解决|动因|动机|缘由|衔接|余韵|遗留"
+        r"|台词钩|抢白|打断|接话|顶回|升级|翻脸|抛出|追问")
+
+    # ★P6.4 新增 C39：竖屏空镜冗余（画幅-节奏错配）——把横屏那套套到竖屏的典型症状。
+    #   病根（2026-10-23 用户口径）：「红果那种 9:16 的剧基本用不到空镜过渡，因为它节奏堆得很快；
+    #   横屏这种算半精品剧，它需要意境、需要唯美。你要把这两块区分开，不然他们用红屏做短剧的时候
+    #   会发现又多了很多无意义的镜头。」→ 同一条「段间衔接」规则不能两档通吃。
+    #   判定：稿内锁定 9:16 + 某镜标注「空镜/无人物入画」且未标「刻意空镜」 → WARN。
+    #   16:9/21:9 永不触发（横屏空镜是表现手段，不是问题）。
+    #   规则权威：blooper-prevention-playbook.md §十·10.0（画幅-剧型分档）
+    _ar39_m = (re.search(r"aspect_ratio\s*[=:]\s*(16:9|9:16|21:9)", text)
+               or re.search(r"【画幅风格】[^\n]{0,80}?(21:9|16:9|9:16)", text))
+    _ratio39 = _ar39_m.group(1) if _ar39_m else ""
+    if _ratio39 == "9:16":
+        _c39 = []
+        for _ci39, _blk39 in enumerate(re.findall(r'```text\n(.*?)```', text, re.S), 1):
+            for _ln39 in _blk39.split("\n"):
+                _m39 = re.match(r"- \d\d:\d\d-\d\d:\d\d \[镜头\s*(\d+)\]", _ln39)
+                if not _m39:
+                    continue
+                if re.search(r"空镜|无人物入画|无人物出场|一个人都没有", _ln39) \
+                        and not re.search(r"刻意空镜|必要空镜", _ln39):
+                    _c39.append(f"段{_ci39} 镜{_m39.group(1)}")
+        if _c39:
+            warns.append(
+                "C39 竖屏空镜冗余：" + "；".join(_c39) +
+                "——稿已锁定 9:16 竖屏，却安排了标注「空镜/无人物入画」的镜。竖屏剧（红果类）节奏堆得极快，"
+                "空镜＝拖节奏，观众一停就划走；空镜、留白、意境镜是 **16:9 横屏半精品**的表现手段，"
+                "套到竖屏就是一堆无意义的镜头。" +
+                "修法：① 竖屏的段间衔接改用**台词钩/抢白/打断/矛盾升级**（一句「我话还没说完」就够了），"
+                "不加空镜；② 时间跳用台词交代（「都放学了」），不给天色空镜；"
+                "③ 确实需要一个关键道具的空镜，就在该镜写「刻意空镜」并压到 ≤1s（机检认此标记放行）")
+
+    # ★P7 新增 C40：群像行为缺失（条件触发 · **无全局默认值**）。
+    #   病根（2026-10-24 用户实测）：男女主对话时背景人物「呆滞、站着不动、一点反应都没有」；
+    #   教室戏后排同学「像僵尸一样在那儿看着」；闹市一男一女走过，「背后的人不知道在干嘛」。
+    #   ⚠️ 病根表述（勿写错，check_package 有档案校验）：**原则层不缺**——
+    #     blocking-direction.md §4.2 已有「背景行为」三级（禁静止的人形立牌）、
+    #     acting-direction.md §十一 已有「群体反应成波不成排」「焦外听者非静止」，
+    #     但它们全部止步于原则层，缺的是三件事：
+    #       ① 投喂层无槽位（（在场）明文允许无反应；站位声明四要素无「手头事务」）；
+    #       ② 无冲突裁决（C35 禁写独立动作 / C37 示范句「其余是静」/ C20h 必写「无其他人物」
+    #          三条反向规则无裁决说明 → 执行者必然选最省力那条，背景人被按死）；
+    #       ③ 机检零断言（C25b 只禁同步词，是**反面**）。
+    #     **禁止一群人「齐动」（C25b）≠ 允许一群人「齐不动」**——缺口就在这个不对称上。
+    #   ★ 本码是 C25b 的**正面对偶**，且**不带全局默认值**：只查开（A/B）门，关门（C）只查一句声明。
+    #     把 C40 写成全局默认 = 把病从「全静」搬到「全动」，两头都错。
+    #   规则权威：short-drama-director/references/crowd-behavior-direction.md
+    _C40_SCENE_RE = re.compile(
+        r"教室|食堂|闹市|大街|街道|广场|集市|市集|朝堂|客栈|车站|商场|礼堂|操场|会场|酒馆|茶馆|铺子|庙会|礼堂")
+    _C40_AGG_RE = re.compile(r"众人|大家|围观|在旁|周围人群|旁人|人群|同学们看着|路人若干|路人甲乙")
+    _C40_BIZ_VERB_RE = re.compile(
+        r"低头|抬头|转头|转笔|抄|批改|记账|翻书|翻页|拧|码|整理|端|拎|提|扫|擦|推|搬|扇|啃|咬|喝"
+        r"|缝|贴|剪|洗|切|煮|盛|蹲|踮|趴|托腮|抱|掏|摸出|张望|打量|驻足|穿行|赶路|排队|结账"
+        r"|装车|卸货|摆摊|收摊|招手|招呼|写字|填表|看卷|望向|注视|停笔|停住|握笔|笔尖")
+    # 摆位人数与「手头事务」覆盖率（C40c）：逐【站位声明】块解析，兼容漏 `@` 的宽松写法
+    # ★P11 修（2026-10-24 · C40 跨段串扰 · 实测两段双人戏必误报 C40c）：
+    #   旧版对整份稿一次性统计，三个变量全是全稿作用域：
+    #     · `_c40_st_total` 把所有段【站位声明】人数**累加** → 两段各 2 人 = 4 ≥ 3
+    #       → `_c40_open` 强行置真、A/B 门大开 → 无视段内「除 @A、@B 外无其他人物」，
+    #       反手报「C40c 摆位 4 人缺手头事务」。密闭双人戏越写越合规，误报越多。
+    #     · `_c40_has_biz_field = "手头事务" in text` 是全稿判定 → 只要任意一段某人
+    #       写了手头事务，其余段写「周围人群都在旁围观」也不再触发 C40b（全稿失明）。
+    #     · `_c40_no_other` 同理：段A 声明了「无其他人物」，段B 没声明也算声明过。
+    #   修法：C40 改为**逐段独立判定**——人数、事务、无其他人物声明全部收进段作用域。
+    #   群体行为本来就是「这一段这群人在干什么」，跨段累加在语义上不成立。
+    _c40_blocks = [(None, text)]
+    _c40_segs = _split_feed_segments(text)
+    if len(_c40_segs) >= 2:
+        _c40_blocks = [(lbl, blk) for lbl, blk in _c40_segs if _segment_is_feed(blk)]
+    for _lbl40, _body40 in _c40_blocks:
+        _pfx40 = f"[{_lbl40}] " if _lbl40 else ""
+        _c40_st_total, _c40_st_biz = 0, 0
+        for _blk40 in re.findall(r"【站位声明】[：:]?(.*?)(?=\n【|\n```|$)", _body40, re.S):
+            for _m40 in re.finditer(r"@?([^\s，。；、（）()【】]{1,6})\s*[（(]", _blk40):
+                _c40_st_total += 1
+                _tail40 = _blk40[_m40.end():]
+                _paren40 = re.split(r"[）)]", _tail40, maxsplit=1)[0]
+                if "手头事务" in _paren40:
+                    _c40_st_biz += 1
+        _c40_has_biz_field = ("手头事务" in _body40) or ("（在场·事务" in _body40)
+        # 开（A/B）门：命中任一即判群像行为；打戏段 / 纯特写段 / 密闭双人戏 走关（C）门
+        _c40_open = bool(
+            "（在场" in _body40
+            or _C40_SCENE_RE.search(_body40)
+            or _c40_has_biz_field
+            or _c40_st_total >= 3
+        )
+        _c40_no_other = bool(re.search(r"无其他人物|(?:禁止|禁|不得|不要)(?:出现|生成|添加)?其他人(?:物)?", _body40))
+        if _c40_open:
+            _c40 = []
+            # C40a：裸（在场）——旧式「画面可见但无动作反应」＝僵尸许可证，逐个点名
+            for _m40a in re.finditer(r"（在场）(?!·)", _body40):
+                _line40a = _body40[:_m40a.start()].count("\n") + 1
+                _c40.append(f"第{_line40a}行 裸（在场）")
+            if _c40:
+                warns.append(_pfx40 +
+                    "C40a 群像人物未派事务（裸（在场））：" + "；".join(_c40[:8]) +
+                    "——`（在场）` 的字面含义「画面可见但无动作反应」会被模型直接读成「这个人不用动」，"
+                    "是教室后排集体僵尸化的直接病根。修法：改写成 `（在场·事务：〔2~6 字手上在做什么〕）`，"
+                    "如 `（在场·事务：低头抄板书）`；R 型可放宽到 12 字内并写打断时机"
+                    "（`（在场·事务：转笔望窗外，被「退学」二字打断才抬眼）`）。"
+                    "规则权威：short-drama-director/references/crowd-behavior-direction.md §六·1")
+            # C40b：群像镜用了聚合词、同一镜行却没派任何事务 → 模型自由发挥 → 全员同步站桩
+            #   （逐镜行判，不扫全稿：聚合词在 A 镜、事务写在 B 镜，A 镜仍然是僵尸）
+            _c40b = [_ln40.strip()[:46] for _ln40 in _body40.split("\n")
+                     if TIME_RE.search(_ln40)
+                     and _C40_AGG_RE.search(_ln40.split("台词：", 1)[0])
+                     and not _C40_BIZ_VERB_RE.search(_ln40.split("台词：", 1)[0])
+                     and not re.search(r"(?:禁止|禁|不得|不要|避免)[^。；]{0,12}(?:众人|大家|围观|旁人|人群)", _ln40)]
+            if _c40b:
+                warns.append(_pfx40 +
+                    "C40b 群像镜只写聚合词未派事务：" + "；".join(_c40b[:5]) +
+                    "——「众人/大家/围观/在旁/周围人群/路人若干」这类聚合词等于把群像交给模型自由发挥，"
+                    "默认产物就是全员同步站桩（用户实测原话：教室后排「像僵尸一样在那儿看着」）。"
+                    "修法：聚合词拆成「每人一件不同的事」——前景两名提购物袋的女性自右向左穿过画面；"
+                    "中景摊主蹲在地上把纸箱往摊后码；远景十余名行人赶路，虚化，不遮挡主角面部。"
+                    "规则权威：short-drama-director/references/crowd-behavior-direction.md §三")
+            # C40c：站位声明五要素缺「手头事务」过半
+            if _c40_st_total >= 3 and (_c40_st_total - _c40_st_biz) * 2 >= _c40_st_total:
+                warns.append(_pfx40 +
+                    f"C40c 站位声明缺「手头事务」：摆位 {_c40_st_total} 人，其中仅 {_c40_st_biz} 人带手头事务"
+                    f"（缺失率 ≥50%）——站位声明旧四要素（位置/依托物/朝向/姿态）锁得住人在哪，"
+                    "锁不住人在干什么；模型拿到「坐姿」就真的只是坐着。修法：四要素升五要素，"
+                    "每人补第 5 项（`手头事务：低头抄板书`）；主角可写 `手头事务：无（全神注视对手）`；"
+                    "S 型密度人不进站位声明，只走密度句。规则权威：short-drama-director/references/crowd-behavior-direction.md §六·2")
+        elif _c40_st_total >= 2 and not _c40_no_other:
+            # 关门（C）门：不查任何群像行为，只查「显式声明」——沉默是最贵的代价
+            warns.append(_pfx40 +
+                f"C40d 群像开关沉默：本段摆位 {_c40_st_total} 人，既未写 `无其他人物`、也未给任何人派事务——"
+                "既不说「有人」也不说「没人」，模型就自己猜，结局要么空场、要么乱加人。修法二选一："
+                "① 本段不要群像 → 显式写 `除 @XX 外无其他人物`（C20h 已验证句式，密闭双人/打戏/纯特写走这条）；"
+                "② 本段要群像 → 按 A/B 开关逐人派事务或写密度句。规则权威：short-drama-director/references/crowd-behavior-direction.md §二"
+            )
+
+    # ★P8 新增 C41：已废除旧口径残留（无子码 · 2026-10-24 · 采纳网友 check_storyboard 判据 1）。
+    #   病根：V6.x 的「单镜 3~5s / 一组 3~4 镜」等**硬性节奏约束**已废除（现行口径＝
+    #   镜长由台词字数÷语速 + 情绪节拍倒推，C10 只管单镜 >6s 的超时线），但历史稿、模板、
+    #   网友转载的旧提示词里仍在写。执行者照抄旧口径 → 机械等分镜长 → C13 镜长雷同；
+    #   或为凑「一组 3~4 镜」把该分开的回合硬并成一镜 → 站桩式对话（C27d）。
+    #   本码只做一件事：把「你正在引用一条已废除的规则」这件事**显式说出来**。
+    #   ⚠️ 带否定/追述守卫：出现「已废/废止/不再/旧版/弃用/禁写」等词时不报——
+    #     讨论旧口径（如本包补丁说明）不等于执行旧口径。
+    _c41_old = []
+    _C41_RULES = [
+        (re.compile(r"一组\s*3\s*[~～\-]\s*4\s*镜"), "一组 3~4 镜"),
+        (re.compile(r"一组\s*4\s*[~～\-]\s*8\s*镜"), "一组 4~8 镜"),
+    ]
+    # 「单镜 3~5s / 3~6s」只在**当约束写**时才报（描述性提及如「SD2.5 常规镜长 3~5s」不报）
+    _C41_SHOT = re.compile(r"单镜\s*3\s*[~～\-]\s*[56]\s*(?:秒|s|S)")
+    _C41_BIND = re.compile(r"约束|限制|规定|预算|上限|不得超过|必须|须|要求|控制在")
+    _C41_EXEMPT = re.compile(r"已废|废止|废弃|不再|旧版|旧口径|弃用|禁写|不采用|作废|历史")
+    for _re41, _name41 in _C41_RULES:
+        for _m41 in _re41.finditer(text):
+            if _C41_EXEMPT.search(text[max(0, _m41.start() - 20):_m41.end() + 20]):
+                continue
+            _c41_old.append(_name41)
+    for _m41 in _C41_SHOT.finditer(text):
+        _win41 = text[max(0, _m41.start() - 12):_m41.end() + 12]
+        if _C41_EXEMPT.search(_win41) or not _C41_BIND.search(_win41):
+            continue
+        _c41_old.append(f"单镜 {_m41.group(0)[2:].strip()}")
+    if _c41_old:
+        warns.append(
+            "C41 已废除旧口径残留：" + "；".join(sorted(set(_c41_old))) +
+            "——稿内还在引用 V6.x 的**硬性节奏约束**。这类口径已废除：镜长应由"
+            "「台词字数÷语速(3.5~6 字/秒) + 情绪节拍」倒推，机检只管单镜 >6s 的超时线（C10）；"
+            "「一组 N 镜」的分组制也不再要求。照抄旧口径的直接后果有两个："
+            "① 机械等分镜长 → C13 镜长雷同；② 为凑「一组 3~4 镜」把该分开的回合硬并进一镜 → C27d 站桩式对话。"
+            "修法：删掉这两句硬约束，改写成「本段节奏：快切/中速/长镜」的意图声明，"
+            "让镜长跟着台词走（权威：sd-storyboard-engine/references/shot-economy-and-acting.md §一/§五·七）")
+
+    _c38_hardcut_re = re.compile(r"硬切跳|刻意跳|跳切|无需桥接|声明硬切|不接棒")
+    _c38_marks = [(m.start(), m.end(), m.group(1)) for m in SEG_HEAD_RE.finditer(text)]
+    if len(_c38_marks) < 2:
+        _c38_marks = [(m.start(), m.end(), m.group(1)) for m in SEG_BRACKET_RE.finditer(text)]
+    _c38_miss = []
+    for _idx38 in range(1, len(_c38_marks)):
+        _e38 = _c38_marks[_idx38][1]
+        _num38 = _c38_marks[_idx38][2]
+        _end38 = _c38_marks[_idx38 + 1][0] if _idx38 + 1 < len(_c38_marks) else len(text)
+        _head38 = text[_e38:_end38]
+        _fence38 = _head38.find("```")
+        if _fence38 >= 0:
+            _head38 = _head38[:_fence38]  # 只看段标题到围栏之间的「段缝说明」区，不扫正文
+        if not (_c38_bridge_re.search(_head38) or _c38_hardcut_re.search(_head38)):
+            _c38_miss.append(f"段{_num38}")
+    if _c38_miss:
+        warns.append(
+            "C38 段间缺桥接声明：" + "；".join(_c38_miss) +
+            "——相邻两段之间（非首段）的段缝说明只写了机位跨度（景别/焦段/换轴），没写内容怎么接。"
+            "段内管「这一秒发生什么」，段间接管「观众凭什么走到下一秒」——后者不写，模型不会补，"
+            "成片就是上一段话音落下、下一段主角空降（用户实测感受：「太跳脱了」「关联性差」）。"
+            "修法任选：① 段尾反应镜（场内第三者一拍：捅肘/对视/笔停在半空）；② 声音先入作桥"
+            "（铃/广播/脚步）；③ 时间锚（铃响/天色/来人）；④ 确实是刻意跳切就写明「硬切跳」。"
+            "写完把桥接方式补进段缝说明——机检查的就是这个声明")
+
+    # ★P2 新增 C34：稿里引了资产图号，却没有对应的资产提示词段。
+    #   病根：投喂稿会写「@//chr/ 苏念（图7）」+ 完整图号速查 + 素材接线单，
+    #   但图7 该长什么样一个字都没有——引用齐全、被引用的东西不存在。
+    #   ★P4 补充：`@//chr/` 仅是「平台已挂载资产文件夹」时的引用形态；未挂载时
+    #   （资产还是 md 待出图）投喂稿写「@苏念（图 7，声线锁…）」「教室（图 1 / 图 2）」
+    #   纯图号指代。旧正则只认 @// 前缀 → 新形态下 C34 静默失效（2026-10-22 实测）。
+    #   判定：是投喂单元 + 未声明"资产另册" + 有资产引用 + 无任何资产模板段 → WARN。
+    _asset_elsewhere = bool(re.search(
+        r"资产另册|资产提示词见|资产提示词分|出图提示词分|人物立绘提示词|场景提示词\.md", text))
+    if _is_feed_unit and not _asset_elsewhere:
+        _has_ref = bool(re.search(r"@//chr/|@//scn/|@//prp/|@CHR-|@SCN-|@PRP-", text)) or bool(
+            re.search(r"【(?:核心人物|场景资产)】[^\n]*（图\s*\d+", text))
+        _has_body = bool(re.search(r"全图共\s*4\s*格|【九宫格内容分配】|道具设定图", text))
+        if _has_ref and not _has_body:
+            warns.append(
+                "C34 引用资产但未附资产段：本稿引用了资产图号"
+                "（@//chr/ / @//scn/ / @//prp/ 挂载形态，或「@人名（图N）」「场景名（图N / 图M）」纯图号形态，"
+                "含图号速查与素材接线单），但正文里没有任何资产提示词段"
+                "（无「全图共 4 格」/「【九宫格内容分配】」/「道具设定图」）。"
+                "按 SKILL「md 正文只放两样：资产提示词 + 分镜提示词」，资产应同稿交付；"
+                "若确已拆册，请在本稿写明「资产另册：{文件名}」；"
+                "否则先回 P2 补齐，再报 P4 完成（自查：check_asset_blocks.py）")
+
     # ★审计补丁P1：投喂单元按 feed-only 核销（只核 CT5-/CT6-WIR），
     #   不再要求情绪锚点表 / 人物锚卡 / 故事板 / 连续性台账——那些属于项目交付包。
     #   注意：_delivery_eff 必须在**外层判定之前**算好，否则投喂单元会因 project_doc=False 而整段跳过契约核销。
@@ -5483,14 +5819,15 @@ def finalize_checks(text, issues, warns, *, delivery=None, contract=False,
         "C30a", "C30b", "C30e", "C30f", "C30g", "C30i", "C30j", "C30k", "C30l",
     )
     if not allow_warn:
-        issues.extend(f"[高危实拍必崩阻断] {w}" for w in warns if w.startswith(FATAL_WARN_PREFIXES))
+        issues.extend(f"[高危实拍必崩阻断] {w}" for w in warns
+                      if _warn_code(w).startswith(FATAL_WARN_PREFIXES))
 
 
 def main():
     argv = sys.argv[1:]
     if "--self-test" in argv:
         sys.exit(0 if _self_test() else 1)
-    value_flags = {"--model", "--track", "--combat", "--c23", "--style-source",
+    value_flags = {"--model", "--combat", "--c23", "--style-source",
                    "--aspect", "--plugin", "--state", "--mode", "--delivery"}
     files = []
     skip = False
@@ -5514,11 +5851,8 @@ def main():
     if delivery not in (None, "full-project", "agent-bundle", "feed-only"):
         print("[-] --delivery 必须 full-project/agent-bundle/feed-only"); sys.exit(2)
     model = opt("--model", "2.5")
-    if model not in ("2.5", "2.0", "h3"):
-        print("[-] --model 必须 2.5/2.0/h3"); sys.exit(2)
-    track = opt("--track", "1")
-    if track not in ("1", "2", "3", "4"):
-        print("[-] --track 必须 1/2/3/4（〇·0 分流锁：1 国内剧 / 2 海外剧 / 3 解说叙事 / 4 其他）"); sys.exit(2)
+    if model not in ("2.5", "2.0"):
+        print("[-] --model 必须 2.5/2.0"); sys.exit(2)
     combat = opt("--combat", "auto")
     if combat not in ("on", "off", "auto"):
         print("[-] --combat 必须 on/off/auto（C21 打戏护栏触发门：默认 auto 自动探测打戏稿）"); sys.exit(2)
@@ -5530,8 +5864,12 @@ def main():
     plugin = opt("--plugin", "auto")
     state_path = opt("--state", None)
     state_data = None
-    if state_path and os.path.isfile(state_path):
-        state_data = json.load(open(state_path, encoding="utf-8-sig"))
+    if state_path:
+        try:
+            with open(state_path, encoding="utf-8-sig") as source:
+                state_data = json.load(source)
+        except (OSError, ValueError) as exc:
+            print(f"[-] 无法读取 --state：{exc}"); sys.exit(2)
     if aspect and not re.match(r"^\d+\s*[:：]\s*\d+$", aspect.strip()):
         print("[-] --aspect 形如 16:9 / 9:16 / 21:9（B 锁画幅一致性比对，C6b）"); sys.exit(2)
     if not os.path.exists(files[0]):
@@ -5547,87 +5885,94 @@ def main():
     aspect = opt("--aspect")
     if aspect and not re.match(r"^\d+\s*[:：]\s*\d+$", aspect.strip()):
         print("[-] --aspect 形如 16:9 / 9:16 / 21:9（B 锁画幅一致性比对，C6b）"); sys.exit(2)
-    if model == "h3":
-        # ---- 非稿件早退（2026-10-12 新增）：规则库/说明文档不是投喂稿，不跑稿件级判据 ----
-        if not _looks_like_feed(text):
-            print("[!] 该文件不具备投喂稿件形态——未识别到「时间轴镜行 / 七段式栏位 / H3 六段式字段」。")
-            print("    validate_prompt.py 只校验 **P4 产出的投喂稿**（提示词文件），")
-            print("    不校验规则库文档（references/*.md）、README/CHANGELOG、项目看板或含反例的说明文档。")
-            print("    若这确实是投喂稿：请检查是否漏写【画幅风格】…【强制禁止项】七段，")
-            print("    或镜行是否为「00:00-00:05 [镜头1] 景别 · 视角 · 运镜。…」格式。")
-            print("    exit code 3 = 非稿件（既非 PASS 也非 FAIL）。")
-            sys.exit(3)
-        issues, warns, stats = validate_h3(text, opt("--mode", "new"))
-    else:
-        if not _looks_like_feed(text):
-            print("[!] 该文件不具备投喂稿件形态——未识别到「时间轴镜行 / 七段式栏位 / H3 六段式字段」。")
-            print("    validate_prompt.py 只校验 **P4 产出的投喂稿**（提示词文件），")
-            print("    不校验规则库文档（references/*.md）、README/CHANGELOG、项目看板或含反例的说明文档。")
-            print("    若这确实是投喂稿：请检查是否漏写【画幅风格】…【强制禁止项】七段，")
-            print("    或镜行是否为「00:00-00:05 [镜头1] 景别 · 视角 · 运镜。…」格式。")
-            print("    exit code 3 = 非稿件（既非 PASS 也非 FAIL）。")
-            sys.exit(3)
-        segs = _split_feed_segments(text) if "--whole" not in argv else []   # ★审计补丁P1：默认按段校验，--whole 才整份
-        if segs:
-            print(f"[i] 分单元校验：识别到 {len(segs)} 个投喂段，逐段独立跑判据"
-                  "（整份合并解析会把多段时长/镜数累计，误触 C21/C22 并让 C10/C15 失真）")
-            issues, warns, stats = [], [], {"duration_s": 0, "shots": 0, "chars": 0}
-            _skipped, _combat_hit = [], False
-            globals()["_BY_SEG"] = True   # ★审计补丁P1：标记逐段模式（C11b 跨段判据据此跳过）
-            for _label, _body in segs:
-                if not _segment_is_feed(_body):
-                    _skipped.append(_label)
-                    continue
-                if model != "h3" and _combat_on(_body, combat):
-                    _combat_hit = True
-                _si, _sw, _ss = validate(_body, model, opt("--mode", "new"), track, combat, c23,
+    if not _looks_like_feed(text):
+        print("[!] 该文件不具备投喂稿件形态——未识别到「时间轴镜行 / 七段式栏位」。")
+        print("    validate_prompt.py 只校验 **P4 产出的投喂稿**（提示词文件），")
+        print("    不校验规则库文档（references/*.md）、README/CHANGELOG、项目看板或含反例的说明文档。")
+        print("    若这确实是投喂稿：请检查是否漏写【画幅风格】…【强制禁止项】七段，")
+        print("    或镜行是否为「00:00-00:05 [镜头1] 景别 · 视角 · 运镜。…」格式。")
+        print("    exit code 3 = 非稿件（既非 PASS 也非 FAIL）。")
+        sys.exit(3)
+    segs = _split_feed_segments(text) if "--whole" not in argv else []   # ★审计补丁P1：默认按段校验，--whole 才整份
+    if segs:
+        print(f"[i] 分单元校验：识别到 {len(segs)} 个投喂段，逐段独立跑判据"
+              "（整份合并解析会把多段时长/镜数累计，误触 C21/C22 并让 C10/C15 失真）")
+        issues, warns, stats = [], [], {"duration_s": 0, "shots": 0, "chars": 0}
+        _skipped, _combat_hit = [], False
+        # 逐次调用保护状态，避免 main 被库调用后污染后续检查。
+        for _label, _body in segs:
+            if not _segment_is_feed(_body):
+                _skipped.append(_label)
+                continue
+            if _combat_on(_body, combat):
+                _combat_hit = True
+            _absent = object()
+            _before = globals().get("_BY_SEG", _absent)
+            globals()["_BY_SEG"] = True
+            try:
+                _si, _sw, _ss = validate(_body, model, opt("--mode", "new"), combat, c23,
                                          style_source, aspect, plugin=plugin, state_data=state_data)
-                print(f"[i] {_label}：时长{_ss['duration_s']}s 镜头{_ss['shots']} 字符{_ss['chars']}"
-                      f" | FAIL={len(_si)} WARN={len(_sw)}")
-                # ★审计补丁P1：逐段模式下切片被重新解析，内部段名一律回落成「段1」；
-                #   统一改写为真实单元标签，避免「[段3] … [段1] …」这种误导性双标签。
-                _si = [x.replace("[段1]", f"[{_label}]") for x in _si]
-                _sw = [x.replace("[段1]", f"[{_label}]").replace("['段1']", f"['{_label}']") for x in _sw]
-                issues.extend(f"[{_label}] {x}" for x in _si)
-                warns.extend(f"[{_label}] {x}" for x in _sw)
-                for _key in stats:
-                    stats[_key] += _ss[_key]
-            if _skipped:
-                print(f"[i] 另有 {len(_skipped)} 处「段」标题不是投喂单元（故事板/预演等段落），已跳过")
-            if not stats["shots"]:
-                print("[!] --by-segment：未解析出任何可校验的投喂段，回退整份校验")
-                issues, warns, stats = validate(text, model, opt("--mode", "new"), track, combat, c23,
-                                                style_source, aspect, plugin=plugin, state_data=state_data)
-            else:
-                stats["segments"] = len([1 for _l, _b in segs if _segment_is_feed(_b)])
-                stats["combat_hit"] = _combat_hit
-        else:
-            if "--by-segment" in argv:
-                print("[i] --by-segment：未识别到 ≥2 个「段N」标题，按整份文档校验")
-            issues, warns, stats = validate(text, model, opt("--mode", "new"), track, combat, c23,
+            finally:
+                if _before is _absent:
+                    globals().pop("_BY_SEG", None)
+                else:
+                    globals()["_BY_SEG"] = _before
+            print(f"[i] {_label}：时长{_ss['duration_s']}s 镜头{_ss['shots']} 字符{_ss['chars']}"
+                  f" | FAIL={len(_si)} WARN={len(_sw)}")
+            # ★审计补丁P1：逐段模式下切片被重新解析，内部段名一律回落成「段1」；
+            #   统一改写为真实单元标签，避免「[段3] … [段1] …」这种误导性双标签。
+            _si = [x.replace("[段1]", f"[{_label}]") for x in _si]
+            _sw = [x.replace("[段1]", f"[{_label}]").replace("['段1']", f"['{_label}']") for x in _sw]
+            issues.extend(f"[{_label}] {x}" for x in _si)
+            warns.extend(f"[{_label}] {x}" for x in _sw)
+            for _key in stats:
+                stats[_key] += _ss[_key]
+        if _skipped:
+            print(f"[i] 另有 {len(_skipped)} 处「段」标题不是投喂单元（故事板/预演等段落），已跳过")
+        if not stats["shots"]:
+            print("[!] --by-segment：未解析出任何可校验的投喂段，回退整份校验")
+            issues, warns, stats = validate(text, model, opt("--mode", "new"), combat, c23,
                                             style_source, aspect, plugin=plugin, state_data=state_data)
+        else:
+            stats["segments"] = len([1 for _l, _b in segs if _segment_is_feed(_b)])
+            stats["combat_hit"] = _combat_hit
+            # ★P11 修：逐段跑完后整份复查跨段判据。
+            #   C11b/C17d/C17e/C18m/C26f 在单段里输入恒为空，必须靠这一步才通电。
+            #   与逐段结果去重：同一码同一内容只留一条（C26f 的本段自查会重复）。
+            if stats["segments"] >= 2:
+                _seen_w = {re.sub(r"^(?:\[[^\]]*\]\s*)*", "", w) for w in warns}
+                for _cw in cross_segment_alerts(
+                        text, model, opt("--mode", "new"), combat, c23,
+                        style_source, aspect, plugin=plugin, state_data=state_data):
+                    _key = re.sub(r"^(?:\[[^\]]*\]\s*)*", "", _cw)
+                    if _key in _seen_w:
+                        continue
+                    warns.append(f"[全篇] {_cw}")
+                    _seen_w.add(_key)
+    else:
+        if "--by-segment" in argv:
+            print("[i] --by-segment：未识别到 ≥2 个「段N」标题，按整份文档校验")
+        issues, warns, stats = validate(text, model, opt("--mode", "new"), combat, c23,
+                                        style_source, aspect, plugin=plugin, state_data=state_data)
     finalize_checks(text, issues, warns, delivery=delivery, contract="--contract" in argv,
                     allow_warn="--allow-warn" in argv, director=style_source)
     if "--json" in argv:
         print(json.dumps({"issues": issues, "warnings": warns, "stats": stats,
-                          "track": track, "c14_exempt": track in NARR_TRACKS,
-                          "combat_checked": model != "h3" and _combat_on(text, combat),
-                          "c23_checked": model != "h3" and _c23_on(text, c23, style_source),
+                          "combat_checked": _combat_on(text, combat),
+                          "c23_checked": _c23_on(text, c23, style_source),
                           "style_source": style_source},
                          ensure_ascii=False, indent=2))
     else:
         _seg_note = f" 段数{stats['segments']}（分单元校验）" if stats.get("segments") else ""
-        print(f"[+] 时长{stats['duration_s']}s 镜头{stats['shots']} 字符{stats['chars']}{_seg_note} | model={model} mode={opt('--mode','new')} track={track}")
-        if track in NARR_TRACKS:
-            print("[i] 赛道③ 解说叙事：C14 篇幅卡口已豁免（VO 即主体），改判 C14n 旁白-画面映射")
+        print(f"[+] 时长{stats['duration_s']}s 镜头{stats['shots']} 字符{stats['chars']}{_seg_note} | model={model} mode={opt('--mode','new')}")
         if stats.get("segments") and not stats.get("combat_hit"):
             pass
-        elif model != "h3" and _combat_on(text, combat):
+        elif _combat_on(text, combat):
             print("[i] 打戏稿：已启用 C21 激烈度硬护栏（a 位移 / b 实体接触 / c 贴身时长 / d 构图变化）"
                   " + C22 节奏负载护栏")
             print("[i] C21/C22 均为 WARN 参考·按档放行——R1 枪战/狙击/暗杀/追车/儿童向、R3 大场面/术法对轰、"
                   "群战乱斗按 combat-rhythm-and-load-guardrails.md §七 豁免；先判档再决定是否采纳（理由写进《改动复验报告》）")
-        if model != "h3" and _c23_on(text, c23, style_source):
+        if _c23_on(text, c23, style_source):
             print("[i] 画风锁已启用：C23 段8/9 · 区间越界 · 零人名 · 题材匹配 · 单镜超载"
                   + (f"（来源：{style_source}）" if style_source else "（auto）"))
         for w in warns:

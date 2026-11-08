@@ -64,9 +64,8 @@ class SliceStabilityTests(unittest.TestCase):
     def test_all_real_files_are_lossless(self):
         files = set()
         for stage in slicer.STAGE_FILES:
-            for track in ('1', '2', '3', '4'):
-                for combat in ('none', 'R1', 'R2', 'R3'):
-                    files.update(slicer.resolve_files(stage, track, combat, 'h3', '3', True))
+            for combat in ('none', 'R1', 'R2', 'R3'):
+                files.update(slicer.resolve_files(stage, combat, '2.5', '3', True))
         for rel in sorted(files):
             with self.subTest(file=rel):
                 raw = Path(slicer.SUITE_DIR, rel).read_text(encoding='utf-8').splitlines()
@@ -93,7 +92,7 @@ class SliceStabilityTests(unittest.TestCase):
         self.assertIn('预算报账', result.stdout)
         self.assertIn('按结构切', result.stdout)
         self.assertIn('当前页输出估算', result.stdout)
-        self.assertIn('预算报账', slicer.build_estimate('P3', '1', 'none', '2.5', 'M1', 40, 1, 0))
+        self.assertIn('预算报账', slicer.build_estimate('P3', 'none', '2.5', 'M1', 40, 1, 0))
 
     def test_invalid_cli_parameters(self):
         for args in [('--page', '0'), ('--lines', '-1'), ('--page', '999999'),

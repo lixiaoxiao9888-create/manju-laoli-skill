@@ -162,5 +162,33 @@ def main():
     sys.exit(2 if missing else (1 if weak else 0))
 
 
+def self_test():
+    """★P11 新增（2026-10-24）：本脚本此前完全游离在自测体系外。
+    它对账的是「剧本每一句台词是否都进了投喂稿」，判错的方向两边都致命——
+    假报缺失会让作者去补本来就在的台词；漏报缺失就是台词在镜头上凭空消失。
+    这里把两条核心判据的正反例钉死。"""
+    ok = True
+    if norm("你好，世界！A1") != "你好世界A1":
+        print("FAIL self-test: norm 未剥离标点", repr(norm("你好，世界！A1"))); ok = False
+    if abs(ngram_cov("他推开门走了进去", "他推开门走了进去") - 1.0) > 1e-9:
+        print("FAIL self-test: ngram_cov 自比对不为 1.0"); ok = False
+    if ngram_cov("他推开门走了进去", "完全不同的一句话内容") >= 0.2:
+        print("FAIL self-test: ngram_cov 对无关句给了不应有的相似度"); ok = False
+    # 超短台词（「嗯」「怎么？」）走包含判定——旧实现因窗口下限 j-i>=3 恒为 0，
+    # 每句「嗯」都被误报成「投喂独有」。
+    if ngram_cov("嗯", "他说嗯了一声") != 1.0:
+        print("FAIL self-test: 超短台词包含判定失效（旧 bug 复发）"); ok = False
+    hit, _ = best_match("嗯。", [("林风", "", "嗯")])
+    if hit is None:
+        print("FAIL self-test: best_match 未匹配到超短台词（会误报缺失）"); ok = False
+    hit2, sc2 = best_match("这句话在池子里根本不存在吧", [("林风", "", "今天天气不错")])
+    if hit2 is not None:
+        print(f"FAIL self-test: best_match 对无关句误匹配（score={sc2:.2f}）"); ok = False
+    print('[+] self-test PASSED' if ok else 'FAIL self-test')
+    return ok
+
+
 if __name__ == '__main__':
+    if '--self-test' in sys.argv:
+        sys.exit(0 if self_test() else 1)
     main()

@@ -1,8 +1,8 @@
 ---
 name: sd-combat-engine
-description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.4.26 套装 · 子技能】打戏分镜专精引擎——负责一切打斗/武打/战斗场面的分镜提示词生成：打斗构思（动机/强弱错位/赌注/环境变数）、八步写作脑、八类自然句母版逐镜成句、铁律自检、摄影机行为锁与战场群战速查。触发词：打戏、武打、分镜打斗、战斗场面、大招、剑阵、法阵、法相、割草、对轰、招式、武学、拳法、刀剑对决、终结技、战场、群战、军阵、运镜锁。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（分镜）+ sd-combat-engine（打戏·本技能）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
+description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.5.0-SLIM 套装 · 子技能】打戏分镜专精引擎——负责一切打斗/武打/战斗场面的分镜提示词生成：打斗构思（动机/强弱错位/赌注/环境变数）、八步写作脑、八类自然句母版逐镜成句、铁律自检、摄影机行为锁与战场群战速查。触发词：打戏、武打、分镜打斗、战斗场面、大招、剑阵、法阵、法相、割草、对轰、招式、武学、拳法、刀剑对决、终结技、战场、群战、军阵、运镜锁。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（分镜）+ sd-combat-engine（打戏·本技能）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
 agent_created: true
-version: "7.4.26"
+version: "7.5.0-SLIM"
 ---
 
 # sd-combat-engine · 打戏分镜专精引擎
@@ -18,9 +18,9 @@ version: "7.4.26"
 ## 二、与总控 short-drama-director 的关系（共享契约）
 
 1. **锁系统引用不重复定义**：连续性锁、角色锁、空间轴线的权威定义在总控〇节；本技能只按锁执行（站位/朝向/光源/攻击轴线不跳变，攻击轴线固定往返、禁止背后袭来）。
-2. **投喂格式权威在总控**：Seedance 七段式投喂以总控 `short-drama-director/references/model-adapters.md` 为准，H3 六段式以总控 `short-drama-director/references/h3-adapter.md` 为准；本技能的 A轨/B轨 输出说明（combat-iron-laws.md 铁律43）只管打斗正文的装配结构，投喂时由总控适配器包裹。
+2. **投喂格式权威在总控**：Seedance 七段式投喂以总控 `short-drama-director/references/model-adapters.md` 为准；本技能的 A轨/B轨 输出说明（combat-iron-laws.md 铁律43）只管打斗正文的装配结构，投喂时由总控适配器包裹。
 3. **资产编号沿用「图N」**：角色参考图写"顾玄晔 =@image1（外观严格参考图1）"，有图零外观、省 token 给特效（铁律25）。
-4. **机检口径**：机检以总控 `validate_prompt.py`（C1~C26/H1~H12，**含增量主码 C27a~d 对话戏节奏 / C28a~c / C29 / C30a~d 外挂指纹探针**）为准；**打戏稿自动启用 C21 激烈度硬护栏**（`--combat on|off|auto` 可控制）；本技能自检清单与其对齐——**通用结构门（画幅/时长/字段/时间轴）冲突以总控为准；打斗领域规则以本引擎为准**（本引擎持铁律全表）；C21/C22 为 **WARN 参考**，按 `references/combat-rhythm-and-load-guardrails.md` §七 分档放行。
+4. **机检口径**：机检以总控 `validate_prompt.py`（C1~C26，**含增量主码 C27a~d 对话戏节奏 / C28a~c / C29 / C30a~d 外挂指纹探针**）为准；**打戏稿自动启用 C21 激烈度硬护栏**（`--combat on|off|auto` 可控制）；本技能自检清单与其对齐——**通用结构门（画幅/时长/字段/时间轴）冲突以总控为准；打斗领域规则以本引擎为准**（本引擎持铁律全表）；C21/C22 为 **WARN 参考**，按 `references/combat-rhythm-and-load-guardrails.md` §七 分档放行。
 5. **Seedance 2.5 与 2.0 语法分开**：时间轴一律整数秒（0-3秒/3-6秒），禁小数点、毫秒、冒号时码、S01/S02 场次嵌套。
 
 ## 三、触发与调用时机

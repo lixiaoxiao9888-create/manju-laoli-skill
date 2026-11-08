@@ -4,7 +4,7 @@
 
 本工具是一条**新生产链的可选入口**，不替换现有 Markdown 工作流，不修改旧编译器或门禁，也不自动挂载到现有技能流程。**旧 md 不会自动迁移**；需要人工整理成 JSON 并复核后再使用。JSON 是本链唯一事实源，导出的 Markdown 是只读衍生物；改镜头请改 JSON 后导出到新目录，不在两份 md 中分别改稿。
 
-仅使用 Python 标准库，无第三方依赖。示例 `../examples/stability-project.json` 为两段各 15 秒、总计 30 秒的简单修理室场景；示例内容待验证、未实拍。
+仅使用 Python 标准库，无第三方依赖。**包内不随附示例工程文件**（P14 起案例示例整体剔除）：合规输入由 `scripts/test_project_bundle.py` 内联的测试夹具在运行期生成到系统临时目录，只服务于回归测试，不作为可参照的样例交付物。
 
 ## JSON 字段
 
@@ -49,7 +49,7 @@ refs 只是登记关系，不递归展开，也不代表已上传图片。asset_
 1. `assets-prompts.md`：角色档案、资产提示词与引用关系，以及逐镜画面、摄影、时码、对白、资产引用。
 2. `P3CLEAN_GRID.md`：**P3 图形化环 CLEAN_GRID** 故事板生图计划，不是 P4.5，不是最终模型七段式投喂稿，也不是已生成图片。
 
-两份逐镜内容共用同一个渲染片段，保留稳定镜号和对白原文。每段一张网格，最小映射一镜一格；列数为格数平方根向上取整，行数向上补齐，余槽留白；示例四镜为 2×2。不凭空增加动作、镜头或剪辑点。复杂动作的相位拆分、默认格数与正式 P3 模板是否充分，仍须人工复核，本工具不宣称完整 P3 已完成。
+两份逐镜内容共用同一个渲染片段，保留稳定镜号和对白原文。每段一张网格，最小映射一镜一格；列数为格数平方根向上取整，行数向上补齐，余槽留白（四镜工程即 2×2）。不凭空增加动作、镜头或剪辑点。复杂动作的相位拆分、默认格数与正式 P3 模板是否充分，仍须人工复核，本工具不宣称完整 P3 已完成。
 
 CLEAN_GRID 的图面要求无文字、序号、对白框、箭头、技术标签或水印，纯画面加留白分隔。Markdown 里的镜号、时码和对白是**图外追溯信息**，不是让生图模型绘制的图中文字。人物与资产依据由同包档案、资产提示词和显式引用提供；素材形态声明为 M0，没有虚构图片槽位。
 
@@ -58,8 +58,8 @@ CLEAN_GRID 的图面要求无文字、序号、对白框、箭头、技术标签
 从 `short-drama-director` 目录运行（`python` 换成实际解释器路径）：
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python scripts/project_bundle.py validate examples/stability-project.json
-PYTHONDONTWRITEBYTECODE=1 python scripts/project_bundle.py export examples/stability-project.json --output /existing-parent/new-bundle
+PYTHONDONTWRITEBYTECODE=1 python scripts/project_bundle.py validate <你的工程.json>
+PYTHONDONTWRITEBYTECODE=1 python scripts/project_bundle.py export <你的工程.json> --output /existing-parent/new-bundle
 PYTHONDONTWRITEBYTECODE=1 python scripts/test_project_bundle.py
 ```
 

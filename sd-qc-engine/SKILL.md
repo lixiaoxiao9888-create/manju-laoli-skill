@@ -1,20 +1,20 @@
 ---
 name: sd-qc-engine
-description: "【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.4.26 套装 · 子技能】成片质检与连续性管理专精引擎：跨镜/跨集一致性台账、剪辑转场设计与 Seedance 15 秒分段门、声音设计模板、后期音乐与声音设计（BGM Cue Sheet/音乐搜索词/AI 音乐提示词/版权检查）、出稿机检使用。**一致性门按素材形态改判**（M0/M1 比文字档案；M2 才做图像级核验；本包不持有图，禁止索要图片、禁止虚假核验断言）。触发词：审查、质检、连续性检查、看片、拉片、台词诊断后复核、剪辑转场、分段检查、声音设计、机检、配BGM、后期音乐、找音乐、Suno提示词、音乐版权、素材形态。本技能为套装成员，完整全流程从总控 short-drama-director 进入。"
+description: "【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.5.0-SLIM 套装 · 子技能】成片质检与连续性管理专精引擎：跨镜/跨集一致性台账、剪辑转场设计与 Seedance 15 秒分段门、声音设计模板、后期音乐与声音设计（BGM Cue Sheet/音乐搜索词/AI 音乐提示词/版权检查）、出稿机检使用。**一致性门按素材形态改判**（M0/M1 比文字档案；M2 才做图像级核验；本包不持有图，禁止索要图片、禁止虚假核验断言）。触发词：审查、质检、连续性检查、看片、拉片、台词诊断后复核、剪辑转场、分段检查、声音设计、机检、配BGM、后期音乐、找音乐、Suno提示词、音乐版权、素材形态。本技能为套装成员，完整全流程从总控 short-drama-director 进入。"
 agent_created: true
-version: "7.4.26"
+version: "7.5.0-SLIM"
 ---
 
 # sd-qc-engine · 成片质检与连续性管理专精引擎
 
 ## 一、角色定位
 
-本引擎是漫剧老李 V7.4.26 套装的**执行层质检专精**，管四件事：
+本引擎是漫剧老李 V7.5.0-SLIM 套装的**执行层质检专精**，管四件事：
 
 1. **连续性台账**——跨镜/跨集的人物账（站位/朝向/服装/道具持拿）、场景账、时间轴账，防「上一段画面里的人这一段凭空消失」式穿帮。
 2. **剪辑转场与 Seedance 分段门**——镜头顺序、精确时长、许可切点、转场方式；Seedance 2.0 全能参考单段 ≤15 秒硬门；段缝安全检查。
 3. **声音设计**——对白/画外音/环境声/拟音/音乐/静默的分层模板，逐段复核台词时长、换气、停顿与反应落点。
-4. **出稿机检**——指导跑总控 `validate_prompt.py`（C1~C26＋增量主码 C27a~d / C28a~c / C29 / C30a~d / `--model h3` → H1~H12），FAIL 清零才交付。
+4. **出稿机检**——指导跑总控 `validate_prompt.py`（C1~C26＋增量主码 C27a~d / C28a~c / C29 / C30a~d / C31 交付契约 / C32 画面段三要素 / C33 焦段 / C34 资产段 / C35 多人物层次 / C36 长镜连续动作 / C37 群体同动 / C38 段间桥接 / **C39 竖屏空镜冗余（仅 9:16 触发）**），FAIL 清零才交付。
 
 **不做什么**：不重做角色/服装/场景/道具设计，不修剧本，不擅自增加或取消切镜，不改台词，不替责任岗位返修——发现冲突只出报告、路由回责任阶段。生产包结构校验的清单化承接见 `machine-check-manual.md` §七（原 V3.9 `validate_production_pack` 脚本未随包迁移）。
 
@@ -24,10 +24,10 @@ version: "7.4.26"
 |---|---|---|
 | P0~P2 三级门禁（含画幅一致性、资产一致性、改动复验三步闭环） | 总控 `short-drama-director/references/quality-gate-review.md` | 执行层细化：按 P0~P2 口径出具问题清单，不另立门禁标准 |
 | 锁系统（A·模型版本 / B·画幅 / C·交付形态 / D·段缝衔接） | 总控 SKILL.md 〇节 | 按总控锁系统执行，不重复定义 |
-| 投喂格式（七段式 / H3 六段式） | 总控 `short-drama-director/references/model-adapters.md`、`short-drama-director/references/h3-adapter.md` | 模板中引用，不另立格式 |
-| 出稿机检脚本 `validate_prompt.py`（C1~C26＋增量主码 C27a~d / C28a~c / C29 / C30a~d / H1~H12） | 总控 `scripts/validate_prompt.py` | 本引擎 `machine-check-manual.md` 是它的使用手册；脚本本体不复制、不改动 |
+| 投喂格式（七段式） | 总控 `short-drama-director/references/model-adapters.md` | 模板中引用，不另立格式 |
+| 出稿机检脚本 `validate_prompt.py`（C1~C26＋增量主码 C27a~d / C28a~c / C29 / C30a~d / C31 交付契约 / C32 画面段三要素 / C33 焦段 / C34 资产段 / C35 多人物层次 / C36 长镜连续动作 / C37 群体同动 / C38 段间桥接 / **C39 竖屏空镜冗余（仅 9:16 触发）**） | 总控 `scripts/validate_prompt.py` | 本引擎 `machine-check-manual.md` 是它的使用手册；脚本本体不复制、不改动 |
 | 包自检 `check_package.py` | 总控 `scripts/check_package.py` | 使用说明见本引擎手册 |
-| 术语口径（C1~C26 / H1~H12 / 整数秒时间轴 / 版本语法分离） | 总控 | 完全一致，冲突处以总控为准 |
+| 术语口径（C1~C26 / 整数秒时间轴 / 版本语法分离） | 总控 | 完全一致，冲突处以总控为准 |
 
 ## 三、触发与路由
 
@@ -38,7 +38,7 @@ version: "7.4.26"
 ```
 总控锁系统 → sd-script-engine（编剧）→ sd-asset-engine（资产）
   → sd-storyboard-engine / sd-combat-engine（分镜）
-  → 总控投喂封装（七段式/H3，权威在总控 short-drama-director/references/model-adapters.md）
+  → 总控投喂封装（七段式，权威在总控 short-drama-director/references/model-adapters.md）
   → ★ sd-qc-engine（连续性台账 → 剪辑转场分段门 → 声音设计 → 出稿机检）
   → 总控看板输出
 ```
@@ -76,11 +76,11 @@ version: "7.4.26"
 1. 严格区分画内对白/画外音/旁白/电话音/系统音，逐字不改台词。
 2. 按 `sound-design-template.md` 分层（对白 > 动作音效 > 环境/BGM），对齐总控声音三层电平。
 3. 逐段复核 dialogue_slices：对白+换气+停顿+反应必须落在段长内；跨段台词同一 dialogue_id 无缝续接。
-4. Seedance 侧写法对齐总控 [SFX:] 标记与语气位规范（C5/C16）；H3 侧对齐 H10 声音分层。
+4. Seedance 侧写法对齐总控 [SFX:] 标记与语气位规范（C5/C16）。
 
 ### 4. 出稿机检
 1. 出稿前先过总控 P0~P2 门禁与 `short-drama-director/references/prompt-feeding-checklist.md` 挂线审查。
-2. 跑 `python scripts/validate_prompt.py <稿> --model 2.5|2.0|h3`（脚本在总控 `scripts/`）。
+2. 跑 `python scripts/validate_prompt.py <稿> --model 2.5|2.0`（脚本在总控 `scripts/`）。
 3. **FAIL 清零才交付**；WARN 逐条修复或写明判定依据。完整操作见 `machine-check-manual.md`。
 
 ## 五、规则库索引
@@ -91,7 +91,7 @@ version: "7.4.26"
 | `references/editing-transition-gate.md` | 剪辑转场设计模板 + Seedance 15 秒分段门 + `validate_seedance_segment_map.py` 用法 |
 | `references/sound-design-template.md` | 声音设计模板：音效/人声/环境音/BGM 层级与写法；与总控 Seedance 原生音效标记体系衔接 |
 | `references/post-music-sound-design.md` | **后期音乐与声音设计：BGM Cue Sheet 标准格式 + 音乐搜索词生成规则（中英+素材库标签）+ AI 音乐生成提示词结构（Suno/Udio/ElevenLabs）+ 剪辑混音建议 + 静默点设计 + 版权与商用检查 + 声音体检清单。承接 `sound-design-template.md` 的 MUSIC 层 cue 落地执行** |
-| `references/machine-check-manual.md` | 出稿机检使用手册：C1~C26 / H1~H12 门禁说明、`validate_prompt.py` 命令行用法、P0~P2 与机检先后关系、`check_package.py` 包自检 |
+| `references/machine-check-manual.md` | 出稿机检使用手册：C1~C26 门禁说明、`validate_prompt.py` 命令行用法、P0~P2 与机检先后关系、`check_package.py` 包自检 |
 | `references/rule-taxonomy-and-verdict.md` | **规则三分类与统一裁决**：硬约束/条件约束/创作建议的定义与判定三问、冲突裁决四级优先链、PASS/WARN/FAIL 三态跨阶段统一定义 |
 | `references/stage-acceptance-table.md` | **阶段交付验收表**：6 阶段 × 交付物 × **校验方式三分类**（机器可判 / AI 语义 / 人工看图看片）——防「声称完成」与「把语义判断题塞进正则」 |
 
@@ -100,6 +100,6 @@ version: "7.4.26"
 - 锁系统（A/B/C/D 四锁）按总控 SKILL.md 〇节执行，本技能不重复定义。
 - 资产编号沿用总控「图N」体系与对应台账（**按素材形态区分：M0《外观档案册》/ M1《资产编号册 + 素材接线单》/ M2《资产图册》**；《剧组产出册》通用）。
 - **素材形态**：**本包不持有图**。三档 M0/M1/M2（默认 M1），**权威 = 总控 `short-drama-director/references/asset-delivery-modes.md`**。本引擎的**一致性门按形态改判**——M0/M1 比**文字档案**（发/服装/体态/年龄感/标志物；场景坐标系与 `SET_STATE`），**M2 才做图像级核验**。**禁止**：索要图片作为继续条件 · 因缺图阻断交付 · 声称"已核验/与资产图册一致"而实际从未见过图（机检兜底见 `sd-feed-engine/scripts/gate_check.py` 闸门 6B）。
-- 投喂格式唯一权威 = 总控 `short-drama-director/references/model-adapters.md`（七段式）/ `short-drama-director/references/h3-adapter.md`（H3 六段式）。
-- Seedance 2.5 与 2.0 语法彻底分开禁混写；Seedance 侧时间轴整数秒口径（禁时间码、禁小数秒）；H3 侧切点按 H3 原生 MM:SS.mmm。
+- 投喂格式唯一权威 = 总控 `short-drama-director/references/model-adapters.md`（七段式）。
+- Seedance 2.5 与 2.0 语法彻底分开禁混写；Seedance 侧时间轴整数秒口径（禁时间码、禁小数秒）。
 - 改稿必跑总控「局部验证 → 联动冲突检查 → 全量审核」三步复验闭环并附《改动复验报告》。

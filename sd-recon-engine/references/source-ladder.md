@@ -107,5 +107,4 @@
 
 1. 更新本表 + 标注分级 + 标注状态（实测可用 / 待验证）；
 2. **状态不得越级标注**——没实测过的源只能标【待验证】；
-3. 与 `sd-overseas-engine` 的外网来源清单**保持互引不重复**（
-   海外平台情境见 `sd-overseas-engine/references/overseas-platform-and-audience.md`）。
+3. 外网来源与本表分级口径一致，新增外网源按同一分级标注，**不得另立一套清单**。

@@ -1,8 +1,8 @@
 ---
 name: sd-xuanhuan-engine
-description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.4.26 套装 · 子技能】玄幻仙侠打戏专精引擎——负责玄幻修仙/仙侠斗法/神魔异能/高燃国漫的打斗分镜与投喂提示词生成：黄金打戏颗粒度（2~3秒整秒细切·一镜一动一反馈）、双向攻防力量互换（防沙包化）、终结收束四大空间闭环协议、尺度四件套与画面几何、13种三层复合元素、法武合一招式总库、写实/修仙双轨物理参数库。触发词：玄幻打斗、仙侠斗法、法术对轰、万剑归宗、剑阵、法阵、法相、神魔大战、大招终结技、仙侠修真。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（文戏分镜）+ sd-combat-engine（通用打戏）+ sd-xuanhuan-engine（玄幻打戏·本技能）+ sd-real-engine（真人写实）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
+description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.5.0-SLIM 套装 · 子技能】玄幻仙侠打戏专精引擎——负责玄幻修仙/仙侠斗法/神魔异能/高燃国漫的打斗分镜与投喂提示词生成：黄金打戏颗粒度（2~3秒整秒细切·一镜一动一反馈）、双向攻防力量互换（防沙包化）、终结收束四大空间闭环协议、尺度四件套与画面几何、13种三层复合元素、法武合一招式总库、写实/修仙双轨物理参数库。触发词：玄幻打斗、仙侠斗法、法术对轰、万剑归宗、剑阵、法阵、法相、神魔大战、大招终结技、仙侠修真。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（文戏分镜）+ sd-combat-engine（通用打戏）+ sd-xuanhuan-engine（玄幻打戏·本技能）+ sd-real-engine（真人写实）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
 agent_created: true
-version: "7.4.26"
+version: "7.5.0-SLIM"
 ---
 
 # sd-xuanhuan-engine · 玄幻仙侠打戏专精引擎
@@ -11,7 +11,7 @@ version: "7.4.26"
 
 你是「电影工业级玄幻仙侠打戏分镜引擎」：把一场仙侠斗法/神魔大战/宗门对决写成可直投 Seedance 2.5/2.0 的分镜提示词。
 
-本技能是 **V7.4.26 套装中 R3 玄幻档的完整规则库权威**。总控原有的玄幻轻量速查入口已随删除，**本技能 9 份规则库即唯一权威**，无并列文件、无冲突仲裁。
+本技能是 **V7.5.0-SLIM 套装中 R3 玄幻档的完整规则库权威**。总控原有的玄幻轻量速查入口已随删除，**本技能 9 份规则库即唯一权威**，无并列文件、无冲突仲裁。
 
 - **只管玄幻打戏**：写实格斗/警匪/暗杀走 sd-real-engine；通用武侠物理打斗走 sd-combat-engine；文戏走 sd-storyboard-engine。
 - **不硬套武侠物理**：R3 玄幻档要换法术语言——法宝媒介 + 五行术法 + 术法攻防 + 能量具象化 + 对军清场。
@@ -20,9 +20,9 @@ version: "7.4.26"
 ## 二、与总控 short-drama-director 的关系（共享契约）
 
 1. **锁系统引用不重复定义**：A 锁（模型版本）/B 锁（画幅）/C 锁（交付形态）/D 锁（段缝衔接）的权威定义在总控〇节；本技能只按锁执行，不另立锁。
-2. **投喂格式权威在总控**：Seedance 七段式投喂以总控 `short-drama-director/references/model-adapters.md` §5 为准，H3 六段式以总控 `short-drama-director/references/h3-adapter.md` 为准；本技能只管玄幻打斗正文的装配结构。
+2. **投喂格式权威在总控**：Seedance 七段式投喂以总控 `short-drama-director/references/model-adapters.md` §5 为准；本技能只管玄幻打斗正文的装配结构。
 3. **资产编号沿用「图N」**：角色参考图零外观描述，省 token 给特效。
-4. **机检口径**：以总控 `validate_prompt.py`（C1~C26 / `--model h3` → H1~H12，**含增量主码 C27a~d 对话戏节奏 / C28a~c / C29 / C30a~d 玄幻外挂指纹探针**）为准；**打戏稿自动启用 C21 激烈度硬护栏**（`--combat on|off|auto` 可控制）；本技能自检清单与其对齐——**通用结构门（画幅/时长/字段/时间轴）冲突以总控为准；R3 玄幻打斗领域规则以本引擎为准**（本引擎 9 份规则库即 R3 权威）；C21/C22 为 **WARN 参考**，按 `sd-combat-engine/references/combat-rhythm-and-load-guardrails.md` §七 分档放行。
+4. **机检口径**：以总控 `validate_prompt.py`（C1~C26，**含增量主码 C27a~d 对话戏节奏 / C28a~c / C29 / C30a~d 玄幻外挂指纹探针**）为准；**打戏稿自动启用 C21 激烈度硬护栏**（`--combat on|off|auto` 可控制）；本技能自检清单与其对齐——**通用结构门（画幅/时长/字段/时间轴）冲突以总控为准；R3 玄幻打斗领域规则以本引擎为准**（本引擎 9 份规则库即 R3 权威）；C21/C22 为 **WARN 参考**，按 `sd-combat-engine/references/combat-rhythm-and-load-guardrails.md` §七 分档放行。
 5. **时间轴双态互通**：独立打戏单段推荐 `0-3秒`/`3-6秒` 整数秒节点；在全流程七段式总稿内与 `00:00-00:03 [镜头1]` 整秒时码双向兼容（`validate_prompt.py` 双格式互通识别），严禁小数点毫秒（如 `0-3.2s`）与 S01/S02 场次嵌套。机检 C2 对打戏段自动开放 2~3 秒黄金颗粒度细切，且由 C30a（四件套缺一即废+三层复合元素与逻辑）、C30b（法武合一11环动力链+物理回执）、C30e（禁长时相持架招）、C30f（禁假攻击与单向沙包）、C30g（终结四协议A/B/C/D闭环与禁平缓收刀）、C30i（中全景禁90°正侧拍）全量硬核把关。
 
 ## 三、触发与调用时机

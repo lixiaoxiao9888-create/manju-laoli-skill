@@ -1,6 +1,6 @@
 # 闭源模型与 Canvas 工作流自动化对接引擎 (Cloud Models & Canvas Workflow Engine)
 
-本引擎专门面向 Seedance 2.5 / 2.0、MiniMax H3 等闭源云端视频模型及 Canvas 协作画布（🗄️ 即梦 Jimeng 为次选/历史兼容），提供提示词解耦注入、资产图映射与批量任务调度规范，实现“AI 自动完成参数装配，导演仅在关键节点审核确认”。
+本引擎专门面向 Seedance 2.5 / 2.0 等闭源云端视频模型及 Canvas 协作画布，提供提示词解耦注入、资产图映射与批量任务调度规范，实现“AI 自动完成参数装配，导演仅在关键节点审核确认”。
 
 ---
 
@@ -11,15 +11,15 @@
        │
        ├──> 1. 资产图/4 View 资产板绑定 (@asset_name -> 平台参考图输入)
        ├──> 2. 提示词解耦投喂 (主体层 + 环境层 + 镜头动态层)
-       └──> 3. 平台参数契约 (生成时长随模型契约: Seedance 2.0 ≤15s / 即梦 5s~10s, 运镜强度, 提示词相关性, 风格预设)
+       └──> 3. 平台参数契约 (生成时长随模型契约: Seedance 2.0 ≤15s, 运镜强度, 提示词相关性, 风格预设)
        │
        ▼
-[Seedance 2.0 / 即梦 / Canvas 画布 API]
+[Seedance 2.0 / Canvas 画布 API]
 ```
 
 ---
 
-## 二、 Canvas / 云端 API 批量调度模版示例 (Python)
+## 二、 Canvas / 云端 API 批量调度模版 (Python)
 
 ```python
 import json

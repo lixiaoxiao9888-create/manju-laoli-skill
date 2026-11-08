@@ -132,37 +132,88 @@ GENRE_FAMILY = [
 GENRE_COMBAT  = ["玄幻","仙侠","修真","武侠","武打","格斗","动作","战斗","打斗","打戏",
                  "械斗","暗杀","枪战","追车","战争","搏杀","厮杀"]
 GENRE_NOCOMBAT = ["都市情感","情感","文艺","静思","家庭","日常","青春","怀旧","年代",
-                  "甜宠","职场","商战","悬疑文戏","心理","生活流","散文"]
+                  "甜宠","职场","商战","悬疑文戏","心理","生活流","散文",
+                  "文戏","纯对话","剧情向"]   # ★P8 补：文戏/纯对话 是分镜稿最常用的「无打斗」自述词
 NEG_PREFIX = ["无", "不", "没有", "没", "非", "零", "免", "去"]
+# ★P8 补：旧实现用 `(p + w) in t` 逐字拼接，只能识别**紧贴**的「无打斗／没有打斗」；
+#   「没有**任何**打斗」「不含一点打斗」这类中间隔字的否定仍然判成**有打斗**
+#   （实测：题材串「都市甜宠办公室，两人对话，纯文戏，没有任何打斗」→ 含打斗=True，
+#    依据「信号词打斗」→ 甜宠项目被塞一张仙侠打斗卡）。
+#   现改为**前置窗口否定判定**：关键词前 8 字内出现否定词即视为已被否定。
+_NEG_WINDOW_RE = re.compile(
+    r"(?:毫无|没有任何|没有|不含|无任何|全无|无|没|不|非|零|免|去)[^，。；、！？\s]{0,4}$")
+
+
+def _negated_at(t, start):
+    return bool(_NEG_WINDOW_RE.search(t[max(0, start - 8):start]))
+
+
+def _live_hits(t, words):
+    """返回在**非否定语境**下真实出现的词（每个词只看首处出现即可）。"""
+    out = []
+    for w in words:
+        for m in re.finditer(re.escape(w), t):
+            if not _negated_at(t, m.start()):
+                out.append(w)
+                break
+    return out
 VFX_HIGH_SIG = ["法术","斗法","玄幻","仙侠","修真","神通","法阵","大招","神魔","仙术","异能","风暴","领域"]
 COMBAT_SIG = ["打斗","打戏","战斗","对决","开打","武打","搏杀","厮杀","对招","交手","格斗","斗法","大战"]
 
 
 def detect_combat(t):
-    for w in COMBAT_SIG:
-        for p in NEG_PREFIX:
-            if (p + w) in t:
-                return False, f"否定式「{p}{w}」"
-    hc = [w for w in GENRE_COMBAT if w in t]
+    live = _live_hits(t, COMBAT_SIG)          # 非否定语境的打斗信号
+    hc = _live_hits(t, GENRE_COMBAT)          # 非否定语境的题材词
     hn = [w for w in GENRE_NOCOMBAT if w in t]
+    if not live and not hc:
+        _raw = [w for w in COMBAT_SIG if w in t]
+        if _raw:
+            return False, f"否定式（「{_raw[0]}」前有否定词）"
     if hn and not hc:
         return False, f"题材词「{hn[0]}」非动作向"
     if hc:
         return True, f"题材词「{hc[0]}」"
-    for w in COMBAT_SIG:
-        if w in t:
-            return True, f"信号词「{w}」"
+    if live:
+        return True, f"信号词「{live[0]}」"
     return False, "无打斗信号"
 
 
 def detect_base(t):
-    if any(w in t for w in ["解说", "禅意", "水墨", "古风意蕴"]):
+    if any(w in t for w in ["禅意", "水墨", "古风意蕴"]):
         return BASE_INK
     if any(w in t for w in ["玄幻", "仙侠", "机甲", "神魔", "3D", "国漫", "高燃"]):
         return BASE_ANIME
     if any(w in t for w in ["手绘", "童话", "水彩", "赛璐璐"]):
         return BASE_2D
     return BASE_LIVE
+
+
+# ★P8（2026-10-24 · 采纳网友建议书 P-02）：影像基底是**必问项**，不是自动判定项。
+#   病根：旧版第 193 行字面写「（不问，自动带出）」，而 style-lock-protocol.md:46 是
+#   2026-10-13 用户裁定原文「影像基底不得由执行者自动带出……用户未表态 = 停下询问」。
+#   脚本与协议直接冲突，且**执行者会照脚本走**——真人项目被自动判成 3D CG，画质词 /
+#   骨相 / 候选池 / 打戏档位全错在源头（用户原话：「我这个是真人的哈」）。
+#   故 detect_base() 降级为**倾向提示**（suggest），只有用户显式给了 --base 才出卡。
+BASE_ALIASES = [
+    (BASE_LIVE,  ("真人", "实拍", "liveaction", "live-action", "live")),
+    (BASE_2D,    ("2d", "手绘", "赛璐璐", "动画2d", "厚涂")),
+    (BASE_ANIME, ("3d", "cg", "国漫", "三维", "动画3d", "anime")),
+    (BASE_INK,   ("水墨", "ink", "国风意蕴")),
+]
+
+
+def parse_base(raw):
+    """把用户回答规整到四种基底之一；认不出返回 None（不许猜）。"""
+    if not raw:
+        return None
+    s = str(raw).strip().lower().replace(" ", "")
+    for canon, keys in BASE_ALIASES:
+        if s == canon.lower().replace(" ", ""):
+            return canon
+        for k in keys:
+            if k in s:
+                return canon
+    return None
 
 
 def route_family(t):
@@ -179,10 +230,10 @@ def route_family(t):
 # ============================================================
 # 主流程
 # ============================================================
-def recommend(text, top=4):
+def recommend(text, top=4, base=None):
     lines = []
     # ---- Step 1 ----
-    base = detect_base(text)
+    suggest = detect_base(text)
     combat, why = detect_combat(text)
     vfx_high = any(w in text for w in VFX_HIGH_SIG)
 
@@ -190,9 +241,23 @@ def recommend(text, top=4):
     lines.append(f"题材输入：{text}")
     lines.append("=" * 84)
     lines.append("")
-    lines.append("【Step 1 · 影像基底】（不问，自动带出）")
-    lines.append(f"   → {base}")
+    if base is None:
+        # ★P8：不问就不出卡。出卡 = 默认替用户拍了形态，正是 2026-10-13 裁定要禁的事。
+        lines.append("【Step 1 · 影像基底】⛔ 必问项 · 不得自动带出")
+        lines.append("   请先向用户确认，四选一（用户未表态 = 停下询问，禁自行判定）：")
+        lines.append("     ① 真人实拍质感    ② 2D 手绘（赛璐璐／厚涂）")
+        lines.append("     ③ 3D CG（国漫3D／游戏CG）    ④ 水墨二维")
+        lines.append(f"   机器识别倾向：{suggest} —— **仅供提示，不得当结论**")
+        lines.append("   （依据：style-lock-protocol.md §三 · 2026-10-13 用户裁定「形态必问」）")
+        lines.append("")
+        lines.append("   → 用户明确后重跑：python style-lock-ladder.py \"<题材>\" --base=真人|2D|3D|水墨")
+        lines.append("   → 基底一旦判错，画质词／形体骨相／候选池／打戏档位全部跟着错，且错在源头、下游无从纠正")
+        return "\n".join(lines)
+    lines.append(f"【Step 1 · 影像基底】用户已确认：{base}")
     lines.append(f"   → 打斗={combat}（依据：{why}）  高特效={vfx_high}")
+    if suggest != base:
+        lines.append(f"   ⚠ 机器倾向原为「{suggest}」，与用户确认不一致 → **以用户为准**，"
+                     f"并按真人/形态口径重写 STYLE_PROFILE")
 
     # ---- Step 2 ----
     fams, gk = route_family(text)
@@ -387,7 +452,14 @@ def recommend(text, top=4):
 
 
 if __name__ == "__main__":
-    cases = [
+    # ★P8（2026-10-24 · 采纳网友建议书 P-01）：旧版 __main__ 只循环硬编码示例，**全程不读
+    #   sys.argv** → 任何输入都输出同一套「3D CG + 打斗=True（依据：题材词「玄幻」）」，
+    #   SKILL 与协议宣称的「题材→候选池路由引擎」实际是**演示脚本**。使用者拍甜宠会拿到
+    #   仙侠打斗卡。现改为：位置参数=题材，--base=用户已确认的影像基底，--demo=原示例回归。
+    import sys
+
+    # 回归锁案例（--demo / 无参数时跑；亦作 2026-10-15 INK 排空回归）
+    demo_cases = [
         "玄幻仙侠打斗，有法术特效",
         "都市情感夜戏，无打斗",
         "现代都市悬疑，追车加近身格斗",
@@ -397,6 +469,47 @@ if __name__ == "__main__":
         #   旧代码在此 IndexError/KeyError 崩溃；修复后应优雅降级（出卡 0 张 + 排空提示）。
         "水墨 悬疑 犯罪",
     ]
-    for c in cases:
-        print(recommend(c))
-        print("\n\n")
+
+    args = [a for a in sys.argv[1:]]
+    # ★P9：包内惯例是 `--self-test`，本脚本原先只有 `--demo` →「自检三件套」在这里
+    #   按名字找不到入口（check_package ◑25 已把这条做成结构断言）。别名等价。
+    _selftest = "--self-test" in args
+    if not args or "--demo" in args or _selftest:
+        print("【演示模式】出卡基底按各示例各自的机器倾向（仅演示，禁当判定依据）")
+        print("实质使用：python style-lock-ladder.py \"<题材>\" --base=真人|2D|3D|水墨\n")
+        for c in demo_cases:
+            print(recommend(c, base=detect_base(c)))
+            print("\n\n")
+        if _selftest:
+            print(f"[+] style-lock-ladder self-test PASSED（{len(demo_cases)} 组内置示例全部出卡未崩）")
+        sys.exit(0)
+
+    base_raw, text_parts, top = None, [], 4
+    for a in args:
+        if a.startswith("--base="):
+            base_raw = a.split("=", 1)[1]
+        elif a == "--base":
+            base_raw = "__MISSING__"      # 只写 --base 不给值 → 视为未确认
+        elif a.startswith("--top="):
+            try:
+                top = max(1, int(a.split("=", 1)[1]))
+            except ValueError:
+                pass
+        elif not a.startswith("--"):
+            text_parts.append(a)
+    text = " ".join(text_parts).strip()
+    if not text:
+        print("用法：python style-lock-ladder.py \"<题材串>\" --base=真人|2D|3D|水墨 [--top=4]")
+        print("      python style-lock-ladder.py --demo        # 跑内置回归示例（--self-test 等价）")
+        sys.exit(2)
+
+    base = parse_base(base_raw) if base_raw and base_raw != "__MISSING__" else None
+    if base_raw and base_raw != "__MISSING__" and base is None:
+        print(f"⚠ 无法识别 --base=「{base_raw}」→ 按「未确认」处理，不出卡。")
+        print("   可写：真人 / 实拍 / 2D / 手绘 / 3D / CG / 水墨")
+        base = None
+
+    print(recommend(text, top=top, base=base))
+    if base is None:
+        # 退出码 3 = 明确信号「等用户回答，不是错误，也不是完成」
+        sys.exit(3)

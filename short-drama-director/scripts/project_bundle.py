@@ -247,5 +247,26 @@ def main(argv=None):
         return 1
 
 
+def self_test():
+    """★P11 新增（2026-10-24）：本脚本此前完全游离在自测体系外。
+    它是「项目 JSON → assets-prompts.md / P3CLEAN_GRID.md」的导出器，
+    导出物直接给人看，所以这里钉两条：Markdown 转义必须做（否则 `|` 会劈开表格列）、
+    空项目必须判结构错误（结构有效 ≠ 语义通过，这条口径不能松）。"""
+    ok = True
+    if md("a<b>c|d&e") != "a&lt;b&gt;c&#124;d&amp;e":
+        print("FAIL self-test: md 转义错误", repr(md("a<b>c|d&e"))); ok = False
+    r = validate({})
+    if r.get("structural_status") != "error":
+        print("FAIL self-test: validate({}) 未判结构错误"); ok = False
+    if not r.get("issues"):
+        print("FAIL self-test: validate({}) 未产出任何 issue"); ok = False
+    if r.get("semantic_status") != "needs_review":
+        print("FAIL self-test: 语义状态应恒为 needs_review（结构有效≠语义通过）"); ok = False
+    print('[+] self-test PASSED' if ok else 'FAIL self-test')
+    return ok
+
+
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        sys.exit(0 if self_test() else 1)
     sys.exit(main())

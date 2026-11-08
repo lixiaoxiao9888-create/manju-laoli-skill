@@ -4,7 +4,7 @@ I 画风锁 · 推荐引擎（题材 → 候选池）
 来源：审计工作区原型 f_lock_recommend.py，逻辑未改，仅改在案口径。
 核心：含打斗时硬排除「不适合打戏」的风格，并把能力标签写进候选卡。
 知识库：references/style-bible/（74 组候选源 / 适配矩阵 / 锁规程）。
-用法：python style-lock-recommend.py  （内置 5 个题材自测例）
+用法：python style-lock-recommend.py "<题材串>" [--top=4]（--demo 跑内置示例）
 """
 import re
 
@@ -68,11 +68,14 @@ VFX_LOW_SIG = ["写实","格斗","军警","警匪","追车","暗杀","械斗","�
 
 # ★否定语境：命中即把该词从打斗信号里剔除（"无打斗""不打斗""没有打斗""非打斗"…）
 NEG_PREFIX = ["无", "不", "没有", "没", "非", "零", "免", "去"]
+_NEG_WINDOW_RE = re.compile(
+    r"(?:毫无|没有任何|没有|不含|无任何|全无|无|没|不|非|零|免|去)[^，。；、！？\s]{0,4}$")
 # 题材关键词（优先于信号词判定"有没有打斗"）
 GENRE_COMBAT  = ["玄幻", "仙侠", "修真", "武侠", "武打", "格斗", "动作", "战斗", "打斗", "打戏",
                  "械斗", "暗杀", "枪战", "追车", "战争", "搏杀", "厮杀"]
 GENRE_NOCOMBAT = ["都市情感", "情感", "文艺", "静思", "家庭", "日常", "青春", "怀旧", "年代",
-                  "甜宠", "职场", "商战", "悬疑文戏", "心理", "生活流", "散文"]
+                  "甜宠", "职场", "商战", "悬疑文戏", "心理", "生活流", "散文",
+                  "文戏", "纯对话", "剧情向"]   # ★P8 补：分镜稿最常用的「无打斗」自述词
 
 # ★题材路由表：题材族 → (首选编号, 次选编号, ...)  顺序即推荐优先级
 GENRE_ROUTES = [
@@ -105,22 +108,40 @@ def route_genre(genre_text):
     return None, None
 
 
+def _negated_at(t, start):
+    """★P8：前置窗口否定判定。旧版只认紧贴的「无打斗/没有打斗」，
+    「没有**任何**打斗」「不含一点打斗」这类隔字否定仍被判成**有打斗**
+    ——实测甜宠文戏稿被塞了一张仙侠打斗卡。"""
+    return bool(_NEG_WINDOW_RE.search(t[max(0, start - 8):start]))
+
+
+def _live_hits(t, words):
+    out = []
+    for w in words:
+        for m in re.finditer(re.escape(w), t):
+            if not _negated_at(t, m.start()):
+                out.append(w)
+                break
+    return out
+
+
 def detect_combat(genre_text):
     """
     判定是否含打斗 —— 三步，顺序不可换：
-      ① 否定式命中（"无打斗/不打斗/没有打斗/非打斗"）→ 直接 False，最高优先级
+      ① 否定式命中（"无打斗/不打斗/没有打斗/没有任何打斗/非打斗"）→ 直接 False，最高优先级
       ② 题材关键词：命中 GENRE_NOCOMBAT 且未命中 GENRE_COMBAT → False
       ③ 打斗信号词：剔除否定语境后再判
     返回 (combat:bool, 判定依据:str)
     """
-    # ① 否定式（词前 1~2 字为否定前缀）
-    for w in COMBAT_SIG:
-        for p in NEG_PREFIX:
-            if (p + w) in genre_text:
-                return False, f"否定式「{p}{w}」"
+    # ① 否定式（关键词前 8 字内出现否定词即视为已否定）
+    live = _live_hits(genre_text, COMBAT_SIG)
+    hit_c = _live_hits(genre_text, GENRE_COMBAT)
+    if not live and not hit_c:
+        _raw = [w for w in COMBAT_SIG if w in genre_text]
+        if _raw:
+            return False, f"否定式（「{_raw[0]}」前有否定词）"
 
     # ② 题材关键词
-    hit_c = [w for w in GENRE_COMBAT if w in genre_text]
     hit_n = [w for w in GENRE_NOCOMBAT if w in genre_text]
     if hit_n and not hit_c:
         return False, f"题材词「{hit_n[0]}」非动作向"
@@ -128,9 +149,8 @@ def detect_combat(genre_text):
     # ③ 信号词
     if hit_c:
         return True, f"题材词「{hit_c[0]}」"
-    for w in COMBAT_SIG:
-        if w in genre_text:
-            return True, f"信号词「{w}」"
+    if live:
+        return True, f"信号词「{live[0]}」"
     return False, "无打斗信号"
 
 
@@ -187,10 +207,44 @@ def render(genre_text, top=4):
 
 
 if __name__ == "__main__":
-    for g in ["15秒玄幻仙侠打斗对决，有法术特效",
-              "都市情感夜戏，无打斗",
-              "年代怀旧文戏，两个人回忆往事",
-              "现代都市悬疑，追车加近身格斗",
-              "都市异能战斗，赛博科幻城市场景"]:
-        render(g)
-        print("\n")
+    # ★P8（2026-10-24 · 采纳网友建议书 P-01）：旧版 __main__ 只循环 5 组硬编码示例，
+    #   **全程不读 sys.argv** → 「题材→候选池路由引擎」实际是演示脚本：任何输入都得到
+    #   同一套输出（拍甜宠也会拿到仙侠打斗卡）。现改为位置参数接题材，--demo 跑原示例。
+    import sys
+
+    demo_cases = ["15秒玄幻仙侠打斗对决，有法术特效",
+                  "都市情感夜戏，无打斗",
+                  "年代怀旧文戏，两个人回忆往事",
+                  "现代都市悬疑，追车加近身格斗",
+                  "都市异能战斗，赛博科幻城市场景"]
+
+    argv = sys.argv[1:]
+    # ★P9：`--self-test` 作为 `--demo` 的正式别名（包内惯例统一，见 check_package ◑25）
+    _selftest = "--self-test" in argv
+    if not argv or "--demo" in argv or _selftest:
+        print("【演示模式】以下为内置示例，非本机输入\n")
+        for g in demo_cases:
+            render(g)
+            print("\n")
+        if _selftest:
+            print(f"[+] style-lock-recommend self-test PASSED（{len(demo_cases)} 组内置示例全部出卡未崩）")
+        sys.exit(0)
+
+    text_parts, top = [], 4
+    for a in argv:
+        if a.startswith("--top="):
+            try:
+                top = max(1, int(a.split("=", 1)[1]))
+            except ValueError:
+                pass
+        elif not a.startswith("--"):
+            text_parts.append(a)
+    text = " ".join(text_parts).strip()
+    if not text:
+        print('用法：python style-lock-recommend.py "<题材串>" [--top=4]')
+        print("      python style-lock-recommend.py --demo        # 跑内置示例（--self-test 等价）")
+        sys.exit(2)
+    render(text, top=top)
+    print("\n※ 本卡是「题材→候选池」建议；**影像基底须先由用户确认**（形态必问，"
+          "见 style-lock-protocol.md §三 · 2026-10-13 裁定），"
+          "基底未定时请勿据此出卡。")

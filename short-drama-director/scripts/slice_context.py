@@ -5,10 +5,10 @@ slice_context.py · 动态原文切片器（Phase Context Slicer · 非手写摘
 设计动机：
   全包 140 份 Markdown 合计 2.46MB。若一次性塞进上下文，大模型必然发生「中间注意力坍塌（Lost in the Middle）」。
   而此前删除「运行态微核 agent-system-core.md」是因为手写摘要不随原文同步。
-  本脚本直接从**权威原文**按「当前阶段 P0~P5 + 赛道 1~4 + 打戏档 R1~R3 + 模型版本 2.5/2.0/h3 + 素材形态 M0~M2」
+  本脚本直接从**权威原文**按「当前阶段 P0~P5 + 打戏档 R1~R3 + 模型版本 2.5/2.0 + 素材形态 M0~M2」
   动态解析必读文件，以完整章节分页输出原文与 coverage/未加载范围；不预填已读回执。
 用法：
-  python3 scripts/slice_context.py --stage P3 --track 1 --combat R1 --model 2.5 --mode M1
+  python3 scripts/slice_context.py --stage P3 --combat R1 --model 2.5 --mode M1
   python3 scripts/slice_context.py --self-test
 """
 import argparse
@@ -22,7 +22,6 @@ SUITE_DIR = os.path.dirname(BASE_DIR)
 
 STAGE_FILES = {
     "P0": [
-        "short-drama-director/references/track-routing.md",
         "short-drama-director/references/asset-first-pipeline.md",
         "short-drama-director/references/asset-delivery-modes.md",
         "short-drama-director/references/aspect-ratio-adaptation.md",
@@ -105,7 +104,7 @@ COMBAT_FILES = {
 }
 
 
-def resolve_files(stage, track="1", combat="none", model="2.5", source="1", previs=False):
+def resolve_files(stage, combat="none", model="2.5", source="1", previs=False):
     files = list(STAGE_FILES.get(stage.upper(), STAGE_FILES["P3"]))
     if source in ("3", "4") and stage.upper() in ("P0", "P1"):
         files.extend([
@@ -114,23 +113,8 @@ def resolve_files(stage, track="1", combat="none", model="2.5", source="1", prev
             "sd-recon-engine/references/recon-evidence.md",
             "sd-recon-engine/references/intel-card.md",
         ])
-    if track == "2" and stage.upper() in ("P0", "P1", "P4"):
-        files.extend([
-            "sd-overseas-engine/SKILL.md",
-            "sd-overseas-engine/references/language-contract.md",
-            "sd-overseas-engine/references/north-american-english.md",
-        ])
-    elif track == "3" and stage.upper() in ("P0", "P1", "P3", "P4", "P5"):
-        files.extend([
-            "sd-jieshuo-engine/SKILL.md",
-            "sd-jieshuo-engine/references/narration-vo-script.md",
-            "sd-jieshuo-engine/references/history-visual-style.md",
-            "sd-jieshuo-engine/references/explainer-formulas.md",
-        ])
     if stage.upper() in ("P3", "P4") and combat.upper() in COMBAT_FILES:
         files.extend(COMBAT_FILES[combat.upper()])
-    if model.lower() == "h3" and stage.upper() in ("P4", "P5"):
-        files.append("short-drama-director/references/h3-adapter.md")
     if previs:
         files.append("sd-storyboard-engine/references/p45-previs-storyboard.md")
     # 去重保序
@@ -184,11 +168,11 @@ def chapter_pages(raw_lines, line_budget=40):
     return pages
 
 
-def build_slice(stage, track="1", combat="none", model="2.5", mode="M1", max_lines_per_file=45,
+def build_slice(stage, combat="none", model="2.5", mode="M1", max_lines_per_file=45,
                 source="1", previs=False, page=1):
     if page < 1 or max_lines_per_file < 1:
         raise ValueError("--page 与 --lines 必须为正整数")
-    files = resolve_files(stage, track, combat, model, source, previs)
+    files = resolve_files(stage, combat, model, source, previs)
     records = []
     for rel in files:
         full_p = os.path.join(SUITE_DIR, rel)
@@ -226,7 +210,7 @@ def build_slice(stage, track="1", combat="none", model="2.5", mode="M1", max_lin
                      f"文件页数={len(pages)}；未加载={'、'.join(unread) or '无'}")
         if selected:
             bodies.extend([f"\n## 原文 `{rel}` · {span}", *raw[start:end]])
-    command = (f"python scripts/slice_context.py --stage {stage.upper()} --track {track}"
+    command = (f"python scripts/slice_context.py --stage {stage.upper()}"
                f" --combat {combat} --model {model} --mode {mode} --source {source}"
                f" --lines {max_lines_per_file}" + (" --previs" if previs else ""))
     lines.append(f"\n续页：`{command} --page {page + 1}`" if page < page_count
@@ -256,11 +240,11 @@ def estimate_tokens(text):
     return int(cjk * 1.05 + (len(text) - cjk) / 3.6)
 
 
-def build_estimate(stage, track="1", combat="none", model="2.5", mode="M1",
+def build_estimate(stage, combat="none", model="2.5", mode="M1",
                    lines=40, episodes=1, chars_per_episode=0, source="1", previs=False, page=1):
     """预算报账：输入侧真实占用 + 输出侧应切几批（预算铁律第 1 条）。"""
-    files = resolve_files(stage, track, combat, model, source, previs)
-    slice_tok = estimate_tokens(build_slice(stage, track, combat, model, mode, lines, source, previs, page))
+    files = resolve_files(stage, combat, model, source, previs)
+    slice_tok = estimate_tokens(build_slice(stage, combat, model, mode, lines, source, previs, page))
     full_tok = 0
     for rel in files:
         fp = os.path.join(SUITE_DIR, rel)
@@ -280,7 +264,7 @@ def build_estimate(stage, track="1", combat="none", model="2.5", mode="M1",
         "=" * 58,
         f"💰 预算报账 · {stg} 阶段（预算铁律第 1 条 · 禁止心算）",
         "=" * 58,
-        f"必读权威文件      : {len(files)} 份（已按赛道/打戏档/模型/素材形态解析）",
+        f"必读权威文件      : {len(files)} 份（已按打戏档/模型/素材形态解析）",
         f"切片后输入        : ≈ {slice_tok:,} token   ← 当前页输出估算，不是全文已读证明",
         f"若通读本阶段全文  : ≈ {full_tok:,} token   ← 可分章节续页通读，仅作预算对照（{full_tok // max(slice_tok,1)}× 倍）",
         "",
@@ -301,21 +285,20 @@ def build_estimate(stage, track="1", combat="none", model="2.5", mode="M1",
 
 def self_test():
     for stg in ("P0", "P1", "P2", "P3", "P4", "P5"):
-        out = build_slice(stg, track="1", combat="R1" if stg == "P3" else "none", max_lines_per_file=10)
+        out = build_slice(stg, combat="R1" if stg == "P3" else "none", max_lines_per_file=10)
         assert "coverage / 未加载清单" in out and "；缺失；" not in out, f"{stg} slice failed"
         assert "> 已读子库：" not in out, f"{stg} 虚假已读"
-    est = build_estimate("P3", track="1", combat="R1", episodes=10)
+    est = build_estimate("P3", combat="R1", episodes=10)
     assert "预算报账" in est and "按结构切" in est, "estimate failed"
     print("[+] slice_context self-test PASSED（slice 6/6 + estimate 1/1）")
     return 0
 
 
 def main():
-    ap = argparse.ArgumentParser(description="漫剧老李 V7.4.26 动态原文切片器")
+    ap = argparse.ArgumentParser(description="漫剧老李 V7.5.0-SLIM 动态原文切片器")
     ap.add_argument("--stage", default="P3", choices=["P0", "P1", "P2", "P3", "P4", "P5", "p0", "p1", "p2", "p3", "p4", "p5"])
-    ap.add_argument("--track", default="1", choices=["1", "2", "3", "4"])
     ap.add_argument("--combat", default="none", choices=["none", "R1", "R2", "R3", "r1", "r2", "r3"])
-    ap.add_argument("--model", default="2.5", choices=["2.5", "2.0", "h3"])
+    ap.add_argument("--model", default="2.5", choices=["2.5", "2.0"])
     ap.add_argument("--mode", default="M1", choices=["M0", "M1", "M2"])
     ap.add_argument("--lines", type=int, default=40, help="每文件每页软行数预算；完整章节可超限，不截断")
     ap.add_argument("--page", type=int, default=1, help="读取第 N 页；不自动累计已读状态")
@@ -332,11 +315,11 @@ def main():
         ap.error("lines/page/episodes 必须为正整数，chars-per-episode 不得为负")
     try:
         if args.estimate:
-            print(build_estimate(args.stage, args.track, args.combat, args.model, args.mode,
+            print(build_estimate(args.stage, args.combat, args.model, args.mode,
                                  args.lines, args.episodes, args.chars_per_episode,
                                  args.source, args.previs, args.page))
         else:
-            print(build_slice(args.stage, args.track, args.combat, args.model, args.mode,
+            print(build_slice(args.stage, args.combat, args.model, args.mode,
                               args.lines, args.source, args.previs, args.page))
     except ValueError as exc:
         ap.error(str(exc))

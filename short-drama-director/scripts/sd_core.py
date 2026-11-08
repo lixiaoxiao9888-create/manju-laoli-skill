@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-sd_core.py · 漫剧老李 V7.4.26 套装唯一公共解析内核与跨阶段状态台账引擎
+sd_core.py · 漫剧老李 V7.5.0-SLIM 套装唯一公共解析内核与跨阶段状态台账引擎
 定位：
   1. 终结「多脚本各自写正则导致修A漏B」——统一提供 TIME_RE、SHOT_TAG_RE、模型时长与字数契约、
      镜行解析 parse_shots()、时间轴解析 parse_time_ranges()、镜行头提取 extract_shot_head()。
@@ -18,8 +18,8 @@ import re
 import sys
 
 # ---- 模型契约唯一常量（与 references/model-adapters.md §5 同源）----
-MODEL_LIMITS = {"2.5": 30, "2.0": 15, "h3": 15}
-WORD_LIMITS = {"2.5": (2600, 3000), "2.0": (1900, 2000), "h3": (1900, 2000)}
+MODEL_LIMITS = {"2.5": 30, "2.0": 15}
+WORD_LIMITS = {"2.5": (3600, 4000), "2.0": (2900, 3000)}
 SEVEN_SEGMENTS = (
     "【画幅风格】",
     "【场景资产】",
@@ -205,7 +205,7 @@ def default_project_state():
                         "no": 1,
                         "start": 0,
                         "end": 4,
-                        "spec": "中近景 · 侧45度 · 极缓慢推",
+                        "spec": "中近景 · 85mm · 侧45度 · 极缓慢推",
                         "action": "画面主体：@林风 右手拇指攥紧战术手套魔术贴，听到名字瞬间手指骤停、下颌咬肌绷紧，目光死死钉在 @陈枭 脸上；@陈枭 摘下金丝半框眼镜捏在指间，鼻梁留有浅红压痕",
                         "sound": "[SFX: 皮质摩擦声与低沉电流嗡鸣]",
                         "dialogue": '【林风（压着怒意·低沉微哑·语速偏慢）：“陈会长，这表你认得吧？”】',
@@ -214,7 +214,7 @@ def default_project_state():
                         "no": 2,
                         "start": 4,
                         "end": 9,
-                        "spec": "中景 · 正侧 · 跟移",
+                        "spec": "中景 · 50mm · 正侧 · 跟移",
                         "action": "@林风 沉腰屈膝，右脚猛然蹬地、拧胯转腰送肩轰出重拳；@陈枭 瞳孔骤缩，双臂交叉架臂格挡卸力，小臂西装布料受击凹陷，整个人向后滑退半步碾开地面浅水洼，命中瞬间画面顿住2帧后稳住重心",
                         "sound": "[SFX: 拳肉沉闷撞击声，鞋底擦地滑水声]",
                         "dialogue": "无",
@@ -223,8 +223,8 @@ def default_project_state():
                         "no": 3,
                         "start": 9,
                         "end": 14,
-                        "spec": "全景 · 略仰 · 缓慢拉远",
-                        "action": "@林风 收拳沉肩稳住重心立于画面左，@陈枭 垂臂立于铁门前呼吸微促，两人隔着水泥走廊对峙",
+                        "spec": "全景 · 35mm · 略仰 · 缓慢拉远",
+                        "action": "@林风 收拳沉肩稳住重心，@陈枭 垂臂立于铁门前呼吸微促，两人隔着水泥走廊对峙",
                         "sound": "[SFX: 粗重呼吸声与走廊回音]",
                         "dialogue": "无",
                     },
@@ -315,7 +315,7 @@ def self_test():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="漫剧老李 V7.4.26 公共解析内核与状态台账工具")
+    ap = argparse.ArgumentParser(description="漫剧老李 V7.5.0-SLIM 公共解析内核与状态台账工具")
     ap.add_argument("--self-test", action="store_true")
     ap.add_argument("--init-state", metavar="JSON_PATH", help="生成标准 project_state.json 模板")
     args = ap.parse_args()

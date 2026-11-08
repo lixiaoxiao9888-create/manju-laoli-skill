@@ -2,6 +2,7 @@
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 
 ROOT_FIELDS = {
@@ -267,5 +268,42 @@ def main():
     print("PASS")
 
 
+def self_test():
+    """★P11 新增（2026-10-24）：本脚本此前完全游离在自测体系外。
+    它是 Seedance 分段映射表的唯一校验器——它若悄悄放行，分段表就是一张没人核过的表。
+    这里钉死四类负例：浮点容差、缺字段、非对象、空数据/版本号错。"""
+    ok = True
+    if not close(0.5, 0.5 + 1e-9) or close(0.5, 0.6):
+        print("FAIL self-test: close 容差判定错误"); ok = False
+    errs = []
+    require_keys({"a": 1}, {"a", "b"}, "x", errs)
+    if not any("x.b is required" in e for e in errs):
+        print("FAIL self-test: require_keys 漏报缺字段", errs); ok = False
+    errs = []
+    require_keys([], {"a"}, "y", errs)
+    if not any("must be an object" in e for e in errs):
+        print("FAIL self-test: require_keys 未拦截非对象", errs); ok = False
+    e1 = validate({})
+    if not e1 or not any("missing root fields" in x for x in e1):
+        print("FAIL self-test: validate({}) 未报根字段缺失", e1); ok = False
+    e2 = validate({"schema_version": "2.0"})
+    if not any("schema_version" in x for x in e2):
+        print("FAIL self-test: schema_version 非 3.0 未报错", e2); ok = False
+    e3 = validate({"schema_version": "3.0", "artifact_type": "EDITING_PLAN",
+                   "stage_id": "16", "payload": []})
+    if not any("payload must be an object" in x for x in e3):
+        print("FAIL self-test: payload 非对象未报错", e3); ok = False
+    e4 = validate({"schema_version": "3.0", "artifact_type": "EDITING_PLAN", "stage_id": "16",
+                   "payload": {"target_profile": {"name": "SEEDANCE_2", "max_segment_seconds": 15,
+                                                  "reference_mode": "OMNI_REFERENCE"},
+                               "segments": []}})
+    if not any("payload.segments" in x for x in e4):
+        print("FAIL self-test: 空 segments 未报错", e4); ok = False
+    print('[+] self-test PASSED' if ok else 'FAIL self-test')
+    return ok
+
+
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        sys.exit(0 if self_test() else 1)
     main()

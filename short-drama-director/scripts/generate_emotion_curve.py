@@ -16,13 +16,25 @@ import os
 import sys
 
 # matplotlib 为可选依赖（缺依赖给安装指引，不抛裸 Traceback）
+# ★P11 修（2026-10-24）：旧版在 import 失败处直接 sys.exit(2)，于是 `--self-test`
+#   在无 matplotlib 的环境里**根本跑不起来**——本脚本因此既没有自测，
+#   也没人发现它没有自测（check_package 的旧 ◑25 只查源码里有没有 "--self-test" 字符串）。
+#   改为「模块恒可加载、绘图时再报错」：让节拍解析这部分纯逻辑在任何环境下都能被验证，
+#   绘图部分在依赖缺失时明确标 SKIP，而不是假装通过。
+_MPL_OK = True
+_MPL_ERR = ""
 try:
     import matplotlib
+    matplotlib.use("Agg")          # 无显示环境（服务器 / CI）也能出图
     import matplotlib.pyplot as plt
-except ImportError:
-    print("[-] 缺少依赖：本脚本需要 matplotlib 才能出图。安装：pip install matplotlib")
-    print("    （不影响包内其余机检与投喂链路——情绪曲线为可选交付物，节拍数据仍可按 12 节拍手写进投喂稿）")
-    sys.exit(2)
+except Exception as _exc:          # ImportError 及后端初始化异常都归这里
+    plt = None
+    _MPL_OK = False
+    _MPL_ERR = f"{type(_exc).__name__}: {_exc}"
+
+_MPL_HINT = ("[-] 缺少依赖：本脚本需要 matplotlib 才能出图。安装：pip install matplotlib\n"
+             "    （不影响包内其余机检与投喂链路——情绪曲线为可选交付物，"
+             "节拍数据仍可按 12 节拍手写进投喂稿）")
 
 # ── 中文字体检测与配置（macOS/常见 Linux 路径回退）──
 def _setup_cjk_font():
@@ -53,6 +65,8 @@ def plot_emotion_curve(beats=None, output_png="emotion_beat_curve.png"):
     """
     绘制 12 节拍短剧全片情绪张力曲线
     """
+    if not _MPL_OK:
+        raise RuntimeError("matplotlib 不可用：" + _MPL_ERR)
     if beats is None:
         beats = [
             ("1.起势", 3.5),
@@ -119,7 +133,57 @@ def _load_beats(path):
     return beats
 
 
+def self_test():
+    """★P11 新增（2026-10-24）：本脚本此前完全游离在自测体系外。
+    分两层验：① 节拍解析（纯逻辑，任何环境都验）；② 出图（需 matplotlib，缺失则 SKIP 不冒充通过）。"""
+    import tempfile
+    ok = True
+    dm = tempfile.mkdtemp()
+    p1 = os.path.join(dm, "beats_dict.json")
+    with open(p1, "w", encoding="utf-8") as f:
+        json.dump([{"name": "起势", "value": 3.5}, {"name": "高潮", "value": 9}], f)
+    b1 = _load_beats(p1)
+    if b1 != [("起势", 3.5), ("高潮", 9.0)]:
+        print("FAIL self-test: dict 形态节拍解析错误", b1); ok = False
+    p2 = os.path.join(dm, "beats_list.json")
+    with open(p2, "w", encoding="utf-8") as f:
+        json.dump([["起势", 3.5]], f)
+    if _load_beats(p2) != [("起势", 3.5)]:
+        print("FAIL self-test: 数组形态节拍解析错误", _load_beats(p2)); ok = False
+    p3 = os.path.join(dm, "beats_empty.json")
+    with open(p3, "w", encoding="utf-8") as f:
+        json.dump([], f)
+    try:
+        _load_beats(p3)
+        print("FAIL self-test: 空节拍列表未被拦截"); ok = False
+    except SystemExit:
+        pass
+    if _MPL_OK:
+        out = os.path.join(dm, "curve.png")
+        try:
+            plot_emotion_curve(output_png=out)
+        except Exception as exc:
+            print(f"FAIL self-test: 绘图异常 {type(exc).__name__}: {exc}"); ok = False
+        else:
+            if not os.path.exists(out) or os.path.getsize(out) < 2000:
+                print("FAIL self-test: PNG 未生成或体积异常"); ok = False
+        out2 = os.path.join(dm, "curve2.png")
+        try:
+            plot_emotion_curve(beats=[("A", 3.0), ("B", 9.0)], output_png=out2)
+            if not os.path.exists(out2):
+                print("FAIL self-test: 自定义节拍未生成 PNG"); ok = False
+        except Exception as exc:
+            print(f"FAIL self-test: 自定义节拍绘制失败 {type(exc).__name__}"); ok = False
+    else:
+        print(f"[SKIP] matplotlib 不可用（{_MPL_ERR[:70]}）——仅验证节拍解析，绘图路径未验证")
+    print('[+] self-test PASSED' if ok else 'FAIL self-test')
+    return ok
+
+
 def main():
+    if not _MPL_OK:
+        print(_MPL_HINT)
+        sys.exit(2)
     ap = argparse.ArgumentParser(
         prog="generate_emotion_curve.py",
         description="生成短剧全片情绪张力曲线 PNG（默认 12 节拍）。",
@@ -145,4 +209,6 @@ def main():
 
 
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        sys.exit(0 if self_test() else 1)
     main()
