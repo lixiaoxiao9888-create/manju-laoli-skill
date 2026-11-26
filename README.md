@@ -176,7 +176,7 @@ python3 short-drama-director/scripts/build_board_lite.py <项目.md>
 lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM 精简套装（173 文件）
 ├── README.md                                   # 本落地页（中文 + English）
 ├── LICENSE / .gitignore
-├── short-drama-director/                       # L0 总控（69 文件 · 53 份规则库 · 机检脚本）
+├── short-drama-director/                       # L0 总控（74 文件 · 53 份规则库 · 机检脚本）
 │   ├── SKILL.md                                #   总控路由 + 工作法 + 模块索引
 │   ├── references/                             #   48 份专业规则库（含 style-bible 画风锁知识库 8 份）
 │   ├── scripts/                                #   check_package / validate_prompt / gate 等机检全家桶
@@ -341,7 +341,7 @@ python3 short-drama-director/scripts/build_board_lite.py <project.md>
 lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM slim suite (173 files)
 ├── README.md                                   # landing (Chinese + English)
 ├── LICENSE / .gitignore
-├── short-drama-director/                       # L0 router (68 files · 48 rulebooks · lint scripts)
+├── short-drama-director/                       # L0 router (74 files · 53 rulebooks · lint scripts)
 ├── sd-decision-engine/                         # L1 decision (E01–E15)
 ├── sd-recon-engine/                            # L2 · sourcing
 ├── sd-script-engine/                           # L2 · scriptwriting
