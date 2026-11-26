@@ -2,17 +2,17 @@
 
 # 🎬 漫剧老李 AIGC 创作全流程 Skill
 
-## **V7.5.0-SLIM 精简套装版** · Short-Drama Director Suite
+## **V8.2.0-SLIM 精简套装版** · Short-Drama Director Suite
 
-> **版本**：V7.5.0-SLIM 精简套装版（Suite）· 在全量版基础上**删去海外剧剧本（sd-overseas-engine）与解说叙事（sd-jieshuo-engine）两条赛道及〇·0 赛道分流锁**，其余判据一条未改。改动与验收记录见 [`short-drama-director/CHANGELOG.md`](short-drama-director/CHANGELOG.md)。
+> **版本**：V8.2.0-SLIM 精简套装版（Suite）· 在全量版基础上**删去海外剧剧本（sd-overseas-engine）与解说叙事（sd-jieshuo-engine）两条赛道及〇·0 赛道分流锁**，其余判据一条未改。改动与验收记录见 [`short-drama-director/CHANGELOG.md`](short-drama-director/CHANGELOG.md)。
 
 > 🎨 面向 **AIGC 视听创作** 的工业级全流程技能包（**1 总控 + 10 子技能 · 四层纵深**）
 > 从创意立项、剧本、资产、分镜到视频模型投喂提示词与独立质检 —— 给 AI 助手 / LLM 直接调用
 
-![Version](https://img.shields.io/badge/版本-V7.5.0--SLIM-6a5acd)
+![Version](https://img.shields.io/badge/版本-V8.2.0--SLIM-6a5acd)
 ![Structure](https://img.shields.io/badge/结构-1%20总控%20%7C%2010%20子技能-8e44ad)
-![Rulebooks](https://img.shields.io/badge/规则库-48%20份-00b4d8)
-![Files](https://img.shields.io/badge/文件-155-2ec4b6)
+![Rulebooks](https://img.shields.io/badge/规则库-53%20份-00b4d8)
+![Files](https://img.shields.io/badge/文件-173-2ec4b6)
 ![Models](https://img.shields.io/badge/模型-Seedance%202.5%20%7C%202.0-9d4edd)
 ![QC](https://img.shields.io/badge/机检-C1~C41-ff6b6b)
 ![Platform](https://img.shields.io/badge/平台-OpenClaw%20%7C%20Coze%20%7C%20Dify%20%7C%20WorkBuddy-ff9f43)
@@ -85,7 +85,7 @@
 
 | 层 | 技能 | 职责 |
 |:---:|:---|:---|
-| **L0 总控** | `short-drama-director` | 素材来源 · **素材形态 M0/M1/M2** · 锁系统 · **48 份规则库**（含 style-bible 画风锁知识库 8 份）· 七段式 · 机检 **C1~C26**（另设增量主码 C27~C41）· P0~P2 门禁 · ★场面调度 · ★素材形态与接线单 |
+| **L0 总控** | `short-drama-director` | 素材来源 · **素材形态 M0/M1/M2** · 锁系统 · **53 份规则库**（含 style-bible 画风锁知识库 8 份）· 七段式 · 机检 **C1~C26**（另设增量主码 C27~C41）· P0~P2 门禁 · ★场面调度 · ★素材形态与接线单 |
 | **L1 决策** | `sd-decision-engine` | 情境映射 E01~E15 + 80/15/5 权重 + 情绪锚点表 + 构图雷区 A/B 双态白名单——回答「这场戏该用什么镜头」 |
 | **L2 生产** | `sd-recon-engine` | 素材采风与对标情报（只交付《对标情报卡》，不做打分 / 聚簇 / 台账 / 定时抓取） |
 | | `sd-script-engine` | 剧本创作与小说改编（六阶段编剧链 + 五席圆桌审核 + 台词七维诊断 + 拟人化引擎 + 外来剧本润色层） |
@@ -147,7 +147,7 @@
 # 安装到 OpenClaw（总控 + 10 子技能整体同级部署）
 openclaw skills install ./short-drama-director --as short-drama-director
 
-# 包级自检（48 份规则库静态 + 语义回归）
+# 包级自检（53 份规则库静态 + 语义回归）
 python3 short-drama-director/scripts/check_package.py
 
 # 出稿质检（★一次跑完：投喂层闸门 + C 系机检，FAIL 清零才交付）
@@ -173,10 +173,10 @@ python3 short-drama-director/scripts/build_board_lite.py <项目.md>
 ## 📦 项目结构
 
 ```
-lixiaoxiao9888-create/manju-laoli-skill/        # V7.5.0-SLIM 精简套装（155 文件）
+lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM 精简套装（173 文件）
 ├── README.md                                   # 本落地页（中文 + English）
 ├── LICENSE / .gitignore
-├── short-drama-director/                       # L0 总控（68 文件 · 48 份规则库 · 机检脚本）
+├── short-drama-director/                       # L0 总控（69 文件 · 53 份规则库 · 机检脚本）
 │   ├── SKILL.md                                #   总控路由 + 工作法 + 模块索引
 │   ├── references/                             #   48 份专业规则库（含 style-bible 画风锁知识库 8 份）
 │   ├── scripts/                                #   check_package / validate_prompt / gate 等机检全家桶
@@ -197,7 +197,7 @@ lixiaoxiao9888-create/manju-laoli-skill/        # V7.5.0-SLIM 精简套装（155
 
 ## 📜 更新历史
 
-- **V7.5.0-SLIM 精简版**（本轮）— **瘦身**：删去海外剧剧本（`sd-overseas-engine`）与解说叙事（`sd-jieshuo-engine`）两个子技能、赛道分流唯一权威文件（原 `references/` 下，已删）、〇·0 赛道分流锁，子技能 **12 → 10**、六道锁 → **五道锁**；判据体系一条未改（详见 `CHANGELOG.md` 沿革）。
+- **V8.2.0-SLIM 精简版**（本轮）— **瘦身**：删去海外剧剧本（`sd-overseas-engine`）与解说叙事（`sd-jieshuo-engine`）两个子技能、赛道分流唯一权威文件（原 `references/` 下，已删）、〇·0 赛道分流锁，子技能 **12 → 10**、六道锁 → **五道锁**；判据体系一条未改（详见 `CHANGELOG.md` 沿革）。
 - **历史补丁 V7.4.26 P14**（2026-11-03，`CHANGELOG.md` 存档）— **案例示例整体剔除 + 判据级去重 + 文档瘦身**：删除全部成稿示例（4 份示例文件 + 30 余处正文示范段 + 填写示例），只留规则、公式与反例约束；`gate_check.py` 与 `validate_prompt.py` 的重复判据合并为单一实现（同一语气位/镜长/七段缺栏不再查两遍），出稿质检从三跑变一跑；README / CHANGELOG / 补丁说明全部精简。
 - **V7.4.26 补丁 P13 及更早** — 见 [`short-drama-director/CHANGELOG.md`](short-drama-director/CHANGELOG.md)（V7.4.26 系列全文保留，更早版本压成一行摘要表）。
 - 旧版归档：[**manju-laoli-skill-legacy**](https://github.com/lixiaoxiao9888-create/manju-laoli-skill-legacy)
@@ -210,7 +210,7 @@ lixiaoxiao9888-create/manju-laoli-skill/        # V7.5.0-SLIM 精简套装（155
 
 # 🇬🇧 English Overview
 
-## **V7.5.0-SLIM Slim Suite** · Short-Drama Director Suite
+## **V8.2.0-SLIM Slim Suite** · Short-Drama Director Suite
 
 **An industrial, full-pipeline creation skill package for AIGC audiovisual works — from concept lock-in to video-model feed prompts — built for AI agents / LLMs to call directly. One router + 12 sub-skills across a four-layer architecture.**
 
@@ -338,7 +338,7 @@ python3 short-drama-director/scripts/build_board_lite.py <project.md>
 ## 📦 Structure
 
 ```
-lixiaoxiao9888-create/manju-laoli-skill/        # V7.5.0-SLIM slim suite (155 files)
+lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM slim suite (173 files)
 ├── README.md                                   # landing (Chinese + English)
 ├── LICENSE / .gitignore
 ├── short-drama-director/                       # L0 router (68 files · 48 rulebooks · lint scripts)
@@ -358,7 +358,7 @@ lixiaoxiao9888-create/manju-laoli-skill/        # V7.5.0-SLIM slim suite (155 fi
 
 ## 📜 Changelog
 
-- **V7.5.0-SLIM** — **slim build**: overseas-drama and explainer-narration tracks **removed** (2 engines + track-routing authority + 〇·0 routing lock), leaving 1 router + 10 sub-skills; all criteria unchanged. Details (历史沿革) in `CHANGELOG.md`.
+- **V8.2.0-SLIM** — **slim build**: overseas-drama and explainer-narration tracks **removed** (2 engines + track-routing authority + 〇·0 routing lock), leaving 1 router + 10 sub-skills; all criteria unchanged. Details (历史沿革) in `CHANGELOG.md`.
 - **历史 patch V7.4.26 P14** (2026-11-03, archived in `CHANGELOG.md`) — **all worked examples removed + criteria de-duplicated + docs slimmed**: every full-length sample script, inline demo block and fill-in example is gone (rules, formulas and counter-examples stay); duplicated checks in `gate_check.py` vs `validate_prompt.py` merged into a single implementation, so shipping a script now needs one check run instead of three; README / CHANGELOG / patch notes compacted.
 - **V7.4.26 patch P13 and earlier** — see [`short-drama-director/CHANGELOG.md`](short-drama-director/CHANGELOG.md).
 - Legacy archive: [**manju-laoli-skill-legacy**](https://github.com/lixiaoxiao9888-create/manju-laoli-skill-legacy)
@@ -411,6 +411,6 @@ lixiaoxiao9888-create/manju-laoli-skill/        # V7.5.0-SLIM slim suite (155 fi
 </table>
 
 
-## V7.5.0-SLIM 稳定性能力与边界
+## V8.2.0-SLIM 稳定性能力与边界
 
 新增完整章节分页、JSON/text 统一门禁、多对白累计及 JSON 单源导出。使用单源项目时必读 `short-drama-director/references/project-bundle-contract.md`。导出仅含资产提示词与 P3CLEAN_GRID 计划；不是已生成图片，也不是已经过 P4 模型适配的投喂稿。旧示例回归和未解决项见包外交付说明，不以机检 PASS 代替语义与实拍验收。

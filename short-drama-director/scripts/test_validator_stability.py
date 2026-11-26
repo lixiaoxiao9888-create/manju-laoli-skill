@@ -52,7 +52,7 @@ class StabilityTests(unittest.TestCase):
             ('【甲(正常)："一二三四五六七八九十"】', '', False),
             ('【甲(正常)："一二三四五六七八九十"】', '末1秒定格', True),
             ('【甲(正常)："一二三四五六七八九十"】', '不做末1秒定格', False),
-            ('【甲(正常)："一二三四五六七"】【乙(正常)："一二三四五六七"】', '', True),
+            ('【甲(正常)："一二三四五六七八九"】【乙(正常)："一二三四五六七八九"】', '', True),
         ]:
             with self.subTest(tail=tail, dialogue=dialogue):
                 self.path.write_text('素材形态：M0\n' + self.unit(dialogue=dialogue, tail=tail), encoding='utf-8')

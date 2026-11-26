@@ -11,7 +11,7 @@
 | 产物 | 是什么 | 形态 | 归属 |
 |---|---|---|---|
 | **文字分镜** | 逐镜的文字镜头序列（景别/焦段/机位/运镜） | Markdown 文本 | `sd-storyboard-engine/SKILL.md` |
-| **九宫格场景图** | **纯场景** 3×3（多机位/多子区域），**画面禁人物** | 生图提示词 → 1 张图 | `sd-asset-engine/references/scene-grid-template.md` |
+| **五宫格场景图** | **纯场景** 3×3（多机位/多子区域），**画面禁人物** | 生图提示词 → 1 张图 | `sd-asset-engine/references/scene-grid-template.md` |
 | **分镜看板** | md → 单文件离线 **HTML**，双击即开，供人查看 | HTML 文件 | `short-drama-director/references/storyboard-board-lite.md` |
 | **15 格动作 PREVIS** | **打戏**专用 15 格动作预演 | 生图/预演 | `sd-combat-engine/` |
 | **★ 故事板图（本文件）** | **带人物 + 带动作相位 + 带镜头信息**的多面板图，**每段一张**，作为**视频生成的视觉依据** | 生图提示词 → 1 张图（含 N 个面板） | **本文件** |

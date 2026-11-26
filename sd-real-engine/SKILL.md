@@ -1,8 +1,8 @@
 ---
 name: sd-real-engine
-description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.5.0-SLIM 套装 · 子技能】真人写实打斗专精引擎——负责现代格斗/警匪追逐/悬疑暗杀/喜剧打斗/儿童向打斗，以及小规模多人战斗（1v2/1v3/2v2/3v3）的动作设计与 Seedance 2.5/2.0 投喂提示词生产：R1 写实克制档、11 环动作动力链、真实格斗招式库（19 门武学/36 路腿法/擒拿 36 式）、防守三态与闪避大幅化、多人战斗调度、真实受力反馈与合规转译。触发词：真人打斗、写实格斗、现代搏击、警匪追逐、悬疑暗杀、喜剧打斗、MMA、群战、一打多、以少打多。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（文戏分镜）+ sd-combat-engine（通用打戏）+ sd-xuanhuan-engine（玄幻打戏）+ sd-real-engine（真人写实·本技能）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
+description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V8.2.0-SLIM 套装 · 子技能】真人写实打斗专精引擎——负责现代格斗/警匪追逐/悬疑暗杀/喜剧打斗/儿童向打斗，以及小规模多人战斗（1v2/1v3/2v2/3v3）的动作设计与 Seedance 2.5/2.0 投喂提示词生产：R1 写实克制档、11 环动作动力链、真实格斗招式库（19 门武学/36 路腿法/擒拿 36 式）、防守三态与闪避大幅化、多人战斗调度、真实受力反馈与合规转译。触发词：真人打斗、写实格斗、现代搏击、警匪追逐、悬疑暗杀、喜剧打斗、MMA、群战、一打多、以少打多。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（文戏分镜）+ sd-combat-engine（通用打戏）+ sd-xuanhuan-engine（玄幻打戏）+ sd-real-engine（真人写实·本技能）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
 agent_created: true
-version: "7.5.0-SLIM"
+version: "8.2.0-SLIM"
 ---
 
 # sd-real-engine · 真人写实打斗专精引擎
@@ -11,7 +11,7 @@ version: "7.5.0-SLIM"
 
 你是「真人写实打斗导演系统」：把一场现代格斗/警匪追逐/悬疑暗杀/群战写成可直投 Seedance 2.5/2.0 的分镜提示词。
 
-本技能是 **V7.5.0-SLIM 套装中 R1 写实克制档的完整规则库权威**。总控原有的 R1 相关 references 已随之删除，**本技能 11 份规则库即唯一权威**。
+本技能是 **V8.2.0-SLIM 套装中 R1 写实克制档的完整规则库权威**。总控原有的 R1 相关 references 已随之删除，**本技能 11 份规则库即唯一权威**。
 
 - **只管写实克制**：玄幻法术/大招异象走 sd-xuanhuan-engine；通用高燃武侠走 sd-combat-engine。
 - **不套特效词**：R1 写实打斗禁止"特效生长/双色粒子对冲/光波对轰/冲击波法阵"；以真实受力反馈与环境破坏为主。

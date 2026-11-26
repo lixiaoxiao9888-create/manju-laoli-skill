@@ -132,7 +132,67 @@ def _asset_elsewhere(text):
     return bool(ASSET_ELSEWHERE_RE.search(text or ""))
 
 
-def audit_markdown(text, mode="auto", director=None, delivery=None):
+def _audit_p0a_locks(text, mode="full", base_dir=None):
+    """CT1-P0A 实现（2026-11-25 补 · 原为仅声明无实现的幽灵项）。
+
+    核销口径：P0A 锁台账必须存在，且每项锁 src=user（用户勾选/用户原话凭证）。
+    代填（src=default/agent/infer/preset）、无凭证、值域非法 → FAIL。
+    board-lite 模式（单文件看板稿）降级为 WARN，不阻断历史短稿。
+
+    单一事实源：台账只写一份（00_立项包）。主档/其它分册写「锁台账见：00_立项包.md」
+    即可按路径解析，避免同一份锁表抄两处、抄出两个口径（SKILL.md L533 记录的
+    摘要层漂移事故，就是副本层先被读到导致规则失效）。
+    """
+    try:
+        if SCRIPT_DIR not in sys.path:
+            sys.path.insert(0, SCRIPT_DIR)
+        import check_locks
+    except Exception as exc:  # pragma: no cover
+        return [], ["CT1-P0A 无法加载 check_locks.py（%s）——锁凭证核销不可用" % exc], []
+
+    ledger_text = text or ""
+    if "<!-- LOCK-LEDGER:BEGIN -->" not in ledger_text:
+        ref = re.search(r"锁台账见[:：]\s*([^\s|，,（）()」]+)", ledger_text)
+        if ref and base_dir:
+            cand_raw = ref.group(1)
+            base_real = os.path.realpath(base_dir)
+            if os.path.isabs(cand_raw):
+                return [], [f"CT1-P0A 锁台账路径越界（禁止绝对路径：{cand_raw}）"], []
+            cand_real = os.path.realpath(os.path.join(base_real, cand_raw))
+            if os.path.commonpath([base_real, cand_real]) != base_real:
+                return [], [f"CT1-P0A 锁台账路径越界（禁止跳出项目目录：{cand_raw}）"], []
+            if os.path.isfile(cand_real):
+                try:
+                    ledger_text += "\n" + open(cand_real, encoding="utf-8").read()
+                except Exception:
+                    pass
+
+    multi = bool(
+        re.search(r"投喂单元\s*[2-9]", ledger_text)
+        or re.search(r"段\s*[2-9]\s*[·:：]", ledger_text)
+        or re.search(r"段\s*[2-9]\s*\(", ledger_text)
+    )
+    ok, fails, warns = check_locks.audit_text(ledger_text, multi_segment=multi)
+
+    passed, issues, out_warns = [], [], []
+    for w in warns:
+        out_warns.append("CT1-P0A " + w)
+
+    if not fails:
+        lock_cnt = sum(1 for x in ok if x.startswith("L3 "))
+        passed.append("CT1-P0A P0A 锁台账凭证核销通过（%d 项锁全部 src=user）" % lock_cnt)
+        return passed, issues, out_warns
+
+    if mode == "board-lite":
+        for f in fails:
+            out_warns.append("CT1-P0A（board-lite 降级告警）" + f)
+    else:
+        for f in fails:
+            issues.append("CT1-P0A " + f)
+    return passed, issues, out_warns
+
+
+def audit_markdown(text, mode="auto", director=None, delivery=None, base_dir=None):
     """仅检查结构指纹；不证明内容正确、逐项完整或语义核销。"""
     if delivery not in (None, "full-project", "agent-bundle", "feed-only"):
         raise ValueError(f"未知交付范围：{delivery}")
@@ -163,6 +223,14 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
             mode = "full"
 
     # 1. CT1: P0 & P1 anchors and acting profiles
+    # ★ 2026-11-25 补实现：CT1-P0A 原为「幽灵项」——契约表第 1 条声明 P0A 前置五道锁基准表，
+    #   但全文件只有声明、没有一行实现代码，于是「执行者自己写一张锁表就 PASS」。
+    #   用户连续三次追责「强制锁未弹卡、按默认值代填」的根因即在于此。现改由 check_locks.py 硬核销。
+    _p0a_p, _p0a_i, _p0a_w = _audit_p0a_locks(text, mode, base_dir)
+    passed.extend(_p0a_p)
+    issues.extend(_p0a_i)
+    warns.extend(_p0a_w)
+
     if mode == "full":
         if "情绪锚点表" in text and re.search(r"E0[1-9]|E1[0-5]", text) and "80%" in text:
             passed.append("CT1-P0B P0B《情绪锚点表》（含情境ID与80/15/5机位锁）在位")
@@ -186,10 +254,17 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
     _tn = re.sub(r"[\s\u3000]+", "", text)
     _tnl = _tn.lower()
     has_chr_template = (
-        "全图共4格" in _tn
-        and ("无脸全身" in _tn or "featurelessface" in _tnl)
-        and "五官10项" in _tn
-        and ("voicedescription" in _tnl or "图底音色速览标签" in _tn)
+        (
+            "全图共4格" in _tn
+            and ("无脸全身" in _tn or "featurelessface" in _tnl)
+            and "五官10项" in _tn
+            and ("voicedescription" in _tnl or "图底音色速览标签" in _tn)
+        )
+        or (
+            "八格拼版" in _tn
+            and "面部标记" in _tn
+            and ("声线锚定" in _tn or "voicedescription" in _tnl)
+        )
     )
     if has_chr_template:
         passed.append("CT2-CHR 角色四格无脸立绘提示词命中结构指纹（4格/无脸全身/五官10项/Voice标签；不证明模板完整性）")
@@ -203,8 +278,13 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
 
     has_scn_template = (
         ("场景母版" in _tn or "无人空镜基准图" in _tn)
-        and ("九宫格摄影机矩阵" in _tn or ("3×3九宫格" in _tn and "参考场景锁定模式" in _tn))
-        and ("标注降级条款" in _tn or "画面纯净要求" in _tn)
+        and (
+            "五宫格摄影机矩阵" in _tn
+            or ("五宫格" in _tn and "参考场景锁定模式" in _tn)
+            or "九宫格摄影机矩阵" in _tn
+            or ("3×3九宫格" in _tn and "参考场景锁定模式" in _tn)
+        )
+        and ("标注降级条款" in _tn or "画面纯净要求" in _tn or "对照表" in _tn)
     )
     if has_scn_template:
         passed.append("CT2-SCN 场景母版 + 3×3 九宫格 8 字段提示词命中结构指纹（不证明模板完整性）")
@@ -212,13 +292,13 @@ def audit_markdown(text, mode="auto", director=None, delivery=None):
         issues.append(
             "CT2-SCN 场景资产提示词未按权威模板展开（疑似简笔糊弄版！）——必须回读 "
             "`sd-asset-engine/references/scene-grid-template.md` 与 `asset-spatial-ledger.md §四`，"
-            "同时产出「① 16:9 无人场景母版」与「② 3×3 九宫格完整 8 字段（含【九宫格摄影机矩阵】、【参考场景锁定模式】、标注降级条款）」"
+            "同时产出「① 16:9 无人场景母版」与「② 16:9 五宫格完整 8 字段（左2/3鸟瞰+右1/3四向，含【五宫格摄影机矩阵】、【参考场景锁定模式】、标注降级条款）」"
             "；若资产已拆册交付，请在本稿写明「资产另册：{文件名}」"
         )
 
     has_prp_template = (
         ("道具设定图" in _tn or "道具提示词" in _tn)
-        and ("正面视图" in _tn and "45°侧视图" in _tn and "俯视图" in _tn)
+        and ("单体静物" in _tn or "单张" in _tn or "正面视图" in _tn and "45°侧视图" in _tn and "俯视图" in _tn)
         and ("禁止手持" in _tn or "不出现人物、人手" in _tn)
     )
     if has_prp_template:
@@ -358,6 +438,11 @@ def _self_test():
     assert "CT2-CHR" in out and "朴赞郁" in out, "init checklist self-test failed"
 
     # 2. Verify full compliant sample passes 0 issues
+    #    ★ 2026-11-25：compliant 样本必须带锁台账，否则 CT1-P0A 会（正确地）判 FAIL
+    if SCRIPT_DIR not in sys.path:
+        sys.path.insert(0, SCRIPT_DIR)
+    import check_locks as _cl
+    _ledger = "\n" + _cl.TEMPLATE.replace("YYYY-MM-DDTHH:MM", "2026-11-25T14:20") + "\n"
     compliant_sample = (
         "素材形态：M1\n情绪锚点表 E04 80%\n世界锚卡 人物锚卡 身份外观三件套\n"
         "角色表演主档案 然而，当\n"
@@ -367,6 +452,7 @@ def _self_test():
         "场景坐标系 权力几何 故事板图 面板 1 图形化交付清单\n"
         "【站位声明】 【时间轴分镜】\n"
         "素材接线单 只控制什么 不控制什么 连续性台账 SET_STATE\n"
+        + _ledger
     )
     iss, _, pas = audit_markdown(compliant_sample, mode="full")
     assert not iss and len(pas) >= 8, f"compliant sample should pass, got {iss}"
@@ -416,12 +502,13 @@ def main():
     # ★审计补丁P1：CLI 自动识别「投喂单元」，否则一份纯投喂稿会被按项目交付包核销、
     #   一次误报 9 项（情绪锚点表/人物锚卡/调度/故事板/台账），与 validate_prompt 口径不一致。
     if args.delivery is None and (txt.count("【画幅风格】") >= 2) and not re.search(
-            r"资产提示词|角色四格板|场景母版|九宫格提示词", txt):
+            r"资产提示词|角色四格板|八格拼版|场景母版|五宫格提示词|九宫格提示词", txt):
         args.delivery = "feed-only"
         print("[i] 识别为「投喂单元」（≥2 组七段式、无资产模板段）→ 按 feed-only 核销（核 CT5-/CT6-WIR + 资产 CT2-*）；"
               "若资产已拆册交付，请在稿内写明「资产另册：{文件名}」以豁免 CT2；"
               "要做全项目核销请显式加 --delivery full-project")
-    issues, warns, passed = audit_markdown(txt, mode=args.mode, director=args.director, delivery=args.delivery)
+    issues, warns, passed = audit_markdown(txt, mode=args.mode, director=args.director, delivery=args.delivery,
+                                           base_dir=os.path.dirname(os.path.abspath(args.file)))
     print(f"=== 📋 全流程交付契约核销报告 ({os.path.basename(args.file)} | mode={args.mode}) ===")
     for p in passed:
         print(f"  [PASS] {p}")

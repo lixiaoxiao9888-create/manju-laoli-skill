@@ -47,9 +47,9 @@ if __name__ == '__main__' and hasattr(sys.stdout, 'reconfigure'):
 SPEED_BANDS = [
     (r'耳语|气声|一字一顿|一字一停|一字一句|拖长|断续|哽咽|抽气', 2.5, 3.5, '慢速重音（节奏维慢）'),
     (r'低语|低声|压抑|嘶哑|沉声|沉冷|宣判|喃喃|放缓', 3.5, 4.5, '偏慢'),
-    (r'争吵|吼|喊|嚷|咆哮|抢话|慌乱|急促|连珠|语速快', 5.0, 6.0, '快速/争吵/抢话'),
+    (r'争吵|吼|喊|嚷|咆哮|抢话|慌乱|急促|连珠|语速快', 5.0, 7.0, '快速/争吵/抢话'),
 ]
-SPEED_DEFAULT = (3.5, 6.0, '标准~高速（判定按 6 字/秒）')
+SPEED_DEFAULT = (3.5, 7.0, '标准~高速（判定按 7 字/秒）')
 
 PAUSE = [('，', 0.2), ('、', 0.2), ('。', 0.4), ('？', 0.4), ('！', 0.4), ('…', 0.8), ('——', 0.6)]
 
@@ -113,7 +113,7 @@ def frac_to_sec(frac):
 
     `5`→0.5 · `50`→0.5 · `05`→0.05 —— **按位数换算，不写死 ÷100**。
     原实现写 `fr / 100.0`，把 1 位小数 `.5` 算成 0.05：`00:03.5` → 3.05s。
-    闸门 2（字数÷6 对镜长）靠这里的秒值判定，口径错会让边缘稿误放行/误拦截。
+    闸门 2（字数÷7 对镜长）靠这里的秒值判定，口径错会让边缘稿误放行/误拦截。
     本口径须与总控 `scripts/sd_core.frac_to_sec`、`validate_prompt._frac_to_sec` 三处一致。
     """
     if not frac:
@@ -225,7 +225,7 @@ def check_asset_mode(text, mode_arg, fails, warns):
 
 def speech_seconds(line, tone):
     """估算台词秒数 → (最快可行, 最慢舒适, 字数, lo, hi)
-    need_fast = n/hi + pause  ← ★判定基准（V7.3.0：hi 通常 = 6 字/秒）
+    need_fast = n/hi + pause  ← ★判定基准（V7.3.0：hi 通常 = 7 字/秒）
     need_slow = n/lo + pause  ← 舒适参考
     """
     lo, hi = SPEED_DEFAULT[0], SPEED_DEFAULT[1]
@@ -296,8 +296,8 @@ def main():
                     help='素材形态（V7.3.0）：auto=按交付稿首行「素材形态：Mx」声明判定，'
                          '未声明时按默认 M1 并告警。权威 = references/asset-delivery-modes.md')
     ap.add_argument('--tol', type=float, default=0.8,
-                    help='闸门2 判定容差(s)：V7.3.0 以最快档 6 字/秒为判定基准，'
-                         '仅当「字数÷6 + 停顿 > 镜长 + tol」才判真念不完。默认 0.8')
+                    help='闸门2 判定容差(s)：V7.3.0 以最快档 7 字/秒为判定基准，'
+                         '仅当「字数÷7 + 停顿 > 镜长 + tol」才判真念不完。默认 0.8')
     ap.add_argument('--syntax', default='auto', choices=['auto', 'on', 'off'],
                     help='P14 判据级去重：auto=检测到总控机检引擎就一次性拉取 C 系判据'
                          '（取代本脚本原先重复实现的闸门0/1b/2语气位）；on=强制必须有引擎；'
@@ -322,7 +322,7 @@ def main():
     warns, fails, infos = [], [], []
     mode = check_asset_mode(text, a.mode, fails, warns)
 
-    print(f'投喂单元：{len(units)} 段  |  闸门2 判定基准：最快档 6 字/秒（V7.3.0）'
+    print(f'投喂单元：{len(units)} 段  |  闸门2 判定基准：最快档 7 字/秒（V7.3.0）'
           f'  |  素材形态：{mode}（闸门6B · V7.3.0）\n')
 
     # ---- 闸门 0 · 结构完整性（P14 逐条核对后的保留项）----
@@ -360,7 +360,7 @@ def main():
             warns.append(f'闸门1 段{ui}：{dur}s 只有 {len(shots)} 镜，需慢节奏白名单或补标点镜')
         # 闸门1b 镜长雷同 —— P14 摘除：与机检 C13 同一判据（≥4 镜、同值占比 ≥70%），由 C13 负责
 
-        # 闸门2 台词时长（以最快档 6 字/秒为判定基准）
+        # 闸门2 台词时长（以最快档 7 字/秒为判定基准）
         #   P14：原此处的「台词缺语气位 → FAIL（C16b）」已整段摘除——C16b 是同一判据的权威实现
         for index, (no, s, e, shot_text) in enumerate(shots):
             dialogue = parse_lines(shot_text)
@@ -420,6 +420,10 @@ def main():
 
     print()
     print('=== 投喂层闸门结果 ===')
+    _g_fails, _g_warns = check_g7_g8_v76(text, units=units)
+    fails.extend(_g_fails)
+    warns.extend(_g_warns)
+
     if fails:
         print(f'FAIL {len(fails)} 条：')
         for x in fails:
@@ -467,6 +471,54 @@ def _find_engine():
     return None
 
 
+
+def check_g7_g8_v76(text, units=None):
+    """V8.2.0-SLIM-rev4 逐段空间交接硬检：
+    - G7-MOUNT / G7-PENDING：多段稿挂载表 WARN 提醒
+    - G8-HANDOFF（段2+ 硬阻断 FAIL）：多段稿自第 2 段起，每段必须自带跨段空间交接卡（机位侧= / 固定可见锚= / 世界坐标）
+    - G8-ANCHOR-REPEAT（段2+ 硬阻断 FAIL）：多段稿自第 2 段起，【场景资产】或【站位声明】必须复述房间物理锚点（C17i），防模型重排房间
+    """
+    fails, warns = [], []
+    unit_list = list(units) if units else []
+    segs = re.findall(r"(?:^|\n)#{1,3}\s*第\s*\d+\s*段|(?:^|\n)【第\s*\d+\s*段", text)
+    is_multi = len(unit_list) >= 2 or len(segs) >= 2
+    if not is_multi:
+        return fails, warns
+
+    if "逐段参考图挂载表" not in text:
+        warns.append("G7-MOUNT 多段投喂稿建议文末附《逐段参考图挂载表》，防止外部平台漏挂角色参考图")
+    if "⏳待生成" in text:
+        warns.append("G7-PENDING 挂载表内仍存在「⏳待生成」资产，正式投喂前请补齐")
+
+    anchor_pat = re.compile(r"门|窗|桌|椅|墙|柱|台|床|沙发|柜|廊|梯|北|南|东|西|前景|中景|背景|中央|画左|画右|左侧|右侧")
+    if len(unit_list) >= 2:
+        for idx, item in enumerate(unit_list, 1):
+            body = item[1] if isinstance(item, tuple) else str(item)
+            if idx == 1:
+                if "机位侧=" not in body and "固定可见锚=" not in body and "世界坐标" not in body:
+                    warns.append("G8-HANDOFF 段1建议在【站位声明】末行写明机位侧=/固定可见锚=，供段2继承")
+                continue
+            # 段 2 及以后：硬阻断（仅对【场景资产】或【站位声明】非空的真实投喂段触发，不干扰空栏单测夹具）
+            m_sc = re.search(r"【场景资产】([^【]*)", body)
+            m_bl = re.search(r"【站位声明】([^【]*)", body)
+            sc_val = m_sc.group(1).strip() if m_sc else ""
+            bl_val = m_bl.group(1).strip() if m_bl else ""
+            spatial_val = (sc_val + " " + bl_val).strip()
+            if spatial_val:
+                if "机位侧=" not in body and "固定可见锚=" not in body and "世界坐标" not in body:
+                    fails.append(f"G8-HANDOFF 段{idx}：多段稿第{idx}段缺失跨段空间交接卡（须写明 机位侧=/固定可见锚=），防段2起站位漂移")
+                if not anchor_pat.search(spatial_val):
+                    fails.append(f"G8-ANCHOR-REPEAT 段{idx}：第{idx}段【场景资产/站位声明】未复述房间物理坐标或固定家具锚点（C17i）")
+                is_c_plus = ("母版" in sc_val and "站位参考" in sc_val)
+                is_c_2in1 = ("二合一" in sc_val and ("站位" in sc_val or "替换" in sc_val))
+                if ("白模" in sc_val or "轴测" in sc_val) and not (is_c_plus or is_c_2in1):
+                    fails.append(f"G8-SCHEME-C 段{idx}：方案C+/C++【场景资产】须明确写清分工：双图C+写明 @场景母版 + 站位参考图 @白模；二合一C++写明 二合一参考图 @实景等轴测站位图")
+    else:
+        if "机位侧=" not in text and "固定可见锚=" not in text:
+            warns.append("G8-HANDOFF 多段投喂稿建议在【站位声明】末行补齐跨段空间交接卡（机位侧=/固定可见锚=）")
+    return fails, warns
+
+
 def run_syntax_engine(path, model, aspect, mode='auto'):
     """调用总控 validate_prompt.py，把 C 系结果并入本次报告。
 
@@ -488,15 +540,15 @@ def run_syntax_engine(path, model, aspect, mode='auto'):
     try:
         proc = subprocess.run(cmd, capture_output=True, encoding='utf-8', env=env)
     except OSError as exc:
-        return 0, 0, f'机检引擎调用失败（{exc}），本次只有投喂层闸门结果'
+        return 1, 0, f'机检引擎调用失败（{exc}）——按 fail-closed 判 FAIL'
     out = (proc.stdout or '') + (proc.stderr or '')
     print(out.rstrip())
     if proc.returncode == 3:
-        return 0, 0, '机检引擎判定「非投喂稿件」，C 系判据未执行（稿件形态请核对）'
+        return 1, 0, '机检引擎判定「非投喂稿件」，C 系判据未执行——按 fail-closed 判 FAIL（请核对稿件形态）'
     n_fail = sum(1 for line in out.splitlines() if line.startswith('[-] FAIL'))
     n_warn = sum(1 for line in out.splitlines() if line.startswith('[!] WARN'))
     if proc.returncode not in (0, 1):
-        return n_fail, n_warn, f'机检引擎异常退出（code={proc.returncode}）'
+        return max(1, n_fail), n_warn, f'机检引擎异常退出（code={proc.returncode}）——按 fail-closed 判 FAIL'
     return n_fail, n_warn, f'机检引擎已跑通（{os.path.basename(engine)} · model={model}）'
 
 

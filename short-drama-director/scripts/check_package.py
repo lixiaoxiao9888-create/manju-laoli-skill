@@ -121,8 +121,8 @@ import py_compile
 import subprocess
 import warnings
 
-VERSION = "7.5.0-SLIM"
-EXPECTED_REFS = 48   # 递归计数（40 份顶层规则库 + style-bible 8 份）。⚠️ 注意：SKILL.md 对外统一声明「49 份规则库」（递归口径）。2026-10-22 新增 blooper-prevention-playbook.md（成片穿帮防治军规）后由 50 升至 51；2026-10-24 新增 crowd-behavior-direction.md 升到 52；2026-11-03 P13 剥离 H3 支线（h3-adapter.md 独立成包）回落至 51。
+VERSION = "8.2.0-SLIM"
+EXPECTED_REFS = 53   # 递归计数（40 份顶层规则库 + style-bible 8 份）。⚠️ 注意：SKILL.md 对外统一声明「49 份规则库」（递归口径）。2026-10-22 新增 blooper-prevention-playbook.md（成片穿帮防治军规）后由 50 升至 51；2026-10-24 新增 crowd-behavior-direction.md 升到 52；2026-11-03 P13 剥离 H3 支线（h3-adapter.md 独立成包）回落至 51。
 SUB_SKILLS = [
     "sd-decision-engine", "sd-recon-engine", "sd-script-engine",
     "sd-asset-engine", "sd-storyboard-engine", "sd-combat-engine", "sd-xuanhuan-engine",
@@ -372,8 +372,8 @@ chk = read(chk_path)
 check("⑥ 场景拼接图产物已废止（2026-10-11 用户裁定 · 职能并入母版）",
       "拼接图" not in asl)
 check("⑥ 旧口径「关键区域细节三联」已清零", "细节三联" not in asl)
-check("⑥ 场景双图铁律（母版 → 九宫格 · 按出图顺序）",
-      "场景双图" in chk and "场景母版" in chk and "九宫格" in chk)
+check("⑥ 场景双图铁律（母版 → 五宫格 · 按出图顺序）",
+      "场景双图" in chk and "场景母版" in chk and "五宫格" in chk)
 
 # ⑰ 规则自洽门：被废止句式只允许出现在警示语境（规则文档自己过自己的禁令）
 DEAD_PATTERNS = (
@@ -558,8 +558,8 @@ check("㉓ 故事板图含 CLEAN_GRID 干净版 + 出口帧=下段入口帧 + �
       "CLEAN_GRID" in sbs and "TECHNICAL_ANNOTATED" in sbs
       and ("出口帧 = 下段入口帧" in sbs or "出口】面板 = 下段" in sbs or "出口帧" in sbs)
       and "面板边界" in sbs)
-check("㉓ 故事板图声明与九宫格场景图/HTML 看板/15 格 PREVIS 四者互不替代",
-      "九宫格场景图" in sbs and "storyboard-board-lite" in sbs)
+check("㉓ 故事板图声明与五宫格场景图/HTML 看板/15 格 PREVIS 四者互不替代",
+      "五宫格场景图" in sbs and "storyboard-board-lite" in sbs)
 check("㉓ sd-storyboard-engine SKILL 挂线故事板图（章节 + 规则库索引 + 契约）",
       bool(sbe) and "storyboard-sheet-template.md" in read(os.path.join(sbe, "SKILL.md"))
       and "故事板图" in read(os.path.join(sbe, "SKILL.md")))
@@ -688,22 +688,22 @@ _grid = read(_grid_p)
 _port = read(_port_p)
 _prop = read(_prop_p)
 
-check("㉚ 九宫格模板含 8 个结构化字段（内容分配/锁定模式/摄影机矩阵/摄影机参数/光照曝光/标注要求/画面纯净/风格分支）",
-      all(k in _grid for k in ("【九宫格内容分配】", "【参考场景锁定模式】", "【九宫格摄影机矩阵】",
+check("㉚ 五宫格模板含 8 个结构化字段（内容分配/锁定模式/摄影机矩阵/摄影机参数/光照曝光/标注要求/画面纯净/风格分支）",
+      all(k in _grid for k in ("【五宫格内容分配】", "【参考场景锁定模式】", "【五宫格摄影机矩阵】",
                                "【摄影机参数】", "【光照与曝光控制】", "【画面标注要求】",
                                "【画面纯净要求】", "【风格分支】")))
-check("㉚ 九宫格模板声明「按空间类型选表」+ 三张替代表 + 「禁止硬凑」",
+check("㉚ 五宫格模板声明「按空间类型选表」+ 三张替代表 + 「禁止硬凑」",
       "空间类型" in _grid and "表 ①" in _grid and "表 ②" in _grid and "表 ③" in _grid
       and "禁止硬凑" in _grid)
-check("㉚ 九宫格模板三张空间类型表齐备（室外独立建筑 / 室内半封闭 / 自然场地·街巷）",
+check("㉚ 五宫格模板三张空间类型表齐备（室外独立建筑 / 室内半封闭 / 自然场地·街巷）",
       "室外独立建筑" in _grid and "室内 / 半封闭空间" in _grid and "自然场地 / 街巷" in _grid)
-check("㉚ 九宫格模板含标注降级条款（降级 + 编号 + 对照表 + 禁裸格）",
+check("㉚ 五宫格模板含标注降级条款（降级 + 编号 + 对照表 + 禁裸格）",
       "降级" in _grid and "编号" in _grid and "对照表" in _grid and "裸格" in _grid)
-check("㉚ 九宫格模板含槽位定位句（1 张图 = 9 个视角 = 1 个素材槽）",
-      "素材槽" in _grid and "9 个视角" in _grid)
-check("㉚ 九宫格模板含模式B 锁定档拆分（允许切换子区域机位 与 仅允许摄影机移动 并存）",
+check("㉚ 五宫格模板含槽位定位句（1 张图 = 5 个核心视角 = 只占 1 个素材槽）",
+      "素材槽" in _grid and "5 个核心视角" in _grid)
+check("㉚ 五宫格模板含模式B 锁定档拆分（允许切换子区域机位 与 仅允许摄影机移动 并存）",
       "允许按子区域切换机位" in _grid and "仅允许摄影机移动" in _grid)
-check("㉚ 九宫格模板已与总控 asset-spatial-ledger §四 双向接线（母版 / 站位版 / 出图顺序）",
+check("㉚ 五宫格模板已与总控 asset-spatial-ledger §四 双向接线（母版 / 站位版 / 出图顺序）",
       "asset-spatial-ledger.md" in _grid and "母版" in _grid and "站位版" in _grid and "出图顺序" in _grid)
 
 check("㉚ 立绘模板含 4 View + 五官 + Voice Description 两档（完整版不进图 / 速览标签入图）",
@@ -715,7 +715,7 @@ check("㉚ 道具模板含「纯道具 + 禁止出现手/人物剪影」硬条",
       "纯道具" in _prop and "手持" in _prop and "剪影" in _prop and "禁止" in _prop)
 check("㉚ 强制读取清单 P2 行：三份出图模板由「按需」改「必读」+ 点名九宫格 8 字段硬产出",
       "必读 `sd-asset-engine/references/scene-grid-template.md`" in skill
-      and "九宫格提示词须含 8 字段" in skill
+      and "五宫格提示词须含 8 字段" in skill
       and "按需 `sd-asset-engine/references/scene-grid-template.md`" not in skill)
 
 # ㉛ 机检 C 码一致性：validate_prompt.py 实现的 C 系码 ⊆ 机检手册登记的 C 系码
@@ -1096,7 +1096,7 @@ check("㊱ 去遗留后零断链（总控/子技能两侧入链点均已改指�
       "残留: " + "; ".join(_dangling))
 check("㊱ 计数口径同步（SKILL 声明 == EXPECTED_REFS · 元规则四）",
       "45 份" not in skill and "36 份" not in skill and "37 份" not in skill
-      and "38 份" not in skill and f"{EXPECTED_REFS} 份规则库" in skill and EXPECTED_REFS == 48)
+      and "38 份" not in skill and f"{EXPECTED_REFS} 份规则库" in skill and EXPECTED_REFS == 53)
 check("㊲ M1 出图提示词配套纪律（asset-delivery-modes §4.4 · 2026-10-09 用户实测退回）",
       "出图提示词配套纪律" in _ade and "全套 P2.5 出图提示词" in _ade
       and "character-portrait-templates.md" in _ade and "scene-grid-template.md" in _ade
@@ -1263,7 +1263,7 @@ check("㊸ 互锁⑥：手册 C6/C17/C18 正文行同步挂上 b/d/g~l 子码（
 #   ③ 段8/段9：约 290 字符固定税、实测没大用 → 未选导演卡时默认不写，美学 ≤15 字并入【画幅风格】
 section("[E*17] 出稿口径实测修订域（2026-10-12 用户实测 · 三改五互锁）")
 
-_main_skill = read(os.path.join(BASE, "SKILL.md"))
+_main_skill = skill
 _feed_skill = read(os.path.join(PKG, "sd-feed-engine", "SKILL.md"))
 check("㊽ 互锁①：运镜规则已分文戏/打戏档（2026-10-14 废除15s运镜≤2死名额 · 动静随剧情自然发生）",
       "★ 运镜分档（2026-10-12 用户实测修订 · 文戏 / 打戏分治" in _cam_sys
@@ -1362,7 +1362,7 @@ check("㊾ 互锁⑧：正文纯净推广到模板骨架（人物骨架主动写
 #   四处缺一即本节 FAIL（防「文档写了、执行时不生效」）。
 section("[E*19] 段缝人物进出场域（新增 C17e · 2026-10-13 用户实测）")
 _e19_ss = read(os.path.join(PKG, "short-drama-director", "references", "segment-splicing.md"))
-_e19_ms = read(os.path.join(PKG, "short-drama-director", "SKILL.md"))
+_e19_ms = skill
 _e19_vp = read(os.path.join(PKG, "short-drama-director", "scripts", "validate_prompt.py"))
 _e19_cl = read(os.path.join(PKG, "sd-qc-engine", "references", "continuity-ledger.md"))
 _e19_mcm = read(os.path.join(PKG, "sd-qc-engine", "references", "machine-check-manual.md"))
@@ -1530,7 +1530,7 @@ check("ㆂ 互锁⑦：camera-transitions-6types.md 指认本库为「扩写 + �
 check("ㆂ 互锁⑧：README 文件清单登记 creative-transition-library 行 + D 锁口径四选一",
       "| 衔接 | `creative-transition-library` |" in read(os.path.join(BASE, "README.md")))
 check("ㆂ 互锁⑨：计数口径同步（SKILL 声明 == EXPECTED_REFS · 元规则四）——本库入包后 SKILL 声明须同步",
-      f"{EXPECTED_REFS} 份规则库" in skill and EXPECTED_REFS == 48
+      f"{EXPECTED_REFS} 份规则库" in skill and EXPECTED_REFS == 53
       and "45 份" not in skill and "37 份" not in skill and "38 份" not in skill)
 check("ㆂ 互锁⑩：必查清单登记第 33 项「技巧型转场（D 锁 ④）」（按需 · 非每段必用）",
       "| 33 | **技巧型转场（D 锁 ④）**" in read(os.path.join(refs_dir, "prompt-feeding-checklist.md")))
@@ -1668,8 +1668,8 @@ check("㊶ 道具四格 互锁⑤：交付配套纪律 §4.4 道具行含「全�
 # 2026-10-12 第七轮（同批）：场景九宫格补**显式**格数声明 —— 与角色板 / 道具同源收口
 #   原有「3×3 九宫格」是名称隐含 9 格，非显式总数声明；实测同源风险（模型按加法出第 10 格 / 拆散图）
 _e12_sg = read(os.path.join(PKG, "sd-asset-engine", "references", "scene-grid-template.md"))
-check("㊶ 九宫格格数 互锁：场景模板含「全图共 9 格，不多不少」显式声明 +「不得出现第 10 格」纪律条",
-      "全图共 9 格，不多不少" in _e12_sg and "不得出现第 10 格" in _e12_sg)
+check("㊶ 五宫格格数 互锁：场景模板含「全图共 5 格，不多不少」显式声明 +「不得出现第 6 格」纪律条",
+      "全图共 5 格，不多不少" in _e12_sg and "不得出现第 6 格" in _e12_sg)
 
 # ------------------------------------------------- [E*15] 运行态微核域 → 【2026-10-13 整环移除】
 # 用户裁定「彻底删掉微核」。原六互锁（㊹①②③④⑤⑥b）随之下线，改为「移除固化域」。
@@ -1884,7 +1884,7 @@ _sbip = read(os.path.join(PKG, "sd-script-engine", "references", "story-bible-an
 _scriptskill = read(os.path.join(PKG, "sd-script-engine", "SKILL.md"))
 _camsys2 = read(os.path.join(PKG, "sd-storyboard-engine", "references", "short-drama-camera-system.md"))
 _sbstory2 = read(os.path.join(PKG, "sd-storyboard-engine", "SKILL.md"))
-_master = read(os.path.join(BASE, "SKILL.md"))
+_master = skill
 check("◉1：外部剧本润色层已落地（权威文件 + 边界三禁 + 六件产出 + 回签流程 + 入口三处）",
       "EXTERNAL_SCRIPT_POLISH" in _polish
       and "润色只补「表演层 + 调度层」，严禁触碰「台词层 / 事件层 / 人物层」" in _polish
@@ -2501,7 +2501,7 @@ check("◔9 参数库补录算式自洽：其余 N == 选卡表卡数 − 已参
 
 # ---- ④ 跨文件数字唯一 + 红线 2 交叉引用 ----
 check("◔10 全包不得残留「72 组」旧口径（选卡表已 74 组）",
-      "72 组" not in _pro + _mtx + _par + read(os.path.join(BASE, "SKILL.md"))
+      "72 组" not in _pro + _mtx + _par + skill
       and "72组" not in read(os.path.join(_sb, "director-style-catalog-74.md")),
       "仍有文件写 72 组")
 check("◔11 model-adapters 保留《素材接线单》红线 2「图号双向一致」的就地交叉引用",
@@ -2562,7 +2562,7 @@ _gc_feed = read(os.path.join(sub_skill_path("sd-feed-engine") or "", "scripts", 
 _gates_doc = read(os.path.join(sub_skill_path("sd-feed-engine") or "", "references", "feed-mode-and-gates.md"))
 _asset_doc = read(os.path.join(sub_skill_path("sd-feed-engine") or "", "references", "asset-mapping-and-rules.md"))
 _seg_doc = read(os.path.join(BASE, "references", "segment-splicing.md"))
-_skill_doc = read(os.path.join(BASE, "SKILL.md"))
+_skill_doc = skill
 
 check("◑18 闸门5 已按模型分档：IMG_LIMIT_BY_MODEL + img_gate_check 纯函数在案，且无写死 `if len(figs) > 9:`",
       ("IMG_LIMIT_BY_MODEL" in _gc_feed)

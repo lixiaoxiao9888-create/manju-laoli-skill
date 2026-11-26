@@ -368,13 +368,51 @@ def parse_md(md_text: str) -> dict:
     def fence_of(body):
         fs = FENCE_RE.findall(body)
         return max(fs, key=len).strip() if fs else ""
-    for seg in data["segments"]:
-        token = seg["name"].split()[0]                 # 段1 / U01 / 第1段
+    def _body_of(chunk):
+        return fence_of("\n".join(chunk.splitlines()[1:]))
+
+    def _locate(name):
+        """按标题把段落回它的 ```text 围栏原文。
+
+        ⚠️ 2026-11-25 修（看板整段串味）：原实现用 `name.split()[0]` 当 token，
+        形如 `【投喂单元 2/5 · 段2】` 的标题 split 出来是 `【投喂单元`——
+        5 段共用一个前缀 → **每段都命中第 1 段**，看板 5 段全部显示段1 的内容，
+        镜数 35（7×5）、总时长 130（26×5）全是重复计数，而 CLI 只报数字不报错。
+        改为三级匹配：① 标题完全相等 → ② 段号 token（段N/第N段/UN）唯一命中 →
+        ③ 首 token 前缀兜底。命中不唯一即视为定位失败，交给下方 WARN 报警。
+        """
+        # ① 标题完全相等
         for chunk in parts[1:]:
-            first = chunk.splitlines()[0].strip()
-            if first == seg["name"] or first.startswith(token):
-                seg["raw"] = fence_of("\n".join(chunk.splitlines()[1:]))
-                break
+            if chunk.splitlines()[0].strip() == name.strip():
+                return _body_of(chunk)
+        # ② 段号 token 唯一命中
+        m = re.search(r"段\s*(\d+)|第\s*(\d+)\s*段|\bU0*(\d+)\b", name)
+        for tok in ([g for g in (m.groups() if m else ()) if g] or []):
+            pat = re.compile(r"(?:段\s*%s(?!\d)|第\s*%s\s*段|U0*%s(?!\d))" % (tok, tok, tok))
+            hits = [c for c in parts[1:] if pat.search(c.splitlines()[0].strip())]
+            if len(hits) == 1:
+                return _body_of(hits[0])
+        # ③ 首 token 前缀兜底（仅在唯一命中时采用，避免再次整段串味）
+        token = name.split()[0] if name.split() else name
+        hits = [c for c in parts[1:] if c.splitlines()[0].strip().startswith(token)]
+        if len(hits) == 1:
+            return _body_of(hits[0])
+        return ""
+
+    for seg in data["segments"]:
+        seg["raw"] = _locate(seg["name"])
+    # 串味安全网：两段拿到同一份围栏原文 = 定位失败（正常不可能），必须报
+    _seen_raw = {}
+    for seg in data["segments"]:
+        _sig = (seg["raw"] or "").strip()
+        if not _sig:
+            continue
+        if _sig in _seen_raw:
+            data["warnings"].append({"seg": seg["no"],
+                "msg": f"{seg['name']}：与 {_seen_raw[_sig]} 拿到同一份投喂原文——"
+                       f"段标题定位失败，看板内容不可信，请检查段标题是否重复或前缀同形"})
+        else:
+            _seen_raw[_sig] = seg["name"]
     for ap in data["asset_prompts"]:
         for chunk in parts[1:]:
             first = chunk.splitlines()[0].strip()
@@ -444,13 +482,13 @@ def parse_md(md_text: str) -> dict:
             _missing_fp = (
                 len(_bd) < 150
                 or "同板四视图" in _bd or "T-pose" in _bd or "九机位小图" in _bd or "详见 P2" in _bd or "不另写文字描述" in _bd
-                or ("CHR" in _cd and not ("无脸全身" in _bd or "featureless face" in _bd))
-                or ("SCN" in _cd and not ("九宫格" in _bd or "摄影机矩阵" in _bd))
+                or ("CHR" in _cd and not ("无脸全身" in _bd or "featureless face" in _bd or "八格拼版" in _bd))
+                or ("SCN" in _cd and not ("五宫格" in _bd or "九宫格" in _bd or "摄影机矩阵" in _bd))
             )
             if _missing_fp:
                 data["warnings"].append({
                     "seg": 0, "lvl": "WARN", "code": "K-lite-4b",
-                    "msg": f"K-lite-4b 资产「{_it.get('code') or _it.get('name', '')}」出图提示词疑似简笔空壳（仅 {len(_bd)} 字或未落权威模板指纹）——须按 sd-asset-engine 权威模板写满（角色四格无脸+声纹锚 / 场景母版+九宫格8字段 / 道具4格）"
+                    "msg": f"K-lite-4b 资产「{_it.get('code') or _it.get('name', '')}」出图提示词疑似简笔空壳（仅 {len(_bd)} 字或未落权威模板指纹）——须按 sd-asset-engine 权威模板写满（角色四格无脸+声纹锚 / 场景母版+五宫格8字段 / 道具4格）"
                 })
     if data["meta"]["画幅"] == "未锁定":
         data["warnings"].append({"seg": 0, "msg": "未声明【画幅】——B 锁未锁定（用户未指定 ≠ 默认 9:16）"})
@@ -467,7 +505,7 @@ def parse_md(md_text: str) -> dict:
     # 资产引用段：用编码在段原文里回查（如 @CHR-沈砚 出现在哪些段）
     for a in data["assets"]:
         code = a.get("code", "")
-        a["refs"] = [seg["no"] for seg in data["segments"] if code and code in seg["raw"]]
+        a["refs"] = refs_of(code, data["segments"])
     return data
 
 
@@ -493,7 +531,10 @@ def build_html(d: dict) -> str:
         "assets": d["assets"], "aprompts": d["asset_prompts"], "publish": d["publish"],
         "segments": d["segments"], "warnings": d["warnings"], "extras": d["extras"],
     }
-    return TEMPLATE.replace("@@DATA@@", json.dumps(payload, ensure_ascii=False)) \
+    safe_json = (json.dumps(payload, ensure_ascii=False)
+                 .replace("<", "\\u003c").replace(">", "\\u003e")
+                 .replace("&", "\\u0026").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
+    return TEMPLATE.replace("@@DATA@@", safe_json) \
                    .replace("@@TITLE@@", html.escape(d["title"], quote=True))
 
 
@@ -909,8 +950,134 @@ def self_test():
     assert ",1000" not in _srt3, f"SRT 毫秒不得进位成非法 ,1000：{_srt3!r}"
     assert "00:00:05,000" in _srt3, f"4.9995s 应结转为 00:00:05,000：{_srt3!r}"
     assert "00:00:00,000 --> 00:00:05,000" in _srt3, f"进位后起止应连续：{_srt3!r}"
+
+    # ---- 2026-11-25 回归锁：多段同前缀标题不得串味 ----
+    #   原 `name.split()[0]` 取 `【投喂单元` 当 token → 5 段全落到段1，
+    #   镜数变 7×5=35、总时长变 26×5=130，且 CLI 零告警。
+    _unit = ("## 【投喂单元 %d/3 · 段%d】\n```text\n【画幅风格】16:9 横屏\n"
+             "【时间轴分镜】\n00:00-00:0%d [镜头1] 段%d首镜。声音：无。台词：无。\n```\n")
+    _d4 = parse_md("# 多段\n" + "".join(_unit % (i, i, i, i) for i in (1, 2, 3)))
+    _cnt = [len(s["shots"]) for s in _d4["segments"]]
+    assert _cnt == [1, 1, 1], f"每段应各解析 1 镜，实得 {_cnt}（串味即本用例拦截目标）"
+    assert len({s["raw"] for s in _d4["segments"]}) == 3, "三段应各自拿到不同投喂原文（禁共用段1）"
+    assert not any("同一份投喂原文" in w["msg"] for w in _d4["warnings"]), \
+        f"正常三段不应报串味告警：{[w['msg'] for w in _d4['warnings']]}"
+
+    # ---- 2026-11-25 回归锁：资产另册挂载（看板「资产 0」事故）----
+    #   M1 形态资产按册另交，主档只有「资产另册：xx.md」一行声明；
+    #   原实现拿这行**只用来抑制 WARN**，不读册 → C 锁选离线看板时 ④⑤ 两栏全空。
+    _side = (
+        "## 一、素材清单状态汇总表\n"
+        "| 序号 | 图号 | 素材类型 | 内容 | 状态 | 备注 |\n"
+        "|---|---|---|---|---|---|\n"
+        "| 1 | 图1 | 场景母版 | 礼堂（内·日） | ⏳待生成 | 基准件 |\n"
+        "| 2 | 图2 | 角色四格纯图板 | 陈墨（男主） | ⏳待生成 | S 级 |\n"
+        "\n### 图1 · 礼堂（场景母版）\n\n```text\n生成一张 16:9 无人空镜场景母版。\n```\n"
+        "\n## 五、群像资产卡 GRP-1（图3 · 人工自检）\n\n"
+        "```text\n【群像资产 GRP-1】七字段：制式/年龄/体态/辨识度/密度/场景/状态。\n```\n"
+        "```text\n生成一张 16:9 B 级群像参考图，全图共 3 格。\n```\n"
+    )
+    _sa, _sp = load_sidecar_assets(_side)
+    assert [x["code"] for x in _sa] == ["图1", "图2"], \
+        f"汇总表应解出 图1/图2，实得 {[x['code'] for x in _sa]}"
+    assert [x["code"] for x in _sp] == ["图1", "图3"], \
+        f"图号小节应解出 图1/图3，实得 {[x['code'] for x in _sp]}"
+    assert "生成" in _sp[1]["raw"] and "七字段" not in _sp[1]["raw"], \
+        "群像卡必须取出图围栏，不得取七字段围栏"
+    assert not _sp[1]["name"].startswith("五"), \
+        f"图号在括号里的标题不得把「五、」序号当资产名：{_sp[1]['name']!r}"
+    assert _sidecar_decl("> 资产另册：02_资产交付_EP001.md（角色/场景/道具）") == "02_资产交付_EP001.md", \
+        "「资产另册：」声明路径解析失败"
     print("[+] build_board_lite self-test PASSED")
     return 0
+
+
+def refs_of(code, segments):
+    """资产编码 → 引用段号。
+
+    ⚠️ 2026-11-25 修：原为 `code in seg["raw"]` 子串匹配，`图1` 会命中 `图10`~`图19`、
+    `图2` 会命中 `图20` —— 资产一多，④ 资产总表的「引用段」列就整片虚高（实测图1 被判到全部 5 段）。
+    改为「编码 + 其后不得紧跟数字」的边界匹配。
+    """
+    if not code:
+        return []
+    pat = re.compile(re.escape(code) + r"(?![0-9])")
+    return [seg["no"] for seg in segments if pat.search(seg.get("raw") or "")]
+
+
+def _sidecar_decl(md_text: str):
+    """读主档里的「资产另册：xxx.md」声明，返回声明路径（原样字符串）。"""
+    m = re.search(r"资产另册\s*[:：]\s*([^\s|，,（()）)」]+?\.md)", md_text)
+    return m.group(1) if m else ""
+
+
+def load_sidecar_assets(side_text: str):
+    """从「资产另册」文档读出资产总表与出图提示词。
+
+    ⚠️ 2026-11-25 新增（看板资产 0 事故）：M1 形态下资产按册另交（`资产另册：02_资产交付_xx.md`），
+    主档只留摘要 —— 结果 C 锁选「离线看板」时，看板 ④ 资产总表 / ⑤ 出图提示词**整块是空的**，
+    资产被交付了却不在交付物里。原实现只把「资产另册」用来**抑制 WARN**（`_asset_by_book`），
+    识别到声明就闭嘴，却不把册里的东西读进来 —— 等于「承认资产存在，但不给你看」。
+    本函数按声明把另册读回：汇总表出 ④，`### 图N · 名称（类型）` 小节的围栏出 ⑤。
+    """
+    assets, prompts = [], []
+    # ④ 资产总表：找表头含「图号」的表格，逐行取 图号/类型/内容/状态/备注
+    lines = side_text.splitlines()
+    hdr_i = None
+    for i, l in enumerate(lines):
+        if l.strip().startswith("|") and "图号" in l:
+            hdr_i = i
+            break
+    if hdr_i is not None:
+        cells_h = [c.strip() for c in lines[hdr_i].strip().strip("|").split("|")]
+        ci = {k: (cells_h.index(k) if k in cells_h else -1) for k in ("图号", "素材类型", "内容", "状态", "备注")}
+        for l in lines[hdr_i + 1:]:
+            s = l.strip()
+            if not s.startswith("|"):
+                break
+            if "---" in s:
+                continue
+            cells = [c.strip() for c in s.strip("|").split("|")]
+            g = lambda k: cells[ci[k]] if ci[k] >= 0 and ci[k] < len(cells) else ""
+            code = g("图号")
+            if not re.fullmatch(r"图\s*\d+", code):
+                continue
+            extra = [x for x in (g("状态"), g("备注")) if x]
+            assets.append({"code": code.replace(" ", ""), "name": g("内容"),
+                           "view": g("素材类型"), "img": code.replace(" ", ""), "extra": extra})
+    # ⑤ 出图提示词：按 `图N` 小节切，取该节最长围栏（群像卡有「七字段 + 出图」两段，长的那个才是提示词）
+    #   兼容两种标题写法：`### 图1 · 第七烙纹礼堂（场景母版）`（图号在头）
+    #                     `## 五、群像资产卡 GRP-1 执法队员（图15 · …）`（图号在括号里）
+    heads = list(re.finditer(r"^(#{2,3})\s+(.+)$", side_text, re.M))
+    for k, hm in enumerate(heads):
+        head = hm.group(2).strip()
+        m1 = re.match(r"^(?:[一二三四五六七八九十]+、)?\s*图\s*(\d+)\s*[·、.．\-]?\s*(.*)$", head)
+        m2 = re.search(r"[（(]\s*图\s*(\d+)", head)
+        if m1:
+            code, rest = "图" + m1.group(1), m1.group(2)
+        elif m2:
+            # 图号在括号里（群像卡式标题）：去掉「五、」序号 + 去掉只含图号的括号，别把序号当资产名
+            code = "图" + m2.group(1)
+            rest = re.sub(r"^[一二三四五六七八九十]+、\s*", "", head)
+            rest = re.sub(r"[（(]\s*图\s*\d+[^）)]*[）)]", "", rest).strip(" ·、")
+        else:
+            continue
+        end = heads[k + 1].start() if k + 1 < len(heads) else len(side_text)
+        body = side_text[hm.start():end]
+        fences = FENCE_RE.findall(body)
+        # 出图提示词的判形标志是「生成一张…」；群像卡的「七字段」围栏不带这句，
+        # 只按长度取会偶发取错块，故先按标志词筛，筛不到再退回最长。
+        _gen = [f for f in fences if "生成" in f]
+        raw = (max(_gen, key=len) if _gen else (max(fences, key=len) if fences else "")).strip()
+        desc = ""
+        dm = re.search(r"[（(]([^）)]*)[）)]", rest)
+        nm = rest
+        if dm:
+            desc = dm.group(1)
+            nm = (rest[:dm.start()] + rest[dm.end():]).strip(" ·、")
+        nm = nm.strip(" ·、")
+        prompts.append({"code": code, "name": nm or code, "desc": desc, "raw": raw})
+    return assets, prompts
 
 
 def main():
@@ -924,6 +1091,8 @@ def main():
     #   需要能承接外部传入，否则永远报「A 锁未锁定」，与已锁定的事实矛盾。
     ap.add_argument("--model", default=None, help="A 锁模型版本（2.5 / 2.0），稿内未写时用于回显")
     ap.add_argument("--aspect", default=None, help="B 锁画幅（9:16 / 16:9 / 21:9），稿内未写时用于回显")
+    ap.add_argument("--assets-from", default=None,
+                    help="资产另册路径（主档未写「资产另册：」或路径不可解析时显式指定）")
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
     if a.self_test:
@@ -936,6 +1105,37 @@ def main():
         print(f"[X] 源文件不存在：{src}")
         sys.exit(1)
     data = parse_md(src.read_text(encoding="utf-8"))
+    # 资产另册挂载（M1）：声明了另册就把册读进来，否则看板 ④⑤ 两栏是空的
+    side_rel = a.assets_from or _sidecar_decl(src.read_text(encoding="utf-8"))
+    if side_rel:
+        base_real = src.parent.resolve()
+        cand_path = Path(side_rel)
+        if cand_path.is_absolute():
+            side = None
+            data["warnings"].append({"seg": 0,
+                "msg": f"资产另册路径越界已拦截（禁止绝对路径：{side_rel}）"})
+        else:
+            resolved = (base_real / cand_path).resolve()
+            try:
+                resolved.relative_to(base_real)
+                side = resolved
+            except ValueError:
+                side = None
+                data["warnings"].append({"seg": 0,
+                    "msg": f"资产另册路径越界已拦截（禁止跳出项目目录：{side_rel}）"})
+        if side is not None and side.exists():
+            s_assets, s_prompts = load_sidecar_assets(side.read_text(encoding="utf-8"))
+            have = {x.get("code") for x in data["assets"]}
+            data["assets"] += [x for x in s_assets if x["code"] not in have]
+            have_p = {x.get("code") for x in data["asset_prompts"]}
+            data["asset_prompts"] += [x for x in s_prompts if x["code"] not in have_p]
+            for x in data["assets"]:                      # 引用段回查按合并后的段正文重算
+                code = x.get("code", "")
+                x["refs"] = refs_of(code, data["segments"])
+            print(f"[i] 资产另册已挂载：{side.name} → 资产 {len(s_assets)} · 出图提示词 {len(s_prompts)}")
+        else:
+            data["warnings"].append({"seg": 0,
+                "msg": f"主档声明了「资产另册：{side_rel}」，但该文件不存在——看板 ④⑤ 两栏会是空的"})
     # 外部传入的 A/B 锁参数只在稿内未声明时兜底（稿内声明优先，绝不覆盖稿内事实）
     if a.model and data["meta"]["模型版本"] == "未锁定":
         data["meta"]["模型版本"] = str(a.model)

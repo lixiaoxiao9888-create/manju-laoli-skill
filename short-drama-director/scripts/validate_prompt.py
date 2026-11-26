@@ -294,7 +294,7 @@ def _frac_to_sec(frac):
     `5`→0.5 · `50`→0.5 · `05`→0.05 —— **按位数换算，不写死 ÷100**。
     原实现两处（`parse_time_ranges` 与 `_combat_ranges`）均写 `fr / 100.0`，
     把 1 位小数 `.5` 算成 0.05：`00:10.5` → 10.05s、`00:03.5` → 3.05s。
-    后果：镜长区间最多偏 0.45s（C27 / 闸门2「字数÷6 对镜长」边缘判定可能翻转），
+    后果：镜长区间最多偏 0.45s（C27 / 闸门2「字数÷7 对镜长」边缘判定可能翻转），
     且告警里印出的绝对时间点本身是错的（写「自 12.05s 起」实际是 12.5s）。
     本包真实产物普遍使用半秒粒度，故此口径必须与 `sd_core.frac_to_sec` 保持一致。
     """
@@ -481,7 +481,7 @@ CAM_FAMILIES = {
     # ★摇/移族同义词补全（2026-10-12 修复）：官方示例 历史示例稿 镜行头写
     #   「快速平摇」「平摇」，原词表只有「摇镜」→ C18g 连报 2 条"镜行未标注运镜"假告警。
     #   这类"方向+摇/移"复合词是中文分镜稿的高频写法，缺一个就误报一条。
-    "平摇": "摇", "横摇": "摇", "直摇": "摇", "摇摄": "摇", "纵摇": "俯仰", "跟摇": "跟",
+    "平摇": "摇", "横摇|急摇|仰摇|俯摇|上摇|下摇": "摇", "直摇": "摇", "摇摄": "摇", "纵摇": "俯仰", "跟摇": "跟",
     "侧移": "横移", "斜移": "横移", "前移": "推", "后移": "拉", "推移": "推", "拉升": "拉",
     "跟随": "跟", "跟移": "跟",
     "跟拍": "跟", "跟移": "跟", "摇镜": "摇", "俯仰": "俯仰", "上摇": "俯仰", "下摇": "俯仰",
@@ -1388,16 +1388,41 @@ def validate(text, model="2.5", mode="new", combat="auto", c23="auto",
         _d = round(max((e for _s, e, _l in _tr_seg), default=0), 2)
         if _d > LIMITS[model] + 0.01:
             issues.append(f"C1 [{_sn}] 段时长 {_d}s 超 {model} 上限 {LIMITS[model]}s")
+        if model == "2.5":
+            _slowmo_shots = []
+            for _s, _e, _ln in _tr_seg:
+                _line_txt = text.splitlines()[_sb + _ln - 2] if (_sb + _ln - 2) < len(text.splitlines()) else ""
+                if re.search(r"慢动作|升格", _line_txt):
+                    _slowmo_shots.append((_s, _e))
+            if len(_slowmo_shots) > 1 or any(_s < 20.0 for _s, _ in _slowmo_shots):
+                warns.append(f"C1b-SLOWMO [{_sn}] 2.5 前20s出现慢动作或全段慢动作超过1处（实测前段给慢动作会导致7~8秒拖沓，建议前20s 1:1 实速、全段仅留1处2~3s升格）")
+        if model == "2.0" and "9:16" in _st and 13.0 <= _d <= 16.0:
+            if len(_tr_seg) < 5 or len(_tr_seg) > 7:
+                warns.append(f"C2-PACING20 [{_sn}] 2.0 竖屏15s当前 {len(_tr_seg)} 镜（黄金节奏推荐 6 镜·每镜2~3s错落快切，过少偏慢、过多偏碎）")
+        if _combat_on(_st, combat):
+            _fr_cnt, _fr_dur = 0, 0.0
+            for _s, _e, _ln in _tr_seg:
+                _line_txt = text.splitlines()[_sb + _ln - 2] if (_sb + _ln - 2) < len(text.splitlines()) else ""
+                if re.search(r"持剑|平举|稳固不移|对峙|凝视|不动", _line_txt) and not re.search(r"冲|跃|劈|刺|斩|退|闪|滚|踢|砸|挥|扑", _line_txt):
+                    _fr_cnt += 1
+                    _fr_dur += (_e - _s)
+                else:
+                    if _fr_cnt >= 3 and _fr_dur >= 10.0:
+                        warns.append(f"C86-FREEZERUN [{_sn}] 连续 {_fr_cnt} 镜（{_fr_dur:.1f}s）无位移持械对峙，易渲染成10秒定格")
+                    _fr_cnt, _fr_dur = 0, 0.0
+            if _fr_cnt >= 3 and _fr_dur >= 10.0:
+                warns.append(f"C86-FREEZERUN [{_sn}] 连续 {_fr_cnt} 镜（{_fr_dur:.1f}s）无位移持械对峙，易渲染成10秒定格")
         # C1b 分段粒度（2.5 专属）：默认 25~30s 吃满上限，禁碎段
         if model == "2.5":
             # ★P6.3 豁免：衔接段/过渡段/过场段/空镜段——用户明确的「段间过渡」产物，
             #   本来就是几秒的短段（4~8s），拿「25~30s 吃满上限」去卡它等于禁止做过渡。
             #   识别位：段标题与段缝说明区（段首 240 字）。
             _is_link_seg = bool(re.search(r"衔接段|过渡段|过场段|空镜段", _st))
+            _is_open_hook = (_sn == "段1") or bool(re.search(r"开场|钩子|序幕", _st))
             if _d < 12 and not _is_link_seg:
                 warns.append(f"C1b [{_sn}] 段时长 {_d}s < 12s 下限（2.5 建议 25~30s 吃满上限，过短会显著增加段数与段缝；若这是刻意的段间过渡段，请在段标题或段缝说明里写明「衔接段/过渡段」即豁免）")
-            elif 15 < _d < 25 and not _is_link_seg:
-                warns.append(f"C1b [{_sn}] 段时长 {_d}s 落在碎段区（2.5 默认 25~30s；16~24s 既吃不到长镜头红利又比 15s 更碎，除非打戏快节奏/单段信息量小，否则合并到 ≥25s）")
+            elif 15 < _d < 25 and not _is_link_seg and not _is_open_hook:
+                warns.append(f"C1b [{_sn}] 段时长 {_d}s 落在碎段区（2.5 仅开场钩子段允许 15~24s 紧凑快切，其余段落含高潮段均建议 25~30s 吃满上限）")
         _n = len(_tr_seg)
         # C2 镜头数上限 —— 对话段例外（2026-10-13 用户实测反馈）：
         #   旧上限「段长÷3s」是为「长镜头/漫剧美学」设的，**会把正反打彻底锁死**——
@@ -1799,7 +1824,7 @@ def validate(text, model="2.5", mode="new", combat="auto", c23="auto",
             top_dur, top_n = cnt.most_common(1)[0]
             ratio = top_n / len(durs)
             if ratio >= 0.7:
-                warns.append(f"C13 镜长雷同：{top_n}/{len(durs)} 镜均为 {top_dur}s（占比 {ratio:.0%}）——节奏缺乏快慢呼吸；镜长应按台词字数÷语速(3.5~6字/s，判定按最快档6)+情绪节拍倒推，禁机械等分（quality-gate-review P1「时长全篇雷同」反例）")
+                warns.append(f"C13 镜长雷同：{top_n}/{len(durs)} 镜均为 {top_dur}s（占比 {ratio:.0%}）——节奏缺乏快慢呼吸；镜长应按台词字数÷语速(3.5~7字/s，判定按最快档7)+情绪节拍倒推，禁机械等分（quality-gate-review P1「时长全篇雷同」反例）")
 
     # C15 拉伸凑时（法则 17：总时长同样由内容倒推，禁拉伸凑满剧本标注时长）
     lines_all = text.splitlines()
@@ -3517,6 +3542,19 @@ def validate(text, model="2.5", mode="new", combat="auto", c23="auto",
             warns.extend(_st_wrn)
         except Exception as _e:
             warns.append(f"STATE 台账对账异常：{_e}")
+
+    # 实测节奏与防定格三门禁：2.5 慢动作过载 / 2.0 竖屏15s黄金6镜 / C86 连续定格链
+    # V8.2.0-SLIM 实测防字幕与槽位落位校验（C19a / C7-STYLEPOS / C7-PERFPOS）
+    _before_ban = text.split("【强制禁止项】")[0] if "【强制禁止项】" in text else text
+    _early_neg_hits = re.findall(r"无文字水印|无文字|无水印|无字幕|无乱码|针对性禁项[:：]|严禁[^，。；\n]{2,12}", _before_ban)
+    if _early_neg_hits:
+        warns.append(f"C19a 前中段出现禁项/否定词「{'/'.join(dict.fromkeys(_early_neg_hits))}」：所有禁项只允许统一收口在文末【强制禁止项】")
+    if "【STYLE｜" in text and "【时间轴分镜】" in text:
+        if text.index("【STYLE｜") > text.index("【时间轴分镜】"):
+            warns.append("C7-STYLEPOS 【STYLE｜视觉风格】不应放在时间轴/文末，请紧跟在【画幅风格】下方")
+    if "【PERFORMANCE｜" in text and "【时间轴分镜】" in text:
+        if text.index("【PERFORMANCE｜") > text.index("【时间轴分镜】"):
+            warns.append("C7-PERFPOS 【PERFORMANCE｜表演与动作】不应放在时间轴/文末，请紧跟在【核心人物】下方")
 
     return issues, warns, {"duration_s": dur, "shots": len(tr), "chars": len(text)}
 
@@ -5442,7 +5480,7 @@ def finalize_checks(text, issues, warns, *, delivery=None, contract=False,
     # ★审计补丁P1 修：旧版把任何 >1500 字带标题的文档都当「项目交付包」，于是一份**纯投喂稿**
     #   （只有【画幅风格】+镜行，没有 P0B/P1/P2/P3 阶段物料）会被一次误报 9 项契约缺失。
     #   投喂单元只该核 CT5-P4F（七段式）与 CT6-WIR（接线单），不该要求情绪锚点表/人物锚卡/故事板。
-    _stage_markers = re.search(r"情绪锚点表|世界锚卡|人物锚卡|角色四格|九宫格|场面调度|连续性台账|故事板",
+    _stage_markers = re.search(r"情绪锚点表|世界锚卡|人物锚卡|角色四格|八格拼版|五宫格|九宫格|场面调度|连续性台账|故事板",
                                text)
     _feed_units = text.count("【画幅风格】")
     # ★P8 修（2026-10-24 · 网友建议书 P-06 核验属实）：
@@ -5739,7 +5777,7 @@ def finalize_checks(text, issues, warns, *, delivery=None, contract=False,
         warns.append(
             "C41 已废除旧口径残留：" + "；".join(sorted(set(_c41_old))) +
             "——稿内还在引用 V6.x 的**硬性节奏约束**。这类口径已废除：镜长应由"
-            "「台词字数÷语速(3.5~6 字/秒) + 情绪节拍」倒推，机检只管单镜 >6s 的超时线（C10）；"
+            "「台词字数÷语速(3.5~7 字/秒) + 情绪节拍」倒推，机检只管单镜 >6s 的超时线（C10）；"
             "「一组 N 镜」的分组制也不再要求。照抄旧口径的直接后果有两个："
             "① 机械等分镜长 → C13 镜长雷同；② 为凑「一组 3~4 镜」把该分开的回合硬并进一镜 → C27d 站桩式对话。"
             "修法：删掉这两句硬约束，改写成「本段节奏：快切/中速/长镜」的意图声明，"
@@ -5782,13 +5820,13 @@ def finalize_checks(text, issues, warns, *, delivery=None, contract=False,
     if _is_feed_unit and not _asset_elsewhere:
         _has_ref = bool(re.search(r"@//chr/|@//scn/|@//prp/|@CHR-|@SCN-|@PRP-", text)) or bool(
             re.search(r"【(?:核心人物|场景资产)】[^\n]*（图\s*\d+", text))
-        _has_body = bool(re.search(r"全图共\s*4\s*格|【九宫格内容分配】|道具设定图", text))
+        _has_body = bool(re.search(r"全图共\s*4\s*格|八格拼版|【五宫格内容分配】|【九宫格内容分配】|道具设定图", text))
         if _has_ref and not _has_body:
             warns.append(
                 "C34 引用资产但未附资产段：本稿引用了资产图号"
                 "（@//chr/ / @//scn/ / @//prp/ 挂载形态，或「@人名（图N）」「场景名（图N / 图M）」纯图号形态，"
                 "含图号速查与素材接线单），但正文里没有任何资产提示词段"
-                "（无「全图共 4 格」/「【九宫格内容分配】」/「道具设定图」）。"
+                "（无「全图共 4 格」/「【五宫格内容分配】」/「道具设定图」）。"
                 "按 SKILL「md 正文只放两样：资产提示词 + 分镜提示词」，资产应同稿交付；"
                 "若确已拆册，请在本稿写明「资产另册：{文件名}」；"
                 "否则先回 P2 补齐，再报 P4 完成（自查：check_asset_blocks.py）")

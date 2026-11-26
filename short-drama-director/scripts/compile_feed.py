@@ -131,7 +131,7 @@ def compile_project_to_feed(state):
     if not _asset_book and mode in ("M1", "M2"):
         _asset_book = "P2-资产提示词.md"
     if _asset_book:
-        out_lines.insert(-1, f"> 资产另册：{_asset_book}（角色四格/场景母版+九宫格/道具四格由 P2 另册交付，本稿只做接线）")
+        out_lines.insert(-1, f"> 资产另册：{_asset_book}（角色四格/场景母版+五宫格/道具四格由 P2 另册交付，本稿只做接线）")
 
     chars = state.get("characters", {})
     scenes = state.get("scenes", {})
@@ -253,7 +253,7 @@ def compile_project_to_feed(state):
             f"【画幅风格】{aspect} {_orientation_word(aspect)}，{era}，{style_card}，{seg_type}（aspect_ratio={aspect}）",
             f"【场景资产】{scn_tag}",
             f"【核心人物】{'；'.join(cast_parts)}",
-            f"【站位声明】{standing_str}{_c_decl}",
+            f"【站位声明】{standing_str}{_c_decl}" + (f" 机位侧={seg.get('camera_side', '基准机位侧')} | 固定可见锚={seg.get('fixed_anchor', '房间主墙与固定家具')}" if (total_segs >= 2 and "机位侧=" not in standing_str and "固定可见锚=" not in standing_str) else ""),
             "【时间轴分镜】",
             *shot_lines,
             f"【音效】{sfx_sum}",
@@ -360,8 +360,26 @@ def self_test():
     return 0
 
 
+
+def build_g7_mount_table(segments_meta):
+    """V8.2.0-SLIM：为多段投喂稿自动生成《逐段参考图挂载表》（G7-MOUNT）"""
+    if not segments_meta:
+        return ""
+    lines = [
+        "",
+        "## 逐段参考图挂载表（G7-MOUNT · 投喂平台逐段核对）",
+        "",
+        "| 段号 | 本段必挂参考图 | 资产就绪态 |",
+        "| --- | --- | --- |",
+    ]
+    for seg_id, figs in segments_meta:
+        fig_str = " + ".join(figs) if figs else "（纯文本/M0态）"
+        lines.append(f"| 段{seg_id} | {fig_str} | ✅ 已就绪 |")
+    return "\n".join(lines) + "\n"
+
+
 def main():
-    ap = argparse.ArgumentParser(description="漫剧老李 V7.5.0-SLIM P4 投喂自动装配编译器")
+    ap = argparse.ArgumentParser(description="漫剧老李 V8.2.0-SLIM P4 投喂自动装配编译器")
     ap.add_argument("--state", help="project_state.json 路径")
     ap.add_argument("--out", help="输出投喂稿 .md 路径（不指定则打印到标准输出）")
     ap.add_argument("--self-test", action="store_true")

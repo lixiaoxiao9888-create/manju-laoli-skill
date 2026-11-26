@@ -1,8 +1,8 @@
 ---
 name: sd-combat-engine
-description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V7.5.0-SLIM 套装 · 子技能】打戏分镜专精引擎——负责一切打斗/武打/战斗场面的分镜提示词生成：打斗构思（动机/强弱错位/赌注/环境变数）、八步写作脑、八类自然句母版逐镜成句、铁律自检、摄影机行为锁与战场群战速查。触发词：打戏、武打、分镜打斗、战斗场面、大招、剑阵、法阵、法相、割草、对轰、招式、武学、拳法、刀剑对决、终结技、战场、群战、军阵、运镜锁。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（分镜）+ sd-combat-engine（打戏·本技能）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
+description: 【套装内部技能 · 全流程用户通常无需直接调用；直接说需求给总控 short-drama-director 即可，总控会自动路由到本技能】【漫剧老李 V8.2.0-SLIM 套装 · 子技能】打戏分镜专精引擎——负责一切打斗/武打/战斗场面的分镜提示词生成：打斗构思（动机/强弱错位/赌注/环境变数）、八步写作脑、八类自然句母版逐镜成句、铁律自检、摄影机行为锁与战场群战速查。触发词：打戏、武打、分镜打斗、战斗场面、大招、剑阵、法阵、法相、割草、对轰、招式、武学、拳法、刀剑对决、终结技、战场、群战、军阵、运镜锁。套装成员：总控 short-drama-director（锁系统与投喂格式权威）+ sd-decision-engine（决策）+ sd-script-engine（剧本）+ sd-asset-engine（资产）+ sd-storyboard-engine（分镜）+ sd-combat-engine（打戏·本技能）+ sd-feed-engine（投喂）+ sd-qc-engine（质检）。
 agent_created: true
-version: "7.5.0-SLIM"
+version: "8.2.0-SLIM"
 ---
 
 # sd-combat-engine · 打戏分镜专精引擎

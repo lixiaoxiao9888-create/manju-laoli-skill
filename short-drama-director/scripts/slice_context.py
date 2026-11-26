@@ -43,6 +43,7 @@ STAGE_FILES = {
         "sd-asset-engine/references/three-list-extraction.md",
         "sd-asset-engine/references/scene-grid-template.md",
         "sd-asset-engine/references/character-portrait-templates.md",
+        "sd-asset-engine/references/character-diversity-engine.md",
         "sd-asset-engine/references/prop-template.md",
         "short-drama-director/references/asset-spatial-ledger.md",
         "short-drama-director/references/asset-delivery-modes.md",
@@ -50,6 +51,9 @@ STAGE_FILES = {
     "P3": [
         "short-drama-director/references/acting-direction.md",
         "short-drama-director/references/blocking-direction.md",
+        "short-drama-director/references/wenxi-wuxi-storyboard-logic.md",
+        "short-drama-director/references/cross-segment-spatial-handoff.md",
+        "short-drama-director/references/blooper-prevention-playbook.md",
         "sd-storyboard-engine/SKILL.md",
         "sd-storyboard-engine/references/short-drama-camera-system.md",
         "sd-storyboard-engine/references/shot-economy-and-acting.md",
@@ -295,7 +299,7 @@ def self_test():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="漫剧老李 V7.5.0-SLIM 动态原文切片器")
+    ap = argparse.ArgumentParser(description="漫剧老李 V8.2.0-SLIM 动态原文切片器")
     ap.add_argument("--stage", default="P3", choices=["P0", "P1", "P2", "P3", "P4", "P5", "p0", "p1", "p2", "p3", "p4", "p5"])
     ap.add_argument("--combat", default="none", choices=["none", "R1", "R2", "R3", "r1", "r2", "r3"])
     ap.add_argument("--model", default="2.5", choices=["2.5", "2.0"])

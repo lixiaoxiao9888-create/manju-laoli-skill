@@ -53,7 +53,8 @@ CROSS_REF_PATTERNS = [
     (r"降级条款同", "降级条款同X"),
 ]
 
-SCENE_GRID_FIELDS = ["【场景定位】", "【九宫格内容分配】", "【参考场景锁定模式】"]
+SCENE_GRID_FIELDS = ["【场景定位】", "【五宫格内容分配】", "【参考场景锁定模式】"]
+SCENE_GRID_FIELDS_LEGACY = ["【场景定位】", "【九宫格内容分配】", "【参考场景锁定模式】"]
 PROP_FIELDS = ["正面视图", "45° 侧视图", "顶部俯视图", "关键细节特写"]
 PROP_FIELDS_ALT = ["正面视图", "45°侧视图", "顶部俯视图", "关键细节特写"]
 
@@ -100,9 +101,13 @@ def classify(title, body):
     """
     if "道具设定图" in body or "道具设定" in body or "道具" in title:
         return "道具"
+    if "五宫格" in title or re.search(r"全图共\s*5\s*格", body):
+        return "五宫格"
+    if "白模轴测" in title or "轴测站位" in title or "白模轴测" in body or "轴测空间站位" in body:
+        return "白模轴测站位图"
     if "九宫格" in title or re.search(r"全图共\s*9\s*格", body):
         return "九宫格"
-    if (re.search(r"全图共\s*4\s*格", body) or "立绘" in body
+    if ("八格拼版" in body or "八格拼版" in title or re.search(r"全图共\s*4\s*格", body) or "立绘" in body
             or "五官" in body or "声纹" in body
             or re.search(r"[SABC]\s*级|男主|女主|主角|反派", title)):
         return "角色"
@@ -122,12 +127,31 @@ def check_block(number, title, body, kind):
         if re.search(pattern, body):
             errors.append(f"A1 {tag} 出现跨条引用「{label}」——单条复制出去即断，必须把内容逐条写死")
 
-    # A2 16:9
-    if not re.search(r"16\s*[:：]\s*9", body):
+    # A2 画幅：常规资产板固定 16:9；可选角色八格拼版允许 3:2 横版
+    _is_char_8grid = (kind == "角色" and ("八格拼版" in body or "八格拼版" in title))
+    if _is_char_8grid:
+        if not re.search(r"3\s*[:：]\s*2", body):
+            errors.append(f"A2 {tag} 角色八格拼版未写明「3:2」横版比例")
+    elif not re.search(r"16\s*[:：]\s*9", body):
         errors.append(f"A2 {tag} 未写明「16:9」整板比例（资产板固定 16:9，不随成片画幅变）")
 
-    if kind == "九宫格":
+    if kind == "白模轴测站位图":
+        if not re.search(r"@[^\s]+母版|参考图\s*@|基于参考图|场景母版", body):
+            errors.append(f"A8 {tag} 白模轴测站位图未预留「@场景母版」参考底图位——必须先出场景母版再垫图生成，防两图空间打架")
+
+    if kind == "五宫格":
         for field in SCENE_GRID_FIELDS:
+            if not re.search(re.escape(field[:-1]) + r"[^】]*】", body):
+                errors.append(f"A3 {tag} 五宫格缺模板字段 {field}（八字段硬性，缺一即不合规）")
+        if not re.search(r"全图共\s*5\s*格", body):
+            errors.append(f"A3 {tag} 五宫格未显式声明「全图共 5 格」")
+        if "仅允许摄影机移动" not in body and "允许按子区域切换机位" not in body and "关" not in body:
+            errors.append(f"A3 {tag} 五宫格缺【参考场景锁定模式】正文（关 / 仅允许摄影机移动 / 允许按子区域切换机位）")
+        if not re.search(r"1\s*[~～-]\s*5", body) or "对照表" not in body:
+            errors.append(f"A3 {tag} 五宫格缺标注降级条款（格内编号 1~5 + 图外对照表）")
+
+    if kind == "九宫格":
+        for field in SCENE_GRID_FIELDS_LEGACY:
             # 字段名允许带后缀（如「【参考场景锁定模式 · 模式A 档 · 仅允许摄影机移动】」）
             if not re.search(re.escape(field[:-1]) + r"[^】]*】", body):
                 errors.append(f"A3 {tag} 九宫格缺模板字段 {field}（八字段硬性，缺一即不合规）")
@@ -139,31 +163,31 @@ def check_block(number, title, body, kind):
             errors.append(f"A3 {tag} 九宫格缺标注降级条款（中文崩字 → 格内编号 1~9 + 图外对照表）")
 
     if kind == "角色":
-        if not re.search(r"全图共\s*4\s*格", body):
-            errors.append(f"A4 {tag} 角色未声明「全图共 4 格」——模型会做加法出成 5 格")
-        if "五官 10 项锁定" not in body and "五官10项锁定" not in body:
-            errors.append(f"A4 {tag} 角色缺「五官 10 项锁定」（模板字段名，勿改写）")
-        if "声纹" not in body:
-            errors.append(f"A4 {tag} 角色缺图底声纹锚（图底波形，非文字）")
-        if not re.search(r"≤\s*8\s*词|8\s*词", body):
-            errors.append(f"A4 {tag} 角色缺「≤8 词音色速览标签」")
-        if "fifth panel" not in body.lower():
-            errors.append(f"A4 {tag} 角色负向词缺 fifth panel / extra panel（防第 5 格）")
-        negative = body.lower()
-        if not any(token in negative for token in
-                   ("different face", "second face", "second recognizable face", "another face")):
-            errors.append(f"A4 {tag} 角色负向词缺「防第二张脸」（different face / second face）")
-        # A5 只抓「正向使用主图」：先把「不设/无/禁…主图」这类否定句摘掉再判
-        scrubbed = re.sub(r"[不无禁勿][^，。；\n]{0,8}主图", "", body)
-        scrubbed = re.sub(r"主图[^，。；\n]{0,6}(?:删除|去掉|不要)", "", scrubbed)
-        if "主图" in scrubbed:
-            errors.append(f"A5 {tag} 出现旧称「主图」（非否定用法）——与四格并存会让模型出 5 格，改称「正面格」")
+        if _is_char_8grid:
+            if "面部标记" not in body:
+                errors.append(f"A4 {tag} 角色八格拼版缺必填唯一「面部标记」")
+            if "声线锚定" not in body and "Voice Description" not in body:
+                errors.append(f"A4 {tag} 角色八格拼版缺「声线锚定」")
+        else:
+            if not re.search(r"全图共\s*4\s*格", body):
+                errors.append(f"A4 {tag} 角色未声明「全图共 4 格」——模型会做加法出成 5 格")
+            if "五官 10 项锁定" not in body and "五官10项锁定" not in body:
+                errors.append(f"A4 {tag} 角色缺「五官 10 项锁定」（模板字段名，勿改写）")
+            if "声纹" not in body and "波形" not in body:
+                errors.append(f"A4 {tag} 角色缺图底声纹锚（图底波形，非文字）")
+            if "Voice Description" not in body and "音色速览" not in body:
+                errors.append(f"A4 {tag} 角色缺「≤8 词音色速览标签」")
+            if not re.search(r"fifth panel|extra panel|第\s*5\s*格", body, re.I):
+                errors.append(f"A4 {tag} 角色负向词缺 fifth panel / extra panel（防第 5 格）")
+            if not re.search(r"different face|second face|second recognizable face|第二张脸", body, re.I):
+                errors.append(f"A4 {tag} 角色负向词缺「防第二张脸」（different face / second face）")
 
     if kind == "道具":
         if "道具设定图" not in body:
             errors.append(f"A6 {tag} 道具缺「道具设定图」标识（模板标题字段）")
         missing = [f for f in PROP_FIELDS if f not in body and f.replace(" ", "") not in body.replace(" ", "")]
-        if missing:
+        is_single_prop = any(k in body for k in ("单体静物", "单张", "唯一一件", "唯一一柄", "单一物体"))
+        if missing and not is_single_prop:
             errors.append(f"A6 {tag} 道具四格字段名不全，缺：{'、'.join(missing)}（须用模板原名）")
         if not re.search(r"禁止手持|不得手持|不出现手", body):
             errors.append(f"A6 {tag} 道具未禁手持（道具图必须无人、无手）")
@@ -171,7 +195,7 @@ def check_block(number, title, body, kind):
     if kind == "未知":
         message = (f"A7 {tag} 块类型无法判定——正文含分格表述，但缺少模板标识字段"
                    "（场景写「母版/全图共 9 格」、角色写「全图共 4 格」、道具写「道具设定图」）")
-        if re.search(r"四格|九宫格|\d\s*×\s*\d|全图共\s*\d+\s*格", body):
+        if re.search(r"四格|五宫格|九宫格|\d\s*×\s*\d|全图共\s*\d+\s*格", body):
             errors.append(message)
         else:
             warns.append(message)
