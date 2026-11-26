@@ -11,7 +11,7 @@
 ![Version](https://img.shields.io/badge/版本-V8.2.0--SLIM-6a5acd?style=for-the-badge)
 ![Structure](https://img.shields.io/badge/结构-1%20总控%20%7C%2010%20子技能-8e44ad?style=for-the-badge)
 ![Rulebooks](https://img.shields.io/badge/规则库-53%20份-00b4d8?style=for-the-badge)
-![Files](https://img.shields.io/badge/文件-173-2ec4b6?style=for-the-badge)
+![Files](https://img.shields.io/badge/文件-174-2ec4b6?style=for-the-badge)
 ![QC](https://img.shields.io/badge/机检-C1~C41-ff6b6b?style=for-the-badge)
 
 ![Models](https://img.shields.io/badge/模型-Seedance%202.5%20%7C%202.0-9d4edd?style=for-the-badge)
@@ -177,7 +177,7 @@ python3 short-drama-director/scripts/build_board_lite.py <项目.md>
 ## 📦 项目结构
 
 ```
-lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM 精简套装（173 文件）
+lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM 精简套装（174 文件）
 ├── README.md                                   # 本落地页（中文 + English）
 ├── LICENSE / .gitignore
 ├── short-drama-director/                       # L0 总控（74 文件 · 53 份规则库 · 机检脚本）
@@ -215,6 +215,7 @@ lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM 精简套装（173
 | <img src="assets/omniboard.jpg" alt="OmniBoard" width="160"> | 企业 | OmniBoard | 字字动画推出专业漫剧创作工具，从剧本到发行变现全渠道一站式，年卡 Seedance 2.5 低至 0.19/秒 | [omniboard.tv/register?ref=GITHUBADD7DZ](https://omniboard.tv/register?ref=GITHUBADD7DZ) |
 | <img src="assets/himadrama.png" alt="浮瑞万相AI" width="160"> | 企业 | 浮瑞万相AI | 浮瑞万相AI旗下喜马抓马 AI 视听全链路综合服务平台，HimaStudio 多模态 AI 视听创作平台及线上 OPC 社区 · 深度适配漫剧老李 Skill | [himadrama.com](https://www.himadrama.com) |
 | <img src="assets/dianzhong.png" alt="点众" width="160"> | 企业 | 点众 | 开放全 IP 库，超创与公司自制权限相同，可看到典藏版、爆款剧、精品剧的 IP | [点众开放 IP 库](https://vcnti1p0lovd.feishu.cn/wiki/W3zvwKqzJiVRDqkvooEckIZgnFh) |
+| <img src="assets/dogcoding.png" alt="DogCoding" width="140"> | 企业 | DogCoding | 大模型 API 中转网关：统一标准化接口，聚合多家大模型，提供请求转发、协议转换、密钥管理、配额控制、用量统计、故障降级能力 | [dogcoding.cn](https://dogcoding.cn/) |
 | *（LOGO 占位）* | — | 虚位以待 | 赞助位开放中——让你的产品出现在众多 AI 短剧创作者面前 | [联系我们](mailto:lixiaoxiao9888@gmail.com) |
 
 > 💡 **招商说明**：赞助位对模型渠道、算力平台、API 服务商及创作团队开放。
@@ -343,7 +344,7 @@ python3 short-drama-director/scripts/build_board_lite.py <project.md>
 ## 📦 Structure
 
 ```
-lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM slim suite (173 files)
+lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM slim suite (174 files)
 ├── README.md                                   # landing (Chinese + English)
 ├── LICENSE / .gitignore
 ├── short-drama-director/                       # L0 router (74 files · 53 rulebooks · lint scripts)
