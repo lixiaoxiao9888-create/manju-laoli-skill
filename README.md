@@ -23,13 +23,9 @@
 
 <div align="center">
 
-```
- ① 立项锁          ② 剧本            ③ 资产            ④ 分镜            ⑤ 投喂            ⑥ 质检
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│ 五道锁 + I │ → │ 六阶段门控 │ → │ 先锁后拍  │ → │ 文武三轨  │ → │ 七段式    │ → │ C1~C41   │
-│ 素材形态 M │   │ 圆桌审核  │   │ 五宫格场景 │   │ 故事板图  │   │ 接线单    │   │ 闸门 G1~G8 │
-└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
-```
+| ① 立项锁 | ② 剧本 | ③ 资产 | ④ 分镜 | ⑤ 投喂 | ⑥ 质检 |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 五道锁 + I 画风锁 | 六阶段门控 + 圆桌 | 先锁后拍 · 五宫格 | 文武三轨 · 故事板 | 七段式 + 接线单 | C1~C41 + G1~G8 |
 
 </div>
 
@@ -252,13 +248,9 @@ lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM 精简套装（173
 ![Models](https://img.shields.io/badge/Models-Seedance%202.5%20%7C%202.0-9d4edd?style=flat-square)
 ![QC](https://img.shields.io/badge/QC-C1~C41-ff6b6b?style=flat-square)
 
-```
-① Locks          ② Script          ③ Assets          ④ Storyboard      ⑤ Feed            ⑥ QC
-┌──────────┐  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│ 5 locks+I │→ │ 6 stages │ → │ asset-1st │ → │ dual-mode │ → │ 7-section │ → │ C1~C41   │
-│ form M0-2 │  │ roundtable│   │ 5-grid    │   │ sheets    │   │ wiring    │   │ gates G1-8│
-└──────────┘  └──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
-```
+| ① Locks | ② Script | ③ Assets | ④ Storyboard | ⑤ Feed | ⑥ QC |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| 5 locks + I | 6 stages + review | asset-first · 5-grid | dual-mode · sheets | 7-section + wiring | C1~C41 + G1–G8 |
 
 </div>
 
@@ -362,7 +354,7 @@ lixiaoxiao9888-create/manju-laoli-skill/        # V8.2.0-SLIM slim suite (173 fi
 ├── sd-storyboard-engine/                       # L2 · storyboard + storyboard sheets
 ├── sd-combat-engine/                           # L2 · general fight
 ├── sd-xuanhuan-engine/                         # L2 · xianxia fight
-├── sd-real-engine/                            # L2 · live-action fight
+├── sd-real-engine/                             # L2 · live-action fight
 ├── sd-feed-engine/                             # L3 delivery · feed (feed-layer gates)
 └── sd-qc-engine/                               # L3 · QC / continuity / sound
 ```
